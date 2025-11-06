@@ -27,6 +27,13 @@ bootstrap/generated-cluster-template.yaml
 *.kubeconfig
 kubeconfig
 
+# Docker & Omni
+.env
+!.env.example
+sidero-omni/etcd/
+sidero-omni/omni.asc
+sidero-omni/cloudflare.ini
+
 # Secrets
 *.pem
 *.key

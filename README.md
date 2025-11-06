@@ -15,10 +15,13 @@ This repository provides a complete Infrastructure as Code (IaC) solution for:
 ```
 .
 ├── README.md
-├── sidero-omni/              # Sidero Omni self-hosted deployment
+├── sidero-omni/              # Sidero Omni self-hosted deployment (Docker)
 │   ├── README.md
-│   ├── deployment.yaml       # Kubernetes deployment manifests
-│   └── config.yaml           # Omni configuration
+│   ├── docker-compose.yml    # Docker Compose configuration
+│   ├── .env.example          # Environment variables template
+│   ├── setup-certificates.sh # SSL certificate setup script
+│   ├── generate-gpg-key.sh   # GPG key generation script
+│   └── config.yaml           # Omni configuration reference
 ├── terraform/                # Terraform IaC for Proxmox VMs
 │   ├── README.md
 │   ├── main.tf              # Main Terraform configuration
@@ -42,16 +45,30 @@ This repository provides a complete Infrastructure as Code (IaC) solution for:
 
 - Proxmox VE 7.x or later
 - Terraform 1.0+
-- kubectl (for Omni deployment)
-- A Kubernetes cluster (for hosting Omni)
+- Docker and Docker Compose
+- Ubuntu/Debian VM or mini PC (for Omni)
+- Domain name with Cloudflare DNS
+- Auth0 account for authentication
 
 ### Step 1: Deploy Sidero Omni
 
-Navigate to the `sidero-omni/` directory and follow the deployment instructions:
+Navigate to the `sidero-omni/` directory and follow the Docker-based deployment instructions:
 
 ```bash
 cd sidero-omni
-kubectl apply -f deployment.yaml
+
+# Set up SSL certificates
+sudo ./setup-certificates.sh
+
+# Generate GPG key for etcd encryption
+./generate-gpg-key.sh
+
+# Configure environment variables
+cp .env.example .env
+nano .env
+
+# Deploy Omni
+docker-compose up -d
 ```
 
 See [sidero-omni/README.md](sidero-omni/README.md) for detailed instructions.
@@ -88,9 +105,11 @@ See [bootstrap/README.md](bootstrap/README.md) for detailed instructions.
 ### Components
 
 1. **Sidero Omni**: Central management platform for Talos clusters
+   - Runs as Docker container on dedicated VM or mini PC
    - Provides a web UI and API for cluster management
-   - Handles machine registration and lifecycle
+   - Handles machine registration and lifecycle via SideroLink
    - Manages cluster templates and configurations
+   - Uses embedded etcd for storage with GPG encryption
 
 2. **Proxmox VE**: Virtualization platform
    - Hosts the Talos Linux VMs
