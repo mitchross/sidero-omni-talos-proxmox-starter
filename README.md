@@ -156,10 +156,17 @@ Create Talos VMs across multiple Proxmox servers:
 # Navigate to Terraform directory
 cd terraform
 
-# Configure your infrastructure
+# OPTION A: Automated Resource Discovery (Recommended)
+# Let the tool discover your Proxmox resources and recommend VMs
+./recommend-cluster.sh
+# - Queries each Proxmox server for CPU, RAM, storage
+# - Recommends optimal VM configurations
+# - Generates terraform.tfvars automatically
+# - Prevents over-provisioning
+
+# OPTION B: Manual Configuration
 cp terraform.tfvars.example terraform.tfvars
 nano terraform.tfvars
-
 # Edit configuration:
 # - Proxmox server details (API URLs, tokens from above, storage)
 # - Control plane VMs (recommend 1 per Proxmox server for HA)

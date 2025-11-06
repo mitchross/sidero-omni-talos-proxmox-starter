@@ -176,9 +176,39 @@ Node Name: pve3
 
 ## Usage
 
-### 1. Configure Terraform Variables
+### Option A: Automated Resource Discovery (Recommended)
 
-Copy the example configuration and edit it:
+Use the **automated cluster recommendation tool** to discover your Proxmox resources and generate optimal VM configurations:
+
+```bash
+./recommend-cluster.sh
+```
+
+**What it does**:
+1. **Queries each Proxmox server** - Discovers CPU, RAM, and storage capacity
+2. **Calculates usable resources** - Reserves 20% for Proxmox host
+3. **Recommends optimal VMs** - Suggests control planes and workers based on capacity
+4. **Generates terraform.tfvars** - Creates complete configuration automatically
+5. **Shows resource allocation** - Displays how VMs are distributed across servers
+
+**Example**:
+```
+Server with 8 cores, 32GB RAM, 500GB storage:
+  → Recommends: 1 control plane (4 cores, 8GB) + 2 workers (8 cores, 16GB each)
+  → Reserves 20% for host
+
+Server with 24 cores, 128GB RAM, 2TB storage:
+  → Recommends: 1 control plane (4 cores, 8GB) + 7 workers (8 cores, 16GB each)
+  → Prevents over-provisioning
+```
+
+After generation, review and customize `terraform.tfvars` as needed, then proceed to [Step 2](#2-initialize-terraform).
+
+---
+
+### Option B: Manual Configuration
+
+Copy the example configuration and edit it manually:
 
 ```bash
 cp terraform.tfvars.example terraform.tfvars
