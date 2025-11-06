@@ -1,0 +1,91 @@
+# Omni Configuration File
+# Reference: https://www.siderolabs.com/omni/docs/configuration/
+
+# Server configuration
+server:
+  # HTTP server bind address
+  bind_addr: "0.0.0.0:8080"
+  
+  # gRPC server bind address
+  grpc_bind_addr: "0.0.0.0:8090"
+
+# Account settings
+account:
+  # Unique account ID for this Omni instance
+  id: "your-account-id"
+
+# Authentication configuration
+auth:
+  # Auth0 configuration (optional)
+  auth0:
+    enabled: false
+    domain: ""
+    client_id: ""
+  
+  # SAML configuration (optional)
+  saml:
+    enabled: false
+    url: ""
+
+# Storage backend configuration
+storage:
+  # Storage kind: etcd, postgres
+  kind: "postgres"
+  
+  # PostgreSQL configuration (when kind is postgres)
+  postgres:
+    host: "postgres.omni-system.svc.cluster.local"
+    port: 5432
+    database: "omni"
+    username: "omni"
+    # Password should be set via environment variable OMNI_POSTGRES_PASSWORD
+    ssl_mode: "disable"
+
+# Machine management
+machines:
+  # Default machine registration timeout
+  registration_timeout: "15m"
+  
+  # Machine heartbeat interval
+  heartbeat_interval: "30s"
+
+# Cluster management
+clusters:
+  # Default Talos version
+  default_talos_version: "v1.7.0"
+  
+  # Default Kubernetes version
+  default_kubernetes_version: "v1.30.0"
+
+# Feature flags
+features:
+  # Enable embedded etcd (alternative to external etcd/postgres)
+  embedded_etcd: false
+  
+  # Enable workload proxy
+  workload_proxy: true
+
+# TLS/SSL configuration
+tls:
+  # Enable TLS
+  enabled: false
+  
+  # Certificate and key paths (if not using cert-manager)
+  cert_file: "/etc/omni/tls/tls.crt"
+  key_file: "/etc/omni/tls/tls.key"
+
+# Logging configuration
+logging:
+  # Log level: debug, info, warn, error
+  level: "info"
+  
+  # Log format: json, console
+  format: "json"
+
+# Metrics configuration
+metrics:
+  # Enable Prometheus metrics
+  enabled: true
+  
+  # Metrics bind address
+  bind_addr: "0.0.0.0:9090"
