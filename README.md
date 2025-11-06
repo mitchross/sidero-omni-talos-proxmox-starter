@@ -71,7 +71,7 @@ This repository provides a complete end-to-end solution for deploying and managi
 **Services**:
 - Domain name with Cloudflare DNS management
 - Auth0 account for authentication (free tier works)
-- Proxmox API tokens for Terraform
+- Proxmox API tokens (one per server) - [setup guide](terraform/README.md#proxmox-api-token-setup)
 
 ### Complete Deployment Workflow
 
@@ -132,6 +132,24 @@ See [sidero-omni/README.md](sidero-omni/README.md) for detailed instructions and
 
 ## Phase 2: Provision VMs with Terraform
 
+**Prerequisites**: Create API tokens for each Proxmox server.
+
+**Quick API Token Setup** (run on each Proxmox server):
+```bash
+# SSH to each Proxmox server and run:
+ssh root@pve1  # or pve2, pve3, etc.
+
+pveum user add terraform@pve
+pveum user token add terraform@pve terraform --privsep 0
+pveum acl modify / --user terraform@pve --role Administrator
+
+# SAVE the token secret shown - you'll need it in terraform.tfvars!
+```
+
+See [terraform/README.md - Proxmox API Token Setup](terraform/README.md#proxmox-api-token-setup) for detailed instructions, UI-based setup, and permission options.
+
+---
+
 Create Talos VMs across multiple Proxmox servers:
 
 ```bash
@@ -143,7 +161,7 @@ cp terraform.tfvars.example terraform.tfvars
 nano terraform.tfvars
 
 # Edit configuration:
-# - Proxmox server details (API URLs, tokens, storage)
+# - Proxmox server details (API URLs, tokens from above, storage)
 # - Control plane VMs (recommend 1 per Proxmox server for HA)
 # - Worker VMs (distribute across servers)
 # - GPU worker VMs (optional, for GPU workloads)
