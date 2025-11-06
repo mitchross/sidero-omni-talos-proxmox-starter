@@ -1,48 +1,56 @@
-version: '3.8'
-
+name: omni-on-prem
 services:
   omni:
-    image: ghcr.io/siderolabs/omni:${OMNI_VERSION:-latest}
     container_name: omni
+    image: "ghcr.io/siderolabs/omni:${OMNI_IMG_TAG}"
     restart: unless-stopped
-    environment:
-      - OMNI_ACCOUNT_UUID=${OMNI_ACCOUNT_UUID}
-      - OMNI_NAME=Omni Self-Hosted
-      - OMNI_SIDEROLINK_WIREGUARD_ADVERTISED_ADDR=${OMNI_WG_IP}:50042
-      - OMNI_INITIAL_USERS=${OMNI_ADMIN_EMAIL}
-      - OMNI_AUTH_AUTH0_ENABLED=true
-      - OMNI_AUTH_AUTH0_DOMAIN=${AUTH0_DOMAIN}
-      - OMNI_AUTH_AUTH0_CLIENT_ID=${AUTH0_CLIENT_ID}
-      - OMNI_STORAGE_KIND=etcd
-      - OMNI_ETCD_EMBEDDED_UNSAFE_FSYNC=false
+    devices:
+      - /dev/net/tun
     volumes:
-      - /etc/letsencrypt/live/${OMNI_DOMAIN_NAME}/fullchain.pem:/tls.crt:ro
-      - /etc/letsencrypt/live/${OMNI_DOMAIN_NAME}/privkey.pem:/tls.key:ro
-      - ./etcd:/_out/etcd
-      - ./omni.asc:/omni.asc:ro
-    command:
-      - --auth-auth0-enabled=true
-      - --auth-auth0-domain=${AUTH0_DOMAIN}
-      - --auth-auth0-client-id=${AUTH0_CLIENT_ID}
-      - --account-uuid=${OMNI_ACCOUNT_UUID}
-      - --name=Omni
-      - --advertised-api-url=https://${OMNI_DOMAIN_NAME}/
-      - --siderolink-api-advertised-url=https://${OMNI_DOMAIN_NAME}:8090
-      - --siderolink-wireguard-advertised-addr=${OMNI_WG_IP}:50042
-      - --advertised-kubernetes-proxy-url=https://${OMNI_DOMAIN_NAME}:8100
-      - --bind-addr=:8080
-      - --https-bind-addr=:443
-      - --k8s-proxy-bind-addr=:8100
-      - --siderolink-api-bind-addr=:8090
-      - --siderolink-wireguard-bind-addr=:50042
-      - --private-key-source=file:///omni.asc
-      - --event-sink-port=8091
-      - --cert=/tls.crt
-      - --key=/tls.key
-      - --initial-users=${OMNI_ADMIN_EMAIL}
-    network_mode: host
+      - ${ETCD_VOLUME_PATH}:/_out/etcd
+      - ${ETCD_ENCRYPTION_KEY}:/omni.asc
+      - ${TLS_CERT}:/tls.crt
+      - ${TLS_KEY}:/tls.key
+    network_mode: "host"
     cap_add:
       - NET_ADMIN
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv6.conf.all.forwarding=1
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 4G
+        reservations:
+          cpus: '2'
+          memory: 2G
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:443/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    command: >
+      --account-id=${OMNI_ACCOUNT_UUID}
+      --name=${NAME}
+      --cert=/tls.crt
+      --key=/tls.key
+      --machine-api-cert=/tls.crt
+      --machine-api-key=/tls.key
+      --private-key-source='file:///omni.asc'
+      --event-sink-port=${EVENT_SINK_PORT}
+      --bind-addr=${BIND_ADDR}
+      --machine-api-bind-addr=${MACHINE_API_BIND_ADDR}
+      --k8s-proxy-bind-addr=${K8S_PROXY_BIND_ADDR}
+      --advertised-api-url=${ADVERTISED_API_URL}
+      --advertised-kubernetes-proxy-url=${ADVERTISED_K8S_PROXY_URL}
+      --siderolink-api-advertised-url=${SIDEROLINK_ADVERTISED_API_URL}
+      --siderolink-wireguard-advertised-addr=${SIDEROLINK_WIREGUARD_ADVERTISED_ADDR}
+      --initial-users=${INITIAL_USER_EMAILS}
+      ${AUTH}
