@@ -282,7 +282,13 @@ services:
   - `gpu_configuration_needed`: Manual GPU setup instructions
 
 ✅ Detailed terraform.tfvars.example with examples for 1, 2, 3+ servers
-✅ Comprehensive terraform/README.md
+✅ Comprehensive terraform/README.md with:
+  - Proxmox API token setup guide (Web UI + CLI methods)
+  - Step-by-step token creation for each server
+  - Permission configuration (Administrator vs custom role)
+  - Token verification via curl
+  - Security best practices
+  - Complete terraform.tfvars configuration examples
 
 ### Phase 3: Integration Scripts (Completed)
 ✅ `discover-machines.sh`: Machine discovery and MAC-based matching
