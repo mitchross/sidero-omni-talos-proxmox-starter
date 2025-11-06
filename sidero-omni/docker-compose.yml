@@ -5,18 +5,10 @@ services:
     image: ghcr.io/siderolabs/omni:${OMNI_VERSION:-latest}
     container_name: omni
     restart: unless-stopped
-    ports:
-      - "443:443"
-      - "8080:8080"
-      - "50042:50042"
     environment:
       - OMNI_ACCOUNT_UUID=${OMNI_ACCOUNT_UUID}
       - OMNI_NAME=Omni Self-Hosted
-      - OMNI_HTTP_BIND_ADDR=:8080
-      - OMNI_HTTPS_BIND_ADDR=:443
       - OMNI_SIDEROLINK_WIREGUARD_ADVERTISED_ADDR=${OMNI_WG_IP}:50042
-      - OMNI_SIDEROLINK_API_ADVERTISED_URL=https://${OMNI_DOMAIN_NAME}:8090
-      - OMNI_ADVERTISED_API_URL=https://${OMNI_DOMAIN_NAME}/
       - OMNI_INITIAL_USERS=${OMNI_ADMIN_EMAIL}
       - OMNI_AUTH_AUTH0_ENABLED=true
       - OMNI_AUTH_AUTH0_DOMAIN=${AUTH0_DOMAIN}
@@ -47,7 +39,6 @@ services:
       - --event-sink-port=8091
       - --cert=/tls.crt
       - --key=/tls.key
-      - --machine-api-bind-addr=:8090
       - --initial-users=${OMNI_ADMIN_EMAIL}
     network_mode: host
     cap_add:

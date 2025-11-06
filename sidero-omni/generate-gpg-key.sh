@@ -21,9 +21,7 @@ echo "Note: Press Enter when prompted for a passphrase (no protection needed)"
 echo ""
 
 # Generate the key
-gpg --batch --quick-generate-key "Omni (Used for etcd data encryption) ${ADMIN_EMAIL}" rsa4096 cert never <<EOF
-
-EOF
+gpg --batch --quick-generate-key "Omni (Used for etcd data encryption) ${ADMIN_EMAIL}" rsa4096 cert never
 
 # Get the key fingerprint
 KEY_ID=$(gpg --list-secret-keys --with-colons | grep '^sec' | head -n 1 | cut -d':' -f5)

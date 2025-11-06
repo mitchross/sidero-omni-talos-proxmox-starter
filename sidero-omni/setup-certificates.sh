@@ -39,6 +39,9 @@ echo ""
 # Prompt for domain name
 read -p "Enter your domain name (e.g., omni.example.com): " DOMAIN_NAME
 
+# Prompt for email address
+read -p "Enter your email address for Let's Encrypt notifications: " ADMIN_EMAIL
+
 # Create omni directory if it doesn't exist
 mkdir -p ~/omni
 
@@ -71,7 +74,7 @@ certbot certonly \
     -d "${DOMAIN_NAME}" \
     --non-interactive \
     --agree-tos \
-    --email "admin@${DOMAIN_NAME}"
+    --email "${ADMIN_EMAIL}"
 
 if [[ $? -eq 0 ]]; then
     echo ""
