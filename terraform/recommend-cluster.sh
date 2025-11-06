@@ -5,18 +5,19 @@ set -euo pipefail
 # =============================================================================
 # Proxmox Cluster Resource Discovery & VM Recommendation Tool
 # =============================================================================
-# This script queries your Proxmox servers and recommends optimal VM
-# configurations based on available resources (CPU, RAM, storage).
+# This script SSH's into your Proxmox servers, queries actual resources,
+# and dynamically calculates optimal VM configurations.
 #
 # Prerequisites:
-# - Proxmox API tokens already created (see README.md)
-# - jq installed: sudo apt-get install jq
-# - curl installed (usually pre-installed)
+# - SSH access to Proxmox servers (key-based auth recommended)
+# - bc for floating point math: sudo apt-get install bc
+# - jq for JSON: sudo apt-get install jq
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}\")\" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "========================================"
 echo "Proxmox Cluster Resource Discovery"
+echo "Dynamic Resource-Based VM Calculator"
 echo "========================================"
 echo ""
 
@@ -24,203 +25,298 @@ echo ""
 # Configuration
 # =============================================================================
 
-# Proxmox servers (customize these)
 declare -A PROXMOX_SERVERS
+declare -A NODE_RESOURCES
 
-echo "This tool will query your Proxmox servers and recommend VM configurations."
+echo "This tool will SSH into your Proxmox servers and calculate optimal VM configs."
 echo ""
-echo "You'll need:"
-echo "  - Proxmox server IP/hostname"
-echo "  - API token ID (e.g., terraform@pve!terraform)"
-echo "  - API token secret"
+echo "Prerequisites:"
+echo "  - SSH access to Proxmox servers (as root)"
+echo "  - Recommended: SSH key-based authentication"
 echo ""
 
-read -p "How many Proxmox servers do you have? (1-10): " SERVER_COUNT
+read -p "How many Proxmox servers? (1-10): " SERVER_COUNT
 
 if [[ ! "$SERVER_COUNT" =~ ^[0-9]+$ ]] || [ "$SERVER_COUNT" -lt 1 ] || [ "$SERVER_COUNT" -gt 10 ]; then
-    echo "❌ Invalid server count. Must be between 1 and 10."
+    echo "❌ Invalid count. Must be 1-10."
     exit 1
 fi
 
 # Collect server information
+echo ""
 for i in $(seq 1 "$SERVER_COUNT"); do
-    echo ""
     echo "--- Server $i ---"
-    read -p "Proxmox hostname/IP (e.g., 192.168.10.160): " HOST
-    read -p "API token ID (e.g., terraform@pve!terraform): " TOKEN_ID
-    read -s -p "API token secret: " TOKEN_SECRET
-    echo ""
+    read -p "Hostname/IP (e.g., 192.168.10.160): " HOST
+    read -p "SSH user (default: root): " SSH_USER
+    SSH_USER=${SSH_USER:-root}
     read -p "Node name (e.g., pve1): " NODE_NAME
 
-    # Store server info
-    PROXMOX_SERVERS["$NODE_NAME"]="$HOST|$TOKEN_ID|$TOKEN_SECRET"
+    # Test SSH connection
+    echo -n "Testing SSH connection to $HOST... "
+    if ssh -o ConnectTimeout=5 -o BatchMode=yes "${SSH_USER}@${HOST}" "echo OK" &>/dev/null; then
+        echo "✓ Connected"
+    else
+        echo "❌ Failed"
+        echo "Please ensure SSH key-based auth is set up:"
+        echo "  ssh-copy-id ${SSH_USER}@${HOST}"
+        exit 1
+    fi
+
+    PROXMOX_SERVERS["$NODE_NAME"]="${SSH_USER}@${HOST}"
+    echo ""
 done
 
-echo ""
 echo "========================================"
-echo "Querying Proxmox Servers..."
+echo "Querying Resources..."
 echo "========================================"
 echo ""
 
 # =============================================================================
-# Query Proxmox Resources
+# Query Proxmox Resources via SSH
 # =============================================================================
-
-declare -A NODE_RESOURCES
 
 for NODE in "${!PROXMOX_SERVERS[@]}"; do
-    IFS='|' read -r HOST TOKEN_ID TOKEN_SECRET <<< "${PROXMOX_SERVERS[$NODE]}"
+    SSH_HOST="${PROXMOX_SERVERS[$NODE]}"
 
-    echo "Querying: $NODE ($HOST)..."
+    echo "Querying: $NODE ($SSH_HOST)..."
 
-    # Query node status
-    RESPONSE=$(curl -k -s -H "Authorization: PVEAPIToken=${TOKEN_ID}=${TOKEN_SECRET}" \
-        "https://${HOST}:8006/api2/json/nodes/${NODE}/status" || echo "ERROR")
+    # Get CPU info
+    CPU_TOTAL=$(ssh "$SSH_HOST" "nproc")
+    CPU_USAGE=$(ssh "$SSH_HOST" "top -bn1 | grep 'Cpu(s)' | awk '{print \$2}' | cut -d'%' -f1")
+    CPU_AVAILABLE=$(echo "scale=0; $CPU_TOTAL * (100 - $CPU_USAGE) / 100" | bc)
 
-    if [[ "$RESPONSE" == "ERROR" ]]; then
-        echo "  ❌ Failed to connect to $NODE"
-        echo "     Check API token and network connectivity"
-        continue
+    # Get memory info (in GB)
+    MEM_INFO=$(ssh "$SSH_HOST" "free -g | grep Mem")
+    MEM_TOTAL=$(echo "$MEM_INFO" | awk '{print $2}')
+    MEM_USED=$(echo "$MEM_INFO" | awk '{print $3}')
+    MEM_AVAILABLE=$(echo "$MEM_INFO" | awk '{print $7}')
+
+    # Get storage info for largest pool
+    STORAGE_INFO=$(ssh "$SSH_HOST" "pvs --noheadings --units g -o pv_name,vg_name,pv_size,pv_free 2>/dev/null | head -1" || echo "")
+
+    if [[ -n "$STORAGE_INFO" ]]; then
+        STORAGE_TOTAL=$(echo "$STORAGE_INFO" | awk '{print $3}' | sed 's/[^0-9.]//g')
+        STORAGE_FREE=$(echo "$STORAGE_INFO" | awk '{print $4}' | sed 's/[^0-9.]//g')
+        STORAGE_NAME=$(echo "$STORAGE_INFO" | awk '{print $2}')
+    else
+        # Fallback to df
+        STORAGE_INFO=$(ssh "$SSH_HOST" "df -BG / | tail -1")
+        STORAGE_TOTAL=$(echo "$STORAGE_INFO" | awk '{print $2}' | sed 's/G//')
+        STORAGE_FREE=$(echo "$STORAGE_INFO" | awk '{print $4}' | sed 's/G//')
+        STORAGE_NAME="local"
     fi
-
-    # Parse resources
-    CPU_TOTAL=$(echo "$RESPONSE" | jq -r '.data.cpuinfo.cpus // 0')
-    CPU_USED=$(echo "$RESPONSE" | jq -r '.data.cpu // 0' | awk '{printf "%.0f", $1 * 100}')
-
-    MEM_TOTAL_BYTES=$(echo "$RESPONSE" | jq -r '.data.memory.total // 0')
-    MEM_USED_BYTES=$(echo "$RESPONSE" | jq -r '.data.memory.used // 0')
-    MEM_TOTAL_GB=$(echo "scale=2; $MEM_TOTAL_BYTES / 1024 / 1024 / 1024" | bc)
-    MEM_USED_GB=$(echo "scale=2; $MEM_USED_BYTES / 1024 / 1024 / 1024" | bc)
-    MEM_FREE_GB=$(echo "scale=2; $MEM_TOTAL_GB - $MEM_USED_GB" | bc)
-
-    # Query storage
-    STORAGE_RESPONSE=$(curl -k -s -H "Authorization: PVEAPIToken=${TOKEN_ID}=${TOKEN_SECRET}" \
-        "https://${HOST}:8006/api2/json/nodes/${NODE}/storage" || echo "ERROR")
-
-    # Find largest storage pool
-    LARGEST_STORAGE=""
-    LARGEST_SIZE=0
-
-    if [[ "$STORAGE_RESPONSE" != "ERROR" ]]; then
-        STORAGES=$(echo "$STORAGE_RESPONSE" | jq -r '.data[] | select(.type == "lvmthin" or .type == "dir" or .type == "lvm") | .storage')
-
-        for STORAGE in $STORAGES; do
-            STORAGE_INFO=$(curl -k -s -H "Authorization: PVEAPIToken=${TOKEN_ID}=${TOKEN_SECRET}" \
-                "https://${HOST}:8006/api2/json/nodes/${NODE}/storage/${STORAGE}/status" || echo "ERROR")
-
-            if [[ "$STORAGE_INFO" != "ERROR" ]]; then
-                TOTAL=$(echo "$STORAGE_INFO" | jq -r '.data.total // 0')
-                if [ "$TOTAL" -gt "$LARGEST_SIZE" ]; then
-                    LARGEST_SIZE=$TOTAL
-                    LARGEST_STORAGE=$STORAGE
-                fi
-            fi
-        done
-    fi
-
-    STORAGE_TOTAL_GB=$(echo "scale=2; $LARGEST_SIZE / 1024 / 1024 / 1024" | bc)
 
     # Store results
-    NODE_RESOURCES["$NODE"]="$CPU_TOTAL|$MEM_TOTAL_GB|$MEM_FREE_GB|$STORAGE_TOTAL_GB|$LARGEST_STORAGE"
+    NODE_RESOURCES["$NODE"]="${CPU_TOTAL}|${CPU_AVAILABLE}|${MEM_TOTAL}|${MEM_AVAILABLE}|${STORAGE_TOTAL}|${STORAGE_FREE}|${STORAGE_NAME}"
 
-    echo "  ✓ CPUs: $CPU_TOTAL cores"
-    echo "  ✓ RAM: ${MEM_TOTAL_GB} GB total (${MEM_FREE_GB} GB free)"
-    echo "  ✓ Storage: ${STORAGE_TOTAL_GB} GB ($LARGEST_STORAGE)"
+    echo "  ✓ CPU: $CPU_TOTAL cores ($CPU_AVAILABLE available after current load)"
+    echo "  ✓ RAM: ${MEM_TOTAL}GB total (${MEM_AVAILABLE}GB available)"
+    echo "  ✓ Storage: ${STORAGE_TOTAL}GB total (${STORAGE_FREE}GB free) [$STORAGE_NAME]"
     echo ""
 done
 
 # =============================================================================
-# Generate Recommendations
+# Calculate Total Cluster Resources
 # =============================================================================
 
 echo "========================================"
-echo "Cluster Recommendations"
+echo "Cluster Analysis"
 echo "========================================"
 echo ""
 
-# Calculate total resources
 TOTAL_CPU=0
 TOTAL_RAM=0
 TOTAL_STORAGE=0
+AVAIL_CPU=0
+AVAIL_RAM=0
+AVAIL_STORAGE=0
 
 for NODE in "${!NODE_RESOURCES[@]}"; do
-    IFS='|' read -r CPU RAM FREE_RAM STORAGE STORAGE_NAME <<< "${NODE_RESOURCES[$NODE]}"
-    TOTAL_CPU=$((TOTAL_CPU + CPU))
-    TOTAL_RAM=$(echo "scale=2; $TOTAL_RAM + $RAM" | bc)
-    TOTAL_STORAGE=$(echo "scale=2; $TOTAL_STORAGE + $STORAGE" | bc)
+    IFS='|' read -r CPU_TOTAL CPU_AVAIL RAM_TOTAL RAM_AVAIL STOR_TOTAL STOR_AVAIL STOR_NAME <<< "${NODE_RESOURCES[$NODE]}"
+
+    TOTAL_CPU=$((TOTAL_CPU + CPU_TOTAL))
+    TOTAL_RAM=$((TOTAL_RAM + RAM_TOTAL))
+    TOTAL_STORAGE=$(echo "scale=0; $TOTAL_STORAGE + $STOR_TOTAL" | bc)
+
+    AVAIL_CPU=$((AVAIL_CPU + CPU_AVAIL))
+    AVAIL_RAM=$((AVAIL_RAM + RAM_AVAIL))
+    AVAIL_STORAGE=$(echo "scale=0; $AVAIL_STORAGE + $STOR_AVAIL" | bc)
 done
 
 echo "Total Cluster Resources:"
-echo "  CPUs: $TOTAL_CPU cores"
-echo "  RAM: $TOTAL_RAM GB"
-echo "  Storage: $TOTAL_STORAGE GB"
+echo "  CPU: $TOTAL_CPU cores ($AVAIL_CPU available)"
+echo "  RAM: ${TOTAL_RAM}GB (${AVAIL_RAM}GB available)"
+echo "  Storage: ${TOTAL_STORAGE}GB (${AVAIL_STORAGE}GB free)"
 echo ""
 
-# Recommend cluster configuration
-# Reserve 20% for Proxmox host
-USABLE_CPU=$(echo "scale=0; $TOTAL_CPU * 0.8 / 1" | bc)
-USABLE_RAM=$(echo "scale=0; $TOTAL_RAM * 0.8 / 1" | bc)
-USABLE_STORAGE=$(echo "scale=0; $TOTAL_STORAGE * 0.8 / 1" | bc)
+# Reserve 20% headroom for host and operations
+USABLE_CPU=$(echo "scale=0; $AVAIL_CPU * 0.8 / 1" | bc)
+USABLE_RAM=$(echo "scale=0; $AVAIL_RAM * 0.8 / 1" | bc)
+USABLE_STORAGE=$(echo "scale=0; $AVAIL_STORAGE * 0.8 / 1" | bc)
 
-echo "Usable Resources (80% of total, 20% reserved for host):"
-echo "  CPUs: $USABLE_CPU cores"
-echo "  RAM: $USABLE_RAM GB"
-echo "  Storage: $USABLE_STORAGE GB"
+echo "Usable Resources (80% of available, 20% reserved):"
+echo "  CPU: $USABLE_CPU cores"
+echo "  RAM: ${USABLE_RAM}GB"
+echo "  Storage: ${USABLE_STORAGE}GB"
 echo ""
 
-# Suggest control plane configuration (odd number, 1 per server recommended)
+# =============================================================================
+# Dynamic VM Configuration Calculation
+# =============================================================================
+
+echo "========================================"
+echo "Calculating Optimal VM Configuration"
+echo "========================================"
+echo ""
+
+# Control planes: 1 per server for HA (odd total)
 CP_COUNT=$SERVER_COUNT
 if [ $((CP_COUNT % 2)) -eq 0 ]; then
-    CP_COUNT=$((CP_COUNT + 1))  # Make it odd
+    CP_COUNT=$((CP_COUNT + 1))
 fi
 
-# Control planes: 4 cores, 8GB RAM each
-CP_CPU=4
-CP_RAM=8
-CP_OS_DISK=50
-CP_DATA_DISK=100
+# Dynamically size control planes based on available resources
+# Minimum: 2 cores, 4GB RAM
+# Target: 4 cores, 8GB RAM
+# Maximum: 8 cores, 16GB RAM
+
+if [ "$USABLE_CPU" -lt $((CP_COUNT * 4)) ] || [ "$USABLE_RAM" -lt $((CP_COUNT * 8)) ]; then
+    # Constrained resources - use smaller CPs
+    CP_CPU=2
+    CP_RAM=4
+    echo "⚠️  Limited resources detected - using minimal control plane size"
+elif [ "$USABLE_CPU" -ge $((CP_COUNT * 8)) ] && [ "$USABLE_RAM" -ge $((CP_COUNT * 16)) ]; then
+    # Abundant resources - use larger CPs
+    CP_CPU=8
+    CP_RAM=16
+    echo "✓ Abundant resources - using enhanced control plane size"
+else
+    # Standard configuration
+    CP_CPU=4
+    CP_RAM=8
+    echo "✓ Standard resources - using recommended control plane size"
+fi
+
+# Disk sizing based on available storage
+if [ "$(echo "$USABLE_STORAGE > 500" | bc)" -eq 1 ]; then
+    CP_OS_DISK=50
+    CP_DATA_DISK=100
+else
+    CP_OS_DISK=30
+    CP_DATA_DISK=50
+    echo "⚠️  Limited storage - reducing disk sizes"
+fi
 
 # Calculate remaining resources after control planes
 REMAINING_CPU=$((USABLE_CPU - (CP_COUNT * CP_CPU)))
 REMAINING_RAM=$((USABLE_RAM - (CP_COUNT * CP_RAM)))
 
-# Suggest worker configuration
-# Workers: 8 cores, 16GB RAM each (standard)
-WORKER_CPU=8
-WORKER_RAM=16
-WORKER_OS_DISK=100
-WORKER_DATA_DISK=0  # Optional
+echo ""
+echo "After allocating $CP_COUNT control planes:"
+echo "  Remaining CPU: $REMAINING_CPU cores"
+echo "  Remaining RAM: ${REMAINING_RAM}GB"
+echo ""
 
-# How many workers can we fit?
-WORKERS_BY_CPU=$((REMAINING_CPU / WORKER_CPU))
-WORKERS_BY_RAM=$((REMAINING_RAM / WORKER_RAM))
+# Dynamically size workers based on remaining resources
+# Calculate optimal worker size to maximize utilization
+
+# Start with target worker size based on total cluster capacity
+AVG_CPU_PER_SERVER=$((TOTAL_CPU / SERVER_COUNT))
+
+if [ "$AVG_CPU_PER_SERVER" -le 8 ]; then
+    # Small servers: smaller workers
+    TARGET_WORKER_CPU=4
+    TARGET_WORKER_RAM=8
+elif [ "$AVG_CPU_PER_SERVER" -ge 24 ]; then
+    # Large servers: larger workers for better efficiency
+    TARGET_WORKER_CPU=8
+    TARGET_WORKER_RAM=16
+else
+    # Medium servers: standard workers
+    TARGET_WORKER_CPU=8
+    TARGET_WORKER_RAM=16
+fi
+
+# Calculate how many workers we can fit
+WORKERS_BY_CPU=$((REMAINING_CPU / TARGET_WORKER_CPU))
+WORKERS_BY_RAM=$((REMAINING_RAM / TARGET_WORKER_RAM))
+
 WORKER_COUNT=$WORKERS_BY_CPU
-if [ $WORKERS_BY_RAM -lt $WORKER_COUNT ]; then
+if [ "$WORKERS_BY_RAM" -lt "$WORKER_COUNT" ]; then
     WORKER_COUNT=$WORKERS_BY_RAM
 fi
 
-# Cap at reasonable number
-if [ $WORKER_COUNT -gt 10 ]; then
-    WORKER_COUNT=10
+# If we can't fit any workers, try smaller size
+if [ "$WORKER_COUNT" -eq 0 ]; then
+    TARGET_WORKER_CPU=2
+    TARGET_WORKER_RAM=4
+    WORKERS_BY_CPU=$((REMAINING_CPU / TARGET_WORKER_CPU))
+    WORKERS_BY_RAM=$((REMAINING_RAM / TARGET_WORKER_RAM))
+    WORKER_COUNT=$WORKERS_BY_CPU
+    if [ "$WORKERS_BY_RAM" -lt "$WORKER_COUNT" ]; then
+        WORKER_COUNT=$WORKERS_BY_RAM
+    fi
+    echo "⚠️  Adjusting worker size to fit: ${TARGET_WORKER_CPU} cores, ${TARGET_WORKER_RAM}GB RAM"
 fi
 
+# Cap at reasonable maximum
+if [ "$WORKER_COUNT" -gt 20 ]; then
+    WORKER_COUNT=20
+    echo "⚠️  Capping workers at 20 for manageability"
+fi
+
+WORKER_CPU=$TARGET_WORKER_CPU
+WORKER_RAM=$TARGET_WORKER_RAM
+
+# Worker disk sizing
+if [ "$(echo "$USABLE_STORAGE > 1000" | bc)" -eq 1 ]; then
+    WORKER_OS_DISK=100
+    WORKER_DATA_DISK=200
+elif [ "$(echo "$USABLE_STORAGE > 500" | bc)" -eq 1 ]; then
+    WORKER_OS_DISK=80
+    WORKER_DATA_DISK=100
+else
+    WORKER_OS_DISK=50
+    WORKER_DATA_DISK=0
+    echo "⚠️  Limited storage - workers will not have data disks"
+fi
+
+# Calculate actual utilization
+TOTAL_CPU_ALLOCATED=$((CP_COUNT * CP_CPU + WORKER_COUNT * WORKER_CPU))
+TOTAL_RAM_ALLOCATED=$((CP_COUNT * CP_RAM + WORKER_COUNT * WORKER_RAM))
+
+CPU_UTIL=$(echo "scale=1; $TOTAL_CPU_ALLOCATED * 100 / $USABLE_CPU" | bc)
+RAM_UTIL=$(echo "scale=1; $TOTAL_RAM_ALLOCATED * 100 / $USABLE_RAM" | bc)
+
+echo ""
 echo "========================================"
 echo "RECOMMENDED CONFIGURATION"
 echo "========================================"
 echo ""
-echo "Control Planes: $CP_COUNT (1 per server for HA)"
-echo "  - $CP_CPU cores, $CP_RAM GB RAM per node"
-echo "  - OS Disk: $CP_OS_DISK GB, Data Disk: $CP_DATA_DISK GB"
-echo "  - Total: $((CP_COUNT * CP_CPU)) cores, $((CP_COUNT * CP_RAM)) GB RAM"
+echo "Control Planes: $CP_COUNT"
+echo "  Resources: ${CP_CPU} cores, ${CP_RAM}GB RAM each"
+echo "  Disks: OS=${CP_OS_DISK}GB, Data=${CP_DATA_DISK}GB"
+echo "  Total: $((CP_COUNT * CP_CPU)) cores, $((CP_COUNT * CP_RAM))GB RAM"
 echo ""
 echo "Workers: $WORKER_COUNT"
-echo "  - $WORKER_CPU cores, $WORKER_RAM GB RAM per node"
-echo "  - OS Disk: $WORKER_OS_DISK GB, Data Disk: $WORKER_DATA_DISK GB (optional)"
-echo "  - Total: $((WORKER_COUNT * WORKER_CPU)) cores, $((WORKER_COUNT * WORKER_RAM)) GB RAM"
+echo "  Resources: ${WORKER_CPU} cores, ${WORKER_RAM}GB RAM each"
+echo "  Disks: OS=${WORKER_OS_DISK}GB, Data=${WORKER_DATA_DISK}GB"
+echo "  Total: $((WORKER_COUNT * WORKER_CPU)) cores, $((WORKER_COUNT * WORKER_RAM))GB RAM"
 echo ""
-echo "TOTAL ALLOCATION:"
-echo "  CPUs: $((CP_COUNT * CP_CPU + WORKER_COUNT * WORKER_CPU)) / $USABLE_CPU cores"
-echo "  RAM: $((CP_COUNT * CP_RAM + WORKER_COUNT * WORKER_RAM)) / $USABLE_RAM GB"
+echo "CLUSTER TOTALS:"
+echo "  VMs: $((CP_COUNT + WORKER_COUNT))"
+echo "  CPU: ${TOTAL_CPU_ALLOCATED}/${USABLE_CPU} cores (${CPU_UTIL}% utilization)"
+echo "  RAM: ${TOTAL_RAM_ALLOCATED}/${USABLE_RAM}GB (${RAM_UTIL}% utilization)"
+echo ""
+
+# Warn if utilization is too high or too low
+if [ "$(echo "$CPU_UTIL > 90" | bc)" -eq 1 ] || [ "$(echo "$RAM_UTIL > 90" | bc)" -eq 1 ]; then
+    echo "⚠️  WARNING: High resource utilization - consider reducing VMs or adding capacity"
+elif [ "$(echo "$CPU_UTIL < 40" | bc)" -eq 1 ] && [ "$(echo "$RAM_UTIL < 40" | bc)" -eq 1 ]; then
+    echo "💡 Low utilization - you could add more workers or increase VM sizes"
+else
+    echo "✓ Good resource utilization"
+fi
 echo ""
 
 # =============================================================================
@@ -230,9 +326,31 @@ echo ""
 read -p "Generate terraform.tfvars with this configuration? (yes/no): " GENERATE
 
 if [[ "$GENERATE" != "yes" ]]; then
-    echo "Configuration not generated. You can re-run this script anytime."
+    echo "Configuration not saved. Re-run script to try again."
     exit 0
 fi
+
+# Collect API credentials for terraform.tfvars
+echo ""
+echo "========================================"
+echo "API Credentials for Terraform"
+echo "========================================"
+echo ""
+echo "Terraform needs API tokens for each Proxmox server."
+echo "See README.md for setup instructions."
+echo ""
+
+declare -A API_TOKENS
+
+for NODE in "${!PROXMOX_SERVERS[@]}"; do
+    IFS='@' read -r USER HOST <<< "${PROXMOX_SERVERS[$NODE]}"
+    echo "--- $NODE ($HOST) ---"
+    read -p "API token ID (e.g., terraform@pve!terraform): " TOKEN_ID
+    read -s -p "API token secret: " TOKEN_SECRET
+    echo ""
+    API_TOKENS["$NODE"]="$TOKEN_ID|$TOKEN_SECRET|$HOST"
+    echo ""
+done
 
 echo ""
 echo "Generating terraform.tfvars..."
@@ -241,6 +359,17 @@ cat > "$SCRIPT_DIR/terraform.tfvars" <<EOF
 # =============================================================================
 # Auto-generated by recommend-cluster.sh
 # Generated: $(date)
+#
+# Cluster Capacity:
+#   - Servers: $SERVER_COUNT
+#   - Total CPU: $TOTAL_CPU cores ($USABLE_CPU usable)
+#   - Total RAM: ${TOTAL_RAM}GB (${USABLE_RAM}GB usable)
+#   - Total Storage: ${TOTAL_STORAGE}GB (${USABLE_STORAGE}GB usable)
+#
+# Recommended Configuration:
+#   - Control Planes: $CP_COUNT x (${CP_CPU} cores, ${CP_RAM}GB RAM)
+#   - Workers: $WORKER_COUNT x (${WORKER_CPU} cores, ${WORKER_RAM}GB RAM)
+#   - Utilization: CPU ${CPU_UTIL}%, RAM ${RAM_UTIL}%
 # =============================================================================
 
 # =============================================================================
@@ -251,10 +380,9 @@ proxmox_servers = {
 EOF
 
 # Add each Proxmox server
-SERVER_INDEX=1
 for NODE in "${!NODE_RESOURCES[@]}"; do
-    IFS='|' read -r CPU RAM FREE_RAM STORAGE STORAGE_NAME <<< "${NODE_RESOURCES[$NODE]}"
-    IFS='|' read -r HOST TOKEN_ID TOKEN_SECRET <<< "${PROXMOX_SERVERS[$NODE]}"
+    IFS='|' read -r CPU_TOTAL CPU_AVAIL RAM_TOTAL RAM_AVAIL STOR_TOTAL STOR_AVAIL STOR_NAME <<< "${NODE_RESOURCES[$NODE]}"
+    IFS='|' read -r TOKEN_ID TOKEN_SECRET HOST <<< "${API_TOKENS[$NODE]}"
 
     cat >> "$SCRIPT_DIR/terraform.tfvars" <<EOF
   "$NODE" = {
@@ -263,17 +391,11 @@ for NODE in "${!NODE_RESOURCES[@]}"; do
     api_token_secret = "$TOKEN_SECRET"
     node_name        = "$NODE"
     tls_insecure     = true
-    storage_os       = "$STORAGE_NAME"
-    storage_data     = "$STORAGE_NAME"
+    storage_os       = "${STOR_NAME}-lvm"
+    storage_data     = "${STOR_NAME}-lvm"
     network_bridge   = "vmbr0"
   }
 EOF
-
-    if [ $SERVER_INDEX -lt $SERVER_COUNT ]; then
-        echo "" >> "$SCRIPT_DIR/terraform.tfvars"
-    fi
-
-    SERVER_INDEX=$((SERVER_INDEX + 1))
 done
 
 cat >> "$SCRIPT_DIR/terraform.tfvars" <<'EOF'
@@ -304,7 +426,7 @@ cluster_name        = "talos-cluster"
 control_planes = [
 EOF
 
-# Generate control plane VMs
+# Generate control plane VMs with distribution across nodes
 NODE_ARRAY=(${!NODE_RESOURCES[@]})
 for i in $(seq 1 $CP_COUNT); do
     NODE_INDEX=$(( (i - 1) % SERVER_COUNT ))
@@ -339,7 +461,7 @@ cat >> "$SCRIPT_DIR/terraform.tfvars" <<'EOF'
 workers = [
 EOF
 
-# Generate worker VMs
+# Generate worker VMs with smart distribution
 for i in $(seq 1 $WORKER_COUNT); do
     NODE_INDEX=$(( (i - 1) % SERVER_COUNT ))
     NODE="${NODE_ARRAY[$NODE_INDEX]}"
@@ -369,6 +491,7 @@ cat >> "$SCRIPT_DIR/terraform.tfvars" <<'EOF'
 # =============================================================================
 # GPU Worker Configuration (Optional)
 # =============================================================================
+# Uncomment and configure if you have GPUs
 
 # gpu_workers = [
 #   {
@@ -389,40 +512,24 @@ EOF
 echo ""
 echo "✓ Generated: terraform.tfvars"
 echo ""
-echo "========================================"
-echo "Next Steps"
-echo "========================================"
-echo ""
-echo "1. Review and customize terraform.tfvars:"
-echo "   nano terraform.tfvars"
-echo ""
-echo "2. Adjust IP addresses if needed (default: 192.168.10.0/24)"
-echo ""
-echo "3. Add GPU workers if you have GPUs (uncomment and configure)"
-echo ""
-echo "4. Initialize and apply Terraform:"
-echo "   terraform init"
-echo "   terraform plan"
-echo "   terraform apply"
-echo ""
-echo "5. Configure DHCP reservations:"
-echo "   terraform output dhcp_reservations_table"
-echo ""
+
+# =============================================================================
+# Show per-server allocation
+# =============================================================================
 
 echo "========================================"
-echo "Resource Utilization"
+echo "VM Distribution Across Servers"
 echo "========================================"
 echo ""
 
 for NODE in "${!NODE_RESOURCES[@]}"; do
-    IFS='|' read -r CPU RAM FREE_RAM STORAGE STORAGE_NAME <<< "${NODE_RESOURCES[$NODE]}"
+    IFS='|' read -r CPU_TOTAL CPU_AVAIL RAM_TOTAL RAM_AVAIL STOR_TOTAL STOR_AVAIL STOR_NAME <<< "${NODE_RESOURCES[$NODE]}"
 
-    # Calculate VMs on this node
     VMS_ON_NODE=0
     CPU_ALLOCATED=0
     RAM_ALLOCATED=0
 
-    # Count control planes
+    # Count control planes on this node
     for i in $(seq 1 $CP_COUNT); do
         NODE_INDEX=$(( (i - 1) % SERVER_COUNT ))
         if [ "${NODE_ARRAY[$NODE_INDEX]}" == "$NODE" ]; then
@@ -432,7 +539,7 @@ for NODE in "${!NODE_RESOURCES[@]}"; do
         fi
     done
 
-    # Count workers
+    # Count workers on this node
     for i in $(seq 1 $WORKER_COUNT); do
         NODE_INDEX=$(( (i - 1) % SERVER_COUNT ))
         if [ "${NODE_ARRAY[$NODE_INDEX]}" == "$NODE" ]; then
@@ -442,12 +549,30 @@ for NODE in "${!NODE_RESOURCES[@]}"; do
         fi
     done
 
-    CPU_PERCENT=$(echo "scale=1; $CPU_ALLOCATED / $CPU * 100" | bc)
-    RAM_PERCENT=$(echo "scale=1; $RAM_ALLOCATED / $RAM * 100" | bc)
+    CPU_PERCENT=$(echo "scale=1; $CPU_ALLOCATED * 100 / $CPU_TOTAL" | bc)
+    RAM_PERCENT=$(echo "scale=1; $RAM_ALLOCATED * 100 / $RAM_TOTAL" | bc)
 
     echo "$NODE:"
     echo "  VMs: $VMS_ON_NODE"
-    echo "  CPU: ${CPU_ALLOCATED}/${CPU} cores (${CPU_PERCENT}%)"
-    echo "  RAM: ${RAM_ALLOCATED}/${RAM} GB (${RAM_PERCENT}%)"
+    echo "  CPU: ${CPU_ALLOCATED}/${CPU_TOTAL} cores (${CPU_PERCENT}%)"
+    echo "  RAM: ${RAM_ALLOCATED}/${RAM_TOTAL}GB (${RAM_PERCENT}%)"
     echo ""
 done
+
+echo "========================================"
+echo "Next Steps"
+echo "========================================"
+echo ""
+echo "1. Review terraform.tfvars (optional customization):"
+echo "   nano terraform.tfvars"
+echo ""
+echo "2. Verify network settings (default: 192.168.10.0/24)"
+echo ""
+echo "3. Deploy with Terraform:"
+echo "   terraform init"
+echo "   terraform plan"
+echo "   terraform apply"
+echo ""
+echo "4. Configure DHCP reservations:"
+echo "   terraform output dhcp_reservations_table"
+echo ""
