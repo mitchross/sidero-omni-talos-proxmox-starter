@@ -1,0 +1,34 @@
+# Terraform
+*.tfstate
+*.tfstate.*
+*.tfvars
+!terraform.tfvars.example
+.terraform/
+.terraform.lock.hcl
+terraform.tfplan
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Generated files
+bootstrap/generated-cluster-template.yaml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Kubernetes
+*.kubeconfig
+kubeconfig
+
+# Secrets
+*.pem
+*.key
+*.crt
+secrets/

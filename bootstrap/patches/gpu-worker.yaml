@@ -1,0 +1,87 @@
+apiVersion: v1alpha1
+kind: MachinePatch
+metadata:
+  name: gpu-worker-patch
+  namespace: default
+spec:
+  description: "Configuration patch for GPU-enabled Talos worker nodes"
+  
+  # Machine configuration patches
+  machine:
+    type: worker
+    kubelet:
+      nodeIP:
+        validSubnets:
+          - 0.0.0.0/0
+      extraArgs:
+        rotate-server-certificates: "true"
+        feature-gates: "DevicePlugins=true"
+      extraMounts:
+        - destination: /var/lib/longhorn
+          type: bind
+          source: /var/lib/longhorn
+          options:
+            - bind
+            - rshared
+            - rw
+    
+    # System disk configuration
+    install:
+      disk: /dev/sda
+      image: ghcr.io/siderolabs/installer:v1.7.0
+      wipe: false
+      extensions:
+        - image: ghcr.io/siderolabs/nvidia-container-toolkit:latest
+        - image: ghcr.io/siderolabs/nonfree-kmod-nvidia:latest
+    
+    # Network configuration
+    network:
+      hostname: ""
+      interfaces:
+        - interface: eth0
+          dhcp: true
+    
+    # Time sync
+    time:
+      servers:
+        - time.cloudflare.com
+    
+    # Features
+    features:
+      rbac: true
+      stableHostname: true
+    
+    # System extensions for GPU and storage
+    kernel:
+      modules:
+        - name: iscsi_tcp
+        - name: nvme-tcp
+        - name: nvidia
+        - name: nvidia_uvm
+        - name: nvidia_drm
+        - name: nvidia_modeset
+    
+    # Systemd units for NVIDIA
+    files:
+      - content: |
+          [Unit]
+          Description=Load NVIDIA modules
+          After=system.slice
+          
+          [Service]
+          Type=oneshot
+          RemainAfterExit=yes
+          ExecStart=/sbin/modprobe nvidia
+          ExecStart=/sbin/modprobe nvidia_uvm
+          ExecStart=/sbin/modprobe nvidia_drm
+          ExecStart=/sbin/modprobe nvidia_modeset
+          
+          [Install]
+          WantedBy=multi-user.target
+        path: /etc/systemd/system/nvidia-modules.service
+        permissions: 0644
+  
+  # Cluster configuration patches
+  cluster:
+    network:
+      cni: flannel
