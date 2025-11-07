@@ -136,18 +136,26 @@ while IFS= read -r tf_machine; do
 
     # Search for matching machine in Omni by MAC address
     # MAC addresses are in .spec.network.networklinks[].hardwareaddress
+    # Use 'first' to ensure we only get one match even if multiple interfaces exist
     OMNI_MATCH=$(echo "${OMNI_MACHINES}" | jq --arg mac "$TF_MAC" '
-        .[] |
-        select(.spec.network.networklinks[]? | .hardwareaddress | ascii_upcase == $mac)
+        [.[] | select(.spec.network.networklinks[]? | .hardwareaddress | ascii_upcase == $mac)] | first
     ')
 
-    if [[ -n "${OMNI_MATCH}" ]]; then
+    if [[ -n "${OMNI_MATCH}" && "${OMNI_MATCH}" != "null" ]]; then
         OMNI_UUID=$(echo "${OMNI_MATCH}" | jq -r '.metadata.id')
         OMNI_NAME=$(echo "${OMNI_MATCH}" | jq -r '.metadata.name // .metadata.id')
 
         echo "✓ Matched: ${TF_HOSTNAME} (${TF_MAC}) -> Omni UUID: ${OMNI_UUID}"
 
-        # Create matched entry
+        # Create matched entry - use safer method to pass JSON
+        TF_DATA=$(echo "${tf_machine}" | jq -c '.value')
+        OMNI_DATA=$(echo "${OMNI_MATCH}" | jq -c '.')
+
+        if [[ -z "${TF_DATA}" || "${TF_DATA}" == "null" || -z "${OMNI_DATA}" || "${OMNI_DATA}" == "null" ]]; then
+            echo "  ⚠️  Warning: Failed to extract JSON data for ${TF_HOSTNAME}, skipping..."
+            continue
+        fi
+
         MATCHED_ENTRY=$(jq -n \
             --arg tf_name "$TF_NAME" \
             --arg tf_hostname "$TF_HOSTNAME" \
@@ -156,8 +164,8 @@ while IFS= read -r tf_machine; do
             --arg tf_role "$TF_ROLE" \
             --arg omni_uuid "$OMNI_UUID" \
             --arg omni_name "$OMNI_NAME" \
-            --argjson tf_data "$(echo "${tf_machine}" | jq '.value')" \
-            --argjson omni_data "${OMNI_MATCH}" \
+            --argjson tf_data "$TF_DATA" \
+            --argjson omni_data "$OMNI_DATA" \
             '{
                 terraform_name: $tf_name,
                 hostname: $tf_hostname,
@@ -168,10 +176,16 @@ while IFS= read -r tf_machine; do
                 omni_name: $omni_name,
                 terraform_data: $tf_data,
                 omni_data: $omni_data
-            }'
+            }' 2>&1
         )
 
-        MATCHED_MACHINES=$(echo "${MATCHED_MACHINES}" | jq ". + [${MATCHED_ENTRY}]")
+        if [[ $? -ne 0 ]]; then
+            echo "  ⚠️  Warning: Failed to create matched entry for ${TF_HOSTNAME}, skipping..."
+            echo "  Error: ${MATCHED_ENTRY}"
+            continue
+        fi
+
+        MATCHED_MACHINES=$(echo "${MATCHED_MACHINES}" | jq ". + [$MATCHED_ENTRY]")
     else
         echo "⚠️  Not found in Omni: ${TF_HOSTNAME} (${TF_MAC})"
         UNMATCHED_TERRAFORM=$(echo "${UNMATCHED_TERRAFORM}" | jq ". + [${tf_machine}]")
