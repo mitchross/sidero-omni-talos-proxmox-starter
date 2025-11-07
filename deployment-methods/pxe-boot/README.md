@@ -187,13 +187,78 @@ Then follow steps 4-6 above for booting VMs.
 
 ## Troubleshooting
 
+### iPXE Stalls at "Configuring" - Can't Get IP Address
+
+**Symptoms**:
+- VMs boot to iPXE successfully
+- iPXE shows "Configuring (net0 MAC:ADDRESS)......" and stalls
+- Eventually times out and reboots
+- Booter logs show DHCP proxy responses but NO HTTP/TFTP GET requests
+
+**Root Cause**: Firewalla (or your DHCP server) is not assigning IP addresses to the VMs. Without an IP, iPXE cannot proceed.
+
+**Solutions**:
+
+1. **Check DHCP Server Logs/Leases**:
+   ```bash
+   # In Firewalla, check if VMs are getting DHCP leases
+   # Look for VM MAC addresses (bc:24:11:xx:xx:xx) in DHCP leases
+   ```
+   - If no leases: DHCP server isn't seeing requests or is blocking them
+   - If leases exist but VMs still failing: Network connectivity issue
+
+2. **Verify VMs are on Correct Network**:
+   - Check Proxmox VM → Hardware → Network Device
+   - Should be on same bridge as Booter server (e.g., vmbr0)
+   - Should be on same subnet (e.g., 192.168.10.x/24)
+   - **Common issue**: VMs on isolated/different VLAN from Booter
+
+3. **Check DHCP Scope/Pool**:
+   - Ensure Firewalla DHCP pool has available IPs
+   - DHCP range should cover the VM subnet
+   - Check for IP exhaustion
+
+4. **Test with Manual DHCP Reservation**:
+   ```bash
+   # In Firewalla: Create static DHCP reservation for one test VM
+   # MAC: bc:24:11:01:00:00 (or your VM's MAC)
+   # IP: 192.168.10.150 (or unused IP in your range)
+   ```
+   - If this works: Dynamic DHCP has issues
+   - If this fails: Network connectivity problem
+
+5. **Check for MAC Filtering**:
+   - Some routers/firewalls filter unknown MAC addresses
+   - Firewalla: Check if MAC filtering is enabled
+   - Add VM MAC addresses to allowed list if needed
+
+6. **Verify Network Connectivity**:
+   ```bash
+   # From Booter host (192.168.10.15)
+   ping 192.168.10.1  # Gateway/Firewalla
+
+   # Check if Booter can reach Proxmox network
+   ping <proxmox-host-ip>
+   ```
+
+7. **Check Proxmox Network Bridge**:
+   ```bash
+   # On Proxmox host
+   brctl show  # List bridges
+   ip addr show vmbr0  # Check bridge config
+   ```
+   - Ensure vmbr0 (or your bridge) is up and connected to physical network
+   - VMs must use same bridge as Booter's network path
+
+**If nothing works**, see "Alternative: Use DHCP Options" section below for fallback method.
+
 ### VMs Don't PXE Boot
 
 **Symptoms**: VMs don't boot from network, show "No bootable device" or boot to disk
 
 **Solutions**:
 
-1. **⚠️ Check for Conflicting DHCP Options (Most Common Issue)**:
+1. **⚠️ Check for Conflicting DHCP Options (Different Issue)**:
    - If you have DHCP Option 66 or 67 configured in your router/DHCP server, **remove them**
    - Booter acts as a DHCP proxy and will conflict with manual PXE options
    - Firewalla: Settings → Advanced → DHCP Options → Remove Option 66/67
@@ -275,6 +340,86 @@ Then follow steps 4-6 above for booting VMs.
 2. **Check Network Bandwidth**: TFTP is slow over high-latency links
 3. **Consider ISO Boot**: For slow networks, use `boot_method = "iso"` instead
 
+## Alternative: Use DHCP Options (Fallback Method)
+
+If the DHCP proxy approach isn't working (VMs can't get IP from DHCP server), you can configure your DHCP server to explicitly tell PXE clients where to find the boot server.
+
+**When to use this**:
+- DHCP proxy method not working
+- VMs stuck at iPXE configuration
+- Network isolation issues
+- Prefer explicit configuration over proxy auto-discovery
+
+### Configure Firewalla DHCP Options
+
+1. **Login to Firewalla**
+
+2. **Navigate to DHCP Settings**:
+   - Settings → Advanced → DHCP Options
+   - Or: Network → Your Network → DHCP Settings
+
+3. **Add DHCP Option 66** (TFTP Server):
+   ```
+   Option Number: 66
+   Type: IP Address
+   Value: 192.168.10.15  (your Booter host IP)
+   ```
+
+4. **Add DHCP Option 67** (Boot Filename):
+   ```
+   Option Number: 67
+   Type: String
+   Value: undionly.kpxe
+   ```
+
+5. **Save and Restart DHCP Service**
+
+6. **Restart VMs**: They should now PXE boot successfully
+
+### Configure Other DHCP Servers
+
+**pfSense/OPNsense**:
+```
+Services → DHCP Server → Your Network
+→ Additional BOOTP/DHCP Options:
+
+Number: 66
+Type: IP Address
+Value: 192.168.10.15
+
+Number: 67
+Type: String
+Value: undionly.kpxe
+```
+
+**ISC DHCP (Linux)**:
+```
+subnet 192.168.10.0 netmask 255.255.255.0 {
+  option tftp-server-name "192.168.10.15";
+  option bootfile-name "undionly.kpxe";
+  next-server 192.168.10.15;
+}
+```
+
+**Mikrotik**:
+```
+/ip dhcp-server option
+add code=66 name=tftp-server value="'192.168.10.15'"
+add code=67 name=boot-file value="'undionly.kpxe'"
+
+/ip dhcp-server network
+set [find] dhcp-option=tftp-server,boot-file
+```
+
+**Note**: If using this method, you may need to restart or disable Booter's DHCP proxy to avoid conflicts:
+```bash
+# Edit docker-compose.yml and add environment variable
+environment:
+  - DISABLE_DHCP_PROXY=true
+
+# Or just rely on your DHCP server options and let Booter serve files
+```
+
 ## Next Steps
 
 After VMs boot and appear in Omni:
@@ -305,25 +450,35 @@ After VMs boot and appear in Omni:
 │   VMs (Proxmox) │
 │   PXE Boot      │
 └────────┬────────┘
-         │ DHCP Request
+         │ DHCP Request (broadcast)
          ▼
-┌─────────────────┐
-│  DHCP Server    │◄── Option 66: Booter IP
-│  (Firewalla)    │    Option 67: undionly.kpxe
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Sidero Booter  │◄── Serves iPXE, Talos kernel/initramfs
-│  :69 (TFTP)     │
-│  :8081 (HTTP)   │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Sidero Omni    │◄── SideroLink (:8090)
-│  Cluster Mgmt   │    Machine discovery
-└─────────────────┘    Cluster provisioning
+┌─────────────────┐         ┌─────────────────┐
+│  DHCP Server    │         │  Sidero Booter  │
+│  (Firewalla)    │         │  (DHCP Proxy)   │
+│  Assigns IP     │         │  Port :67       │
+└────────┬────────┘         └────────┬────────┘
+         │                           │
+         └──────────┬────────────────┘
+                    │ VM gets IP + PXE boot info
+                    ▼
+         ┌─────────────────┐
+         │  VM (iPXE)      │
+         │  Downloads boot │
+         │  files via TFTP │
+         └────────┬────────┘
+                  │ HTTP/TFTP requests
+                  ▼
+         ┌─────────────────┐
+         │  Sidero Booter  │◄── Serves Talos kernel/initramfs
+         │  :69 (TFTP)     │
+         │  :8081 (HTTP)   │
+         └────────┬────────┘
+                  │ Boots into Talos
+                  ▼
+         ┌─────────────────┐
+         │  Sidero Omni    │◄── SideroLink (:8090)
+         │  Cluster Mgmt   │    Machine discovery
+         └─────────────────┘    Cluster provisioning
 ```
 
 ## References
