@@ -148,6 +148,7 @@ patches:
           management-ip: 192.168.10.120
           node-role: control-plane
           topology.kubernetes.io/zone: proxmox
+          topology.proxmox.io/node: pve1
   - idOverride: 401-cm-abc123-control-plane-config
     annotations:
       name: control-plane-config
