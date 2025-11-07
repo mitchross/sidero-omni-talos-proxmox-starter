@@ -158,8 +158,8 @@ echo ""
 echo "Checking machine status..."
 echo ""
 
-# Get machine status from Omni
-omnictl get machines -o wide || true
+# Get machine status from Omni (omnictl doesn't support -o wide, just use default output)
+omnictl get machines 2>/dev/null || echo "  (Use 'omnictl get machines' to view machine status)"
 
 echo ""
 
