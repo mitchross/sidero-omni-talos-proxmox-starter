@@ -57,10 +57,11 @@ echo "Configuration Preview"
 echo "======================================"
 echo ""
 
-# Count machines
-CONTROL_COUNT=$(grep -A 100 "^kind: ControlPlane" "${CLUSTER_TEMPLATE}" | grep -c "^  - " || true)
-WORKER_COUNT=$(grep -A 100 "^kind: Workers" "${CLUSTER_TEMPLATE}" | grep "^name: workers" -A 100 | grep -c "^  - " || true)
-GPU_COUNT=$(grep -A 100 "^kind: Workers" "${CLUSTER_TEMPLATE}" | grep "^name: gpu-workers" -A 100 | grep -c "^  - " || true)
+# Count machines (match only UUID lines, not patch lines)
+# UUIDs have format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (8-4-4-4-12 hex digits)
+CONTROL_COUNT=$(grep -A 100 "^kind: ControlPlane" "${CLUSTER_TEMPLATE}" | grep "^  - [0-9a-f]\{8\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{12\}" | wc -l || true)
+WORKER_COUNT=$(grep -A 100 "^kind: Workers" "${CLUSTER_TEMPLATE}" | grep "^name: workers" -A 100 | grep "^  - [0-9a-f]\{8\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{12\}" | wc -l || true)
+GPU_COUNT=$(grep -A 100 "^kind: Workers" "${CLUSTER_TEMPLATE}" | grep "^name: gpu-workers" -A 100 | grep "^  - [0-9a-f]\{8\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{12\}" | wc -l || true)
 
 echo "Cluster Template: ${CLUSTER_TEMPLATE}"
 echo ""
