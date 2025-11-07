@@ -1,0 +1,90 @@
+# =============================================================================
+# Omni Infrastructure Provider for Proxmox - Configuration
+# =============================================================================
+# Copy this file to config.yaml and fill in your Proxmox details:
+#   cp config.yaml.example config.yaml
+#   nano config.yaml
+
+proxmox:
+  # Proxmox API URL
+  # Format: https://PROXMOX_IP_OR_HOSTNAME:8006/api2/json
+  url: "https://192.168.10.160:8006/api2/json"
+
+  # Authentication
+  username: "root"                  # Proxmox username
+  password: "your-password-here"    # Proxmox password
+  realm: "pam"                      # Authentication realm
+                                    # - "pam" for root user
+                                    # - "pve" for Proxmox users (terraform@pve)
+
+  # SSL Certificate Validation
+  insecureSkipVerify: true          # Set to false if using valid SSL certs
+
+  # Optional: Default Storage Pool
+  # Uncomment to set a default storage pool for all VMs
+  # Can be overridden per machine class in Omni UI
+  # storage: "local-lvm"
+
+  # Optional: Default Network Bridge
+  # Uncomment to set a default network bridge
+  # Can be overridden per machine class in Omni UI
+  # bridge: "vmbr0"
+
+  # Optional: Default Proxmox Node
+  # Uncomment to set a default node
+  # Can be overridden per machine class in Omni UI
+  # node: "pve1"
+
+# =============================================================================
+# Security Best Practices
+# =============================================================================
+# - Store this file securely (contains Proxmox password)
+# - Do not commit config.yaml to git (it's in .gitignore)
+# - Consider using Proxmox API tokens instead of password
+# - Rotate passwords regularly
+
+# =============================================================================
+# Example Configurations
+# =============================================================================
+
+# Single Proxmox Server (Most Common):
+# proxmox:
+#   url: "https://192.168.10.160:8006/api2/json"
+#   username: "root"
+#   password: "supersecret123"
+#   realm: "pam"
+#   insecureSkipVerify: true
+
+# Using Proxmox User (Dedicated terraform@pve user):
+# proxmox:
+#   url: "https://192.168.10.160:8006/api2/json"
+#   username: "terraform@pve"
+#   password: "terraform-password"
+#   realm: "pve"
+#   insecureSkipVerify: true
+
+# Production with Valid SSL Cert:
+# proxmox:
+#   url: "https://proxmox.example.com:8006/api2/json"
+#   username: "root"
+#   password: "supersecret123"
+#   realm: "pam"
+#   insecureSkipVerify: false
+
+# =============================================================================
+# Troubleshooting
+# =============================================================================
+
+# Test Proxmox API connection:
+#   curl -k https://192.168.10.160:8006/api2/json/version
+
+# If connection fails:
+#   - Check Proxmox firewall (port 8006)
+#   - Verify URL is correct
+#   - Try from provider container:
+#     docker exec omni-proxmox-provider curl -k https://192.168.10.160:8006/api2/json/version
+
+# If authentication fails:
+#   - Verify username/password
+#   - Check realm (pam vs pve)
+#   - Ensure user has permissions in Proxmox
