@@ -58,11 +58,29 @@ echo "======================================"
 echo ""
 
 # Count machines (match only UUID lines, not patch lines)
+# Use awk to extract sections properly (grep -A 100 was grabbing too many lines)
 # UUIDs have format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (8-4-4-4-12 hex digits)
-# Anchor to end of line with $ to avoid matching UUIDs embedded in patch idOverrides
-CONTROL_COUNT=$(grep -A 100 "^kind: ControlPlane" "${CLUSTER_TEMPLATE}" | grep "^  - [0-9a-f]\{8\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{12\}$" | wc -l || true)
-WORKER_COUNT=$(grep -A 100 "^kind: Workers" "${CLUSTER_TEMPLATE}" | grep "^name: workers" -A 100 | grep "^  - [0-9a-f]\{8\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{12\}$" | wc -l || true)
-GPU_COUNT=$(grep -A 100 "^kind: Workers" "${CLUSTER_TEMPLATE}" | grep "^name: gpu-workers" -A 100 | grep "^  - [0-9a-f]\{8\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{12\}$" | wc -l || true)
+
+# ControlPlane section: from "kind: ControlPlane" to next "---"
+CONTROL_COUNT=$(awk '/^kind: ControlPlane$/,/^---$/' "${CLUSTER_TEMPLATE}" | grep -c "^  - [0-9a-f]\{8\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{12\}$" 2>/dev/null || echo 0)
+
+# Workers section with name: workers (not gpu-workers)
+WORKER_COUNT=$(awk '
+  /^kind: Workers$/ { in_workers=1; section=""; next }
+  in_workers && /^name: workers$/ { section="workers"; next }
+  in_workers && /^name: gpu-workers$/ { section="gpu"; next }
+  in_workers && section=="workers" && /^  - [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/ { print }
+  /^---$/ { in_workers=0; section="" }
+' "${CLUSTER_TEMPLATE}" | wc -l || echo 0)
+
+# Workers section with name: gpu-workers
+GPU_COUNT=$(awk '
+  /^kind: Workers$/ { in_workers=1; section=""; next }
+  in_workers && /^name: workers$/ { section="workers"; next }
+  in_workers && /^name: gpu-workers$/ { section="gpu"; next }
+  in_workers && section=="gpu" && /^  - [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/ { print }
+  /^---$/ { in_workers=0; section="" }
+' "${CLUSTER_TEMPLATE}" | wc -l || echo 0)
 
 echo "Cluster Template: ${CLUSTER_TEMPLATE}"
 echo ""
