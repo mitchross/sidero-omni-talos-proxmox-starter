@@ -90,10 +90,11 @@ echo ""
 
 echo "Querying Omni for registered machines..."
 
-# Get all machines from Omni in JSON format
-OMNI_MACHINES=$(omnictl get machines -o json 2>/dev/null)
+# Get all machine statuses from Omni in JSON format
+# Note: omnictl returns newline-delimited JSON, so we use jq -s to slurp into array
+OMNI_MACHINES=$(omnictl get machinestatus -o json 2>/dev/null | jq -s '.')
 
-if [[ -z "${OMNI_MACHINES}" ]]; then
+if [[ -z "${OMNI_MACHINES}" || "${OMNI_MACHINES}" == "[]" ]]; then
     echo "⚠️  No machines registered in Omni yet"
     echo ""
     echo "Wait for Talos VMs to boot and register with Omni."
@@ -103,7 +104,7 @@ if [[ -z "${OMNI_MACHINES}" ]]; then
     exit 1
 fi
 
-REGISTERED_COUNT=$(echo "${OMNI_MACHINES}" | jq '.items | length')
+REGISTERED_COUNT=$(echo "${OMNI_MACHINES}" | jq 'length')
 echo "✓ Found ${REGISTERED_COUNT} machines registered in Omni"
 echo ""
 
@@ -134,9 +135,10 @@ while IFS= read -r tf_machine; do
     TF_ROLE=$(echo "${tf_machine}" | jq -r '.value.role')
 
     # Search for matching machine in Omni by MAC address
+    # MAC addresses are in .spec.network.networklinks[].hardwareaddress
     OMNI_MATCH=$(echo "${OMNI_MACHINES}" | jq --arg mac "$TF_MAC" '
-        .items[] |
-        select(.spec.hardware.network[] | .hardwareAddress | ascii_upcase == $mac)
+        .[] |
+        select(.spec.network.networklinks[]? | .hardwareaddress | ascii_upcase == $mac)
     ')
 
     if [[ -n "${OMNI_MATCH}" ]]; then
