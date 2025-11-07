@@ -80,6 +80,7 @@ while IFS= read -r machine; do
     OMNI_UUID=$(echo "${machine}" | jq -r '.omni_uuid')
     IP_ADDRESS=$(echo "${machine}" | jq -r '.ip_address')
     ROLE=$(echo "${machine}" | jq -r '.role')
+    PROXMOX_NODE=$(echo "${machine}" | jq -r '.proxmox_server')
     GATEWAY=$(echo "${machine}" | jq -r '.terraform_data.gateway')
     DNS_SERVERS=$(echo "${machine}" | jq -r '.terraform_data.dns_servers | join("\",\"")' | sed 's/^/["/; s/$/"]/')
     HAS_DATA_DISK=$(echo "${machine}" | jq -r '.terraform_data.has_data_disk')
@@ -119,6 +120,7 @@ patches:
           management-ip: ${IP_ADDRESS}
           node-role: ${ROLE}
           topology.kubernetes.io/zone: proxmox
+          topology.proxmox.io/node: ${PROXMOX_NODE}
 EOF
 
     # Add GPU label for GPU workers
