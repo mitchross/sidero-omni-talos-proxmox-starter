@@ -136,10 +136,11 @@ resource "proxmox_vm_qemu" "control_plane" {
   boot = var.boot_method == "iso" ? "order=ide2;scsi0" : "order=net0;scsi0"
 
   # CD-ROM with Talos ISO (only for ISO boot method)
-  dynamic "cdrom" {
+  dynamic "disk" {
     for_each = var.boot_method == "iso" ? [1] : []
     content {
-      type = "iso"
+      type = "cdrom"
+      slot = "ide2"
       iso  = var.talos_iso
     }
   }
@@ -218,10 +219,11 @@ resource "proxmox_vm_qemu" "worker" {
   boot   = var.boot_method == "iso" ? "order=ide2;scsi0" : "order=net0;scsi0"
 
   # CD-ROM with Talos ISO (only for ISO boot method)
-  dynamic "cdrom" {
+  dynamic "disk" {
     for_each = var.boot_method == "iso" ? [1] : []
     content {
-      type = "iso"
+      type = "cdrom"
+      slot = "ide2"
       iso  = var.talos_iso
     }
   }
@@ -296,11 +298,12 @@ resource "proxmox_vm_qemu" "gpu_worker" {
   boot   = var.boot_method == "iso" ? "order=ide2;scsi0" : "order=net0;scsi0"
 
   # CD-ROM with Talos ISO (only for ISO boot method)
-  # Note: For GPU workers with PXE, ensure Booter serves GPU-enabled images
-  dynamic "cdrom" {
+  # Note: For GPU workers with ISO boot, use GPU-enabled ISO from Talos Image Factory
+  dynamic "disk" {
     for_each = var.boot_method == "iso" ? [1] : []
     content {
-      type = "iso"
+      type = "cdrom"
+      slot = "ide2"
       iso  = var.talos_iso
     }
   }
