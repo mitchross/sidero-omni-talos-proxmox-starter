@@ -420,28 +420,133 @@ environment:
 # Or just rely on your DHCP server options and let Booter serve files
 ```
 
-## Next Steps
+## Complete Workflow: Terraform + PXE Boot + Omni
 
-After VMs boot and appear in Omni:
+### Step 1: Create VMs with Terraform
 
-1. **Organize Machines**:
-   - Create machine classes
-   - Label machines by role (control-plane, worker, gpu-worker)
+```bash
+cd terraform
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars:
+#   - Set boot_method = "pxe"
+#   - Configure your Proxmox servers
+#   - Define control planes, workers, GPU workers
+terraform init
+terraform plan
+terraform apply
+```
 
-2. **Create Cluster**:
-   - Omni UI → Clusters → Create Cluster
-   - Select machines
-   - Configure cluster settings
+**Result**: VMs created in Proxmox, configured for PXE boot, with specific MAC addresses.
 
-3. **Monitor Installation**:
-   - Watch Omni install Talos to disk
-   - VMs will reboot and join the cluster
+### Step 2: Deploy Booter (Already Done ✅)
 
-4. **Access Cluster**:
-   ```bash
-   # Download kubeconfig from Omni
-   kubectl get nodes
-   ```
+Your working Booter configuration:
+```yaml
+services:
+  booter:
+    image: ghcr.io/siderolabs/booter:v0.3.0
+    container_name: sidero-booter
+    network_mode: host
+    restart: unless-stopped
+    command:
+      - "--api-advertise-address=192.168.10.15"
+      - "--dhcp-proxy-iface-or-ip=enp1s0"
+      - "--api-port=50084"
+      - "--extra-kernel-args=siderolink.api=https://omni.vanillax.me:8090/?jointoken=... talos.events.sink=[fdae:41e4:649b:9303::1]:8091 talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092"
+```
+
+**Result**: VMs PXE boot into Talos and register with Omni.
+
+### Step 3: Match Machines (Automation Scripts)
+
+At this point, VMs appear in Omni with UUIDs but no identifying information. **Use the automation scripts** to label them:
+
+```bash
+cd scripts
+
+# 1. Install prerequisites
+sudo apt-get install jq
+# Install omnictl from Omni UI or: https://www.siderolabs.com/omni/docs/cli/
+
+# 2. Configure omnictl
+omnictl config new
+# Follow prompts to connect to your Omni instance
+
+# 3. Discover and match machines by MAC address
+./discover-machines.sh
+# Matches Terraform inventory → Omni machines by MAC
+# Output: machine-data/matched-machines.json with UUID mappings
+
+# 4. Generate machine configurations
+./generate-machine-configs.sh
+# Creates YAML configs with:
+#   - Hostnames (e.g., talos-control-01)
+#   - Static IPs
+#   - Role labels (control-plane, worker, gpu-worker)
+#   - Disk configurations
+#   - GPU configurations (for GPU workers)
+
+# 5. Apply configurations to Omni
+./apply-machine-configs.sh
+# Applies labels, hostnames, and network configs
+```
+
+**Result**: Machines now show up in Omni with proper hostnames and labels instead of just UUIDs.
+
+### Step 4: Create Cluster in Omni
+
+**Option A: Via Omni UI (Recommended)**
+1. Go to Omni UI → Clusters → Create Cluster
+2. Machines now show with names like `talos-control-01` instead of UUIDs
+3. Select machines by role (control-plane, worker, gpu-worker)
+4. Configure cluster settings
+5. Create cluster
+
+**Option B: Via Cluster Template**
+```bash
+# Use the generated cluster template
+omnictl cluster template sync -f scripts/machine-configs/cluster-template.yaml
+```
+
+### Step 5: Monitor and Access
+
+```bash
+# Watch cluster creation
+omnictl get machines --watch
+
+# Download kubeconfig when ready
+omnictl kubeconfig > kubeconfig.yaml
+export KUBECONFIG=kubeconfig.yaml
+
+# Verify cluster
+kubectl get nodes
+kubectl get pods -A
+```
+
+## Why This Workflow?
+
+**Problem**: When VMs PXE boot into Omni, they appear with auto-generated UUIDs like `c1b495ae-4e67-4292-b78d-9354f6aae431`. You can't tell which UUID is which VM from Terraform.
+
+**Solution**: The automation scripts:
+1. Read Terraform outputs (VM names, MACs, IPs, roles)
+2. Query Omni API for registered machines
+3. **Match by MAC address** (Terraform knows MACs, Omni sees MACs)
+4. Apply labels and configurations so machines show up with proper names
+
+**Before Scripts**:
+```
+UUID                                  | Platform | CPU | RAM
+c1b495ae-4e67-4292-b78d-9354f6aae431 | metal    | 8   | 16GB
+7bfdca4c-6917-4279-bd38-4d5d7c174904 | metal    | 4   | 8GB
+```
+
+**After Scripts**:
+```
+Hostname            | Role          | IP              | Platform
+talos-control-01    | control-plane | 192.168.10.100  | metal
+talos-worker-01     | worker        | 192.168.10.110  | metal
+talos-worker-gpu-01 | gpu-worker    | 192.168.10.120  | metal
+```
 
 ## Architecture Diagram
 

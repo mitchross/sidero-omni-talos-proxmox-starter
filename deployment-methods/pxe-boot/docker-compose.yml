@@ -2,19 +2,34 @@ version: '3.8'
 
 services:
   booter:
-    image: ghcr.io/siderolabs/booter:latest
+    image: ghcr.io/siderolabs/booter:v0.3.0
     container_name: sidero-booter
     network_mode: host
     restart: unless-stopped
-    # To get kernel args:
-    # 1. Go to Omni UI -> Overview
-    # 2. Click "Copy Kernel Parameters"
-    # 3. Paste them below (replace <KERNEL_ARGS>)
-    command:
-      - <KERNEL_ARGS>
 
-    # Example command (replace with your actual kernel args from Omni):
-    # command:
-    #   - siderolink.api=https://omni.vanillax.me:8090/?jointoken=YOUR_TOKEN_HERE
-    #   - talos.events.sink=[fdae:41e4:649b:9303::1]:8091
-    #   - talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092
+    # IMPORTANT: Update these parameters for your environment
+    command:
+      # Advertise address (IP where Booter is running)
+      - "--api-advertise-address=192.168.10.15"
+
+      # CRITICAL: Network interface for DHCP proxy
+      # Find your interface: ip addr show
+      - "--dhcp-proxy-iface-or-ip=enp1s0"
+
+      # API port (default 50084)
+      - "--api-port=50084"
+
+      # Kernel args from Omni UI (Overview → Copy Kernel Parameters)
+      - "--extra-kernel-args=siderolink.api=https://omni.vanillax.me:8090/?jointoken=YOUR_TOKEN_HERE talos.events.sink=[fdae:41e4:649b:9303::1]:8091 talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092"
+
+    # Example for your environment:
+    #
+    # 1. Replace 192.168.10.15 with your Booter host IP
+    # 2. Replace enp1s0 with your network interface (find with: ip addr show)
+    # 3. Replace kernel args with your actual Omni join token and endpoints
+    #
+    # To get kernel args:
+    #   - Login to Omni UI
+    #   - Go to Overview page
+    #   - Click "Copy Kernel Parameters"
+    #   - Paste the entire string after --extra-kernel-args=
