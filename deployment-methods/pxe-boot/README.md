@@ -71,75 +71,42 @@ Starting Omni Infra Provider (Bare Metal)...
 Connected to Omni at https://your-omni-instance.com
 Listening on :8081 (HTTP)
 Listening on :69 (TFTP)
+Listening on :67 (DHCP Proxy)
 ```
 
-**Note the IP address** of the machine running Booter - you'll need this for DHCP configuration.
+Booter is now acting as a DHCP proxy on your network!
 
-### Step 4: Configure DHCP Server
+### Step 4: DHCP Configuration (No Changes Needed!)
 
-Configure your DHCP server (router, Firewalla, pfSense, etc.) to point to Booter.
+**Important:** Sidero Booter acts as a **DHCP proxy server**. This means:
 
-**Required DHCP Options:**
-- **Option 66 (TFTP Server)**: `<booter-ip>` (e.g., `192.168.10.50`)
-- **Option 67 (Boot Filename)**:
-  - BIOS: `undionly.kpxe`
-  - UEFI: `ipxe.efi`
-- **Next Server**: `<booter-ip>`
+✅ **What you DON'T need to do:**
+- You do **NOT** need to configure DHCP Option 66 (TFTP Server)
+- You do **NOT** need to configure DHCP Option 67 (Boot Filename)
+- You do **NOT** need to set "Next Server" options
 
-**Example Configurations:**
+✅ **What you DO need:**
+- Keep your normal DHCP server running (Firewalla, router, etc.) for IP address assignment
+- Ensure VMs are on the same network as Booter
+- That's it!
 
-**Firewalla:**
-```bash
-# SSH to Firewalla
-ssh pi@firewalla.local
+**How it works:**
+1. VM sends DHCP request for IP address
+2. Your DHCP server (Firewalla/router) assigns IP address normally
+3. **Booter intercepts the PXE boot request** and automatically provides the correct boot files
+4. VM boots Talos from Booter
 
-# Add DHCP options (requires Firewalla Gold/Purple with advanced settings)
-# Go to: Settings → Advanced → DHCP Options
-Option 66: 192.168.10.50
-Option 67: undionly.kpxe
-```
+**⚠️ Important - Remove Conflicting DHCP Options:**
 
-**pfSense/OPNsense:**
-```
-Services → DHCP Server → LAN
-→ Additional BOOTP/DHCP Options:
+If you previously configured DHCP Options 66/67 for PXE boot, **remove them now**. They will conflict with Booter's DHCP proxy functionality.
 
-Option 66 (Text): 192.168.10.50
-Option 67 (Text): undionly.kpxe
-```
+For Firewalla users:
+- Go to: Settings → Advanced → DHCP Options
+- **Remove** Option 66 (TFTP Server) if set
+- **Remove** Option 67 (Bootfile) if set
+- Leave DHCP server enabled normally
 
-**ISC DHCP Server** (`/etc/dhcp/dhcpd.conf`):
-```conf
-subnet 192.168.10.0 netmask 255.255.255.0 {
-  option routers 192.168.10.1;
-  option domain-name-servers 1.1.1.1, 8.8.8.8;
-
-  # PXE Boot Options
-  next-server 192.168.10.50;
-
-  # BIOS vs UEFI
-  if exists user-class and option user-class = "iPXE" {
-    filename "http://192.168.10.50:8081/boot.ipxe";
-  } elsif option arch = 00:07 or option arch = 00:09 {
-    filename "ipxe.efi";
-  } else {
-    filename "undionly.kpxe";
-  }
-}
-```
-
-**Dnsmasq** (`/etc/dnsmasq.conf`):
-```conf
-# Enable DHCP
-dhcp-range=192.168.10.100,192.168.10.200,12h
-
-# PXE Boot
-dhcp-boot=undionly.kpxe,192.168.10.50,192.168.10.50
-
-# TFTP
-enable-tftp
-tftp-root=/var/lib/tftpboot
-```
+The same applies to pfSense, OPNsense, or any other DHCP server - remove manual PXE boot options.
 
 ### Step 5: Boot VMs
 
@@ -218,30 +185,31 @@ Then follow steps 4-6 above for DHCP configuration and booting VMs.
 **Symptoms**: VMs don't boot from network, show "No bootable device" or boot to disk
 
 **Solutions**:
-1. **Check Boot Order**:
+
+1. **⚠️ Check for Conflicting DHCP Options (Most Common Issue)**:
+   - If you have DHCP Option 66 or 67 configured in your router/DHCP server, **remove them**
+   - Booter acts as a DHCP proxy and will conflict with manual PXE options
+   - Firewalla: Settings → Advanced → DHCP Options → Remove Option 66/67
+   - pfSense: Services → DHCP Server → Remove BOOTP/DHCP Options
+   - After removing, restart Booter: `docker restart sidero-booter`
+
+2. **Check Boot Order**:
    - Proxmox VM → Options → Boot Order
    - Ensure `net0` is first in boot order
    - If using Terraform, verify `boot = "order=net0;scsi0"`
 
-2. **Verify DHCP Options**:
+3. **Verify Booter is Running**:
    ```bash
-   # On VM, check DHCP offer
-   tcpdump -i any -n port 67 and port 68
+   # Check Booter logs
+   docker logs sidero-booter
 
-   # Should see DHCP offer with:
-   # Option 66 (TFTP Server)
-   # Option 67 (Boot Filename)
+   # Should see "Listening on :67 (DHCP Proxy)"
    ```
 
-3. **Test TFTP Access**:
-   ```bash
-   # From another machine on same network
-   tftp 192.168.10.50
-   > get undionly.kpxe
-   > quit
-
-   # File should download successfully
-   ```
+4. **Check Network Connectivity**:
+   - Ensure VMs are on the same network as Booter
+   - Booter must be reachable on UDP port 67 (DHCP) and 69 (TFTP)
+   - Check firewall rules on the machine running Booter
 
 ### Machines Don't Appear in Omni
 
@@ -259,6 +227,7 @@ Then follow steps 4-6 above for DHCP configuration and booting VMs.
 2. **Verify Firewall Rules**:
    - Omni SideroLink port: `8090/tcp` (must be reachable from VMs)
    - Booter HTTP port: `8081/tcp`
+   - Booter DHCP Proxy port: `67/udp`
    - Booter TFTP port: `69/udp`
 
 3. **Check VM Network**:
