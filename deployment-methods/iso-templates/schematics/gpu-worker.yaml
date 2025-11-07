@@ -1,0 +1,54 @@
+# Talos Image Factory Schematic - GPU Worker Nodes
+# This schematic defines system extensions for GPU-accelerated worker VMs
+# KEY FEATURE: NVIDIA drivers are PRE-INSTALLED in the ISO!
+
+customization:
+  systemExtensions:
+    officialExtensions:
+      # QEMU Guest Agent - Required for Proxmox integration
+      - siderolabs/qemu-guest-agent
+
+      # NVIDIA Proprietary Drivers - Production branch
+      # Includes kernel modules for NVIDIA GPUs
+      # Version: Matched to Talos version automatically
+      - siderolabs/nonfree-kmod-nvidia-production
+
+      # NVIDIA Container Toolkit - Production branch
+      # Required for running GPU workloads in containers
+      # Provides nvidia-container-runtime
+      - siderolabs/nvidia-container-toolkit-production
+
+# Alternative: Use open-source drivers (experimental)
+# Uncomment the following and comment out nonfree-kmod-nvidia-production:
+# - siderolabs/nvidia-open-gpu-kernel-modules-production
+
+# For multi-GPU setups with NVLink:
+# - siderolabs/nvidia-fabricmanager-production
+
+# Usage:
+#   Upload this schematic to https://factory.talos.dev
+#   Download the generated ISO for GPU worker nodes
+#
+# The ISO will include:
+#   - Base Talos Linux
+#   - QEMU Guest Agent for Proxmox
+#   - NVIDIA Proprietary Drivers (pre-compiled for this Talos version)
+#   - NVIDIA Container Toolkit (for GPU container support)
+#
+# Recommended VM specs:
+#   CPU: 16 cores
+#   RAM: 32 GB
+#   Disk: 100 GB (OS) + 500 GB (Data for models/datasets)
+#
+# IMPORTANT:
+#   After VM creation, you MUST manually configure GPU passthrough in Proxmox.
+#   See: ../../docs/gpu-passthrough-guide.md
+#
+# Supported NVIDIA GPUs:
+#   - GeForce RTX series (2000, 3000, 4000)
+#   - Tesla/Quadro series
+#   - A100, H100 datacenter GPUs
+#
+# Driver versions (automatically matched):
+#   - Production: Latest stable NVIDIA driver
+#   - LTS: Long-term support driver branch

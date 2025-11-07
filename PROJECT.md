@@ -326,14 +326,66 @@ services:
   - Future roadmap
   - Development guidelines
 
+### Phase 5: Multiple Deployment Methods (Completed)
+✅ Created deployment-methods/ directory with 4 different approaches
+✅ Each method targets different user skill levels and use cases
+✅ Comprehensive comparison guide with decision tree
+
+**Method 1: Omni Infrastructure Provider** (NEW! 2025)
+✅ deployment-methods/omni-provider/
+  - Official Siderolabs tool for auto-provisioning
+  - Docker Compose configuration
+  - Complete setup guide with machine class examples
+  - Easiest method - everything in Omni UI
+  - No Terraform knowledge required
+  - Auto-scaling with click
+  - GPU support via system extensions
+
+**Method 2: ISO Templates** (NEW! User-requested)
+✅ deployment-methods/iso-templates/
+  - Schematic files for Talos Image Factory
+  - control-plane.yaml: Base Talos + QEMU guest agent
+  - worker.yaml: Base Talos + QEMU guest agent
+  - gpu-worker.yaml: Talos + QEMU + NVIDIA drivers PRE-INSTALLED
+  - Simple Proxmox UI workflow (clone templates)
+  - No Terraform required
+  - GPU drivers baked into ISO (key feature!)
+
+**Method 3: Terraform** (Existing, enhanced)
+✅ terraform/ directory
+  - Full IaC with HCL
+  - Multi-Proxmox support
+  - Resource recommendation tool
+  - Advanced users, large deployments
+
+**Method 4: PXE Boot (Booter)** (Documented)
+✅ deployment-methods/pxe-boot/
+  - For network boot environments
+  - Uses Siderolabs Booter
+  - Bare metal ready
+  - Specialized use case
+
+**Comparison Documentation**:
+✅ deployment-methods/README.md:
+  - Decision tree to choose method
+  - Feature matrix comparing all 4 approaches
+  - Pros/cons for each
+  - When to use each method
+  - Quick start links
+
+**Key Discovery**: Found official Siderolabs omni-infra-provider-proxmox
+  - Released in 2025
+  - Completely automated VM provisioning from Omni
+  - Game-changer for ease of deployment
+
 ## Known Issues & Limitations
 
 ### Current Limitations
 
-1. **Talos Template Creation Not Documented**
-   - Users must manually create Talos template VM in Proxmox
-   - Template must exist on ALL Proxmox servers
-   - Need guide for downloading Talos ISO and creating template
+1. **~~Talos Template Creation Not Documented~~** ✅ RESOLVED
+   - ISO Templates method provides custom ISOs via Image Factory
+   - Schematic files create ISOs with extensions pre-installed
+   - GPU drivers can be pre-baked into ISOs
 
 2. **GPU Passthrough is Manual**
    - Cannot be automated via Terraform
@@ -503,6 +555,9 @@ Types: feat, fix, docs, refactor, test, chore
 - `terraform/outputs.tf`: Machine inventory (scripts depend on this structure)
 - `scripts/discover-machines.sh`: MAC matching logic (tested and working)
 - `scripts/generate-machine-configs.sh`: Talos YAML generation (matches official format)
+- `deployment-methods/README.md`: Decision tree and comparison of all 4 methods
+- `deployment-methods/omni-provider/config.yaml.example`: Proxmox connection config for Omni provider
+- `deployment-methods/iso-templates/schematics/*.yaml`: Image Factory schematics (GPU worker has NVIDIA extensions)
 
 ### What NOT to Change Without Good Reason
 - MAC address generation pattern (BC:24:11:NODE:00:IDX)

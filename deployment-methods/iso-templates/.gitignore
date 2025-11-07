@@ -1,0 +1,9 @@
+# Downloaded ISO files (large binaries)
+isos/
+
+# Generated machine data
+machine-data/
+
+# Temporary files
+*.tmp
+*.bak
