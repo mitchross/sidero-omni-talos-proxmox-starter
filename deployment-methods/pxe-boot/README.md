@@ -25,40 +25,49 @@ This deployment method uses **Sidero Booter** to PXE boot machines into Talos Li
 
 The easiest way to deploy Booter is using Docker Compose.
 
-### Step 1: Create Service Account in Omni
+### Step 1: Get Kernel Parameters from Omni
 
 1. **Login to Omni UI**: `https://your-omni-instance`
 
-2. **Create Service Account**:
-   - Go to **Settings** → **Service Accounts**
-   - Click **Create Service Account**
-   - Name: `booter`
-   - **Role: Operator** (important!)
-   - Copy the token (starts with `eyJ...`)
+2. **Copy Kernel Parameters**:
+   - Go to the **Overview** page (main dashboard)
+   - Click **"Copy Kernel Parameters"** button
+   - This copies parameters like:
+     ```
+     siderolink.api=https://omni.example.com:8090/?jointoken=YOUR_TOKEN
+     talos.events.sink=[fdae:41e4:649b:9303::1]:8091
+     talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092
+     ```
 
-### Step 2: Configure Environment
+### Step 2: Configure Docker Compose
 
 ```bash
 # Navigate to pxe-boot directory
 cd deployment-methods/pxe-boot
 
-# Copy the example environment file
-cp .env.example .env
-
-# Edit .env with your values
-nano .env
+# Edit docker-compose.yml
+nano docker-compose.yml
 ```
 
-Update `.env` with your credentials:
-```bash
-OMNI_ENDPOINT=https://your-omni-instance.com
-OMNI_SERVICE_ACCOUNT_KEY=eyJuYW1lIjoiYm9vdGVyIiwi...  # Your service account key
+Replace `<KERNEL_ARGS>` with the parameters you copied from Omni:
+
+```yaml
+services:
+  booter:
+    image: ghcr.io/siderolabs/booter:latest
+    container_name: sidero-booter
+    network_mode: host
+    restart: unless-stopped
+    command:
+      - siderolink.api=https://omni.example.com:8090/?jointoken=YOUR_TOKEN
+      - talos.events.sink=[fdae:41e4:649b:9303::1]:8091
+      - talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092
 ```
 
 ### Step 3: Start Booter
 
 ```bash
-# Make sure you've exported your environment variables or they're in .env
+# Start Booter
 docker-compose up -d
 
 # Check logs
@@ -67,11 +76,10 @@ docker logs -f sidero-booter
 
 You should see:
 ```
-Starting Omni Infra Provider (Bare Metal)...
-Connected to Omni at https://your-omni-instance.com
 Listening on :8081 (HTTP)
 Listening on :69 (TFTP)
 Listening on :67 (DHCP Proxy)
+PXE server started
 ```
 
 Booter is now acting as a DHCP proxy on your network!
@@ -157,26 +165,25 @@ The same applies to pfSense, OPNsense, or any other DHCP server - remove manual 
 If you prefer not to use Docker Compose:
 
 ```bash
-# Create directory for Booter data
-mkdir -p /opt/sidero-booter
+# Get kernel parameters from Omni UI -> Overview -> Copy Kernel Parameters
+# Then run:
 
-# Run Booter container
 docker run -d \
   --name sidero-booter \
   --restart unless-stopped \
   --network host \
-  -v /opt/sidero-booter:/var/lib/sidero \
-  -e OMNI_ENDPOINT=https://your-omni-instance.com \
-  -e OMNI_SERVICE_ACCOUNT_KEY=eyJuYW1lIjoiYm9vdGVyIiwi... \
-  ghcr.io/siderolabs/omni-infra-provider-bare-metal:latest \
-  --name=booter \
-  --omni-api-endpoint=https://your-omni-instance.com
+  ghcr.io/siderolabs/booter:latest \
+  siderolink.api=https://omni.example.com:8090/?jointoken=YOUR_TOKEN \
+  talos.events.sink=[fdae:41e4:649b:9303::1]:8091 \
+  talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092
 
 # Check logs
 docker logs -f sidero-booter
 ```
 
-Then follow steps 4-6 above for DHCP configuration and booting VMs.
+Replace the kernel arguments with the ones you copied from Omni.
+
+Then follow steps 4-6 above for booting VMs.
 
 ## Troubleshooting
 
