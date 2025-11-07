@@ -120,7 +120,7 @@ resource "proxmox_vm_qemu" "control_plane" {
 
   name        = each.value.name
   target_node = var.proxmox_servers[each.value.proxmox_server].node_name
-  desc        = "Talos Control Plane - Managed by Terraform - Talos ${var.talos_version}"
+  desc        = "Talos Control Plane - Managed by Terraform - Talos ${var.talos_version} - Boot: ${upper(var.boot_method)}"
 
   # VM Resources
   cores   = each.value.cpu_cores
@@ -130,13 +130,18 @@ resource "proxmox_vm_qemu" "control_plane" {
   # SCSI Controller
   scsihw = "virtio-scsi-single"
 
-  # Boot from CD-ROM first (for Talos install), then disk
-  boot = "order=ide2;scsi0"
+  # Boot order depends on boot method
+  # ISO: Boot from CD-ROM first, then disk
+  # PXE: Boot from network first, then disk
+  boot = var.boot_method == "iso" ? "order=ide2;scsi0" : "order=net0;scsi0"
 
-  # CD-ROM with Talos ISO
-  cdrom {
-    type = "iso"
-    iso  = var.talos_iso
+  # CD-ROM with Talos ISO (only for ISO boot method)
+  dynamic "cdrom" {
+    for_each = var.boot_method == "iso" ? [1] : []
+    content {
+      type = "iso"
+      iso  = var.talos_iso
+    }
   }
 
   # OS Disk (scsi0)
@@ -203,19 +208,22 @@ resource "proxmox_vm_qemu" "worker" {
 
   name        = each.value.name
   target_node = var.proxmox_servers[each.value.proxmox_server].node_name
-  desc        = "Talos Worker - Managed by Terraform - Talos ${var.talos_version}"
+  desc        = "Talos Worker - Managed by Terraform - Talos ${var.talos_version} - Boot: ${upper(var.boot_method)}"
 
   cores   = each.value.cpu_cores
   sockets = 1
   memory  = each.value.memory_mb
 
   scsihw = "virtio-scsi-single"
-  boot   = "order=ide2;scsi0"
+  boot   = var.boot_method == "iso" ? "order=ide2;scsi0" : "order=net0;scsi0"
 
-  # CD-ROM with Talos ISO
-  cdrom {
-    type = "iso"
-    iso  = var.talos_iso
+  # CD-ROM with Talos ISO (only for ISO boot method)
+  dynamic "cdrom" {
+    for_each = var.boot_method == "iso" ? [1] : []
+    content {
+      type = "iso"
+      iso  = var.talos_iso
+    }
   }
 
   # OS Disk
@@ -278,19 +286,23 @@ resource "proxmox_vm_qemu" "gpu_worker" {
 
   name        = each.value.name
   target_node = var.proxmox_servers[each.value.proxmox_server].node_name
-  desc        = "Talos GPU Worker - Managed by Terraform - Talos ${var.talos_version} - GPU PCI: ${each.value.gpu_pci_id} (Configure manually)"
+  desc        = "Talos GPU Worker - Managed by Terraform - Talos ${var.talos_version} - Boot: ${upper(var.boot_method)} - GPU PCI: ${each.value.gpu_pci_id} (Configure manually)"
 
   cores   = each.value.cpu_cores
   sockets = 1
   memory  = each.value.memory_mb
 
   scsihw = "virtio-scsi-single"
-  boot   = "order=ide2;scsi0"
+  boot   = var.boot_method == "iso" ? "order=ide2;scsi0" : "order=net0;scsi0"
 
-  # CD-ROM with Talos ISO (should be GPU-enabled ISO from Image Factory)
-  cdrom {
-    type = "iso"
-    iso  = var.talos_iso
+  # CD-ROM with Talos ISO (only for ISO boot method)
+  # Note: For GPU workers with PXE, ensure Booter serves GPU-enabled images
+  dynamic "cdrom" {
+    for_each = var.boot_method == "iso" ? [1] : []
+    content {
+      type = "iso"
+      iso  = var.talos_iso
+    }
   }
 
   # OS Disk

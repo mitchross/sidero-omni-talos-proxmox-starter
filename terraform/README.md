@@ -7,7 +7,9 @@ This directory contains Terraform Infrastructure as Code (IaC) to provision virt
 - **Proxmox VE**: 7.x or later (2-3+ servers recommended)
 - **Terraform**: 1.0 or later ([install guide](https://www.terraform.io/downloads))
 - **Proxmox API Tokens**: One per Proxmox server (see setup guide below)
-- **Talos ISO**: Uploaded to Proxmox storage (see [ISO Download Guide](#talos-iso-setup) below)
+- **Boot Method** (choose one):
+  - **ISO Boot**: Talos ISO uploaded to Proxmox storage (see [ISO Setup](#talos-iso-setup) below)
+  - **PXE Boot**: Sidero Booter running and DHCP configured (see [PXE Setup](#pxe-boot-setup) below)
 
 ## Files
 
@@ -243,6 +245,70 @@ talos_iso = "nfs-storage:iso/talos-amd64.iso"
 - Upload to each server's `local` storage, OR
 - Use shared storage (NFS, Ceph) accessible by all servers
 
+## PXE Boot Setup
+
+**PXE boot is the recommended approach** for automated, bare-metal-style deployments. VMs boot from the network and pull Talos images from Sidero Booter.
+
+### What is PXE Boot?
+
+With PXE boot:
+- VMs are created with **empty disks only** (no ISO mounted)
+- VMs boot from the **network interface first**
+- Sidero Booter serves the Talos image over PXE/iPXE
+- Machines automatically register with Sidero Omni
+- Omni installs Talos to disk
+
+### Prerequisites for PXE Boot
+
+1. **Sidero Booter**: Running and accessible on your network
+   - See `deployment-methods/pxe-boot/` for Booter setup
+   - Booter serves Talos images via HTTP/TFTP
+
+2. **DHCP Configuration**: Your DHCP server must point to Booter
+   - Option 66 (TFTP Server): IP of Booter
+   - Option 67 (Boot Filename): `undionly.kpxe` or `ipxe.efi`
+   - Next Server: IP of Booter
+
+3. **Network Access**: VMs must reach Booter and Omni
+
+### Configure Terraform for PXE Boot
+
+In your `terraform.tfvars`:
+
+```hcl
+# Use PXE boot method
+boot_method = "pxe"
+
+# No need to configure talos_iso when using PXE
+cluster_name = "talos-cluster"
+```
+
+That's it! VMs will be created with:
+- Empty OS and data disks
+- Network boot enabled (boot order: `net0;scsi0`)
+- No CD-ROM attached
+
+### PXE Boot Workflow
+
+1. **Deploy VMs**: `terraform apply` creates empty VMs
+2. **VMs boot from network**: They PXE boot and contact Booter
+3. **Booter serves Talos**: VMs boot into Talos maintenance mode
+4. **Omni discovers machines**: Machines appear in Omni UI
+5. **Omni configures cluster**: Installs Talos to disk
+6. **VMs reboot to disk**: After install, VMs boot from disk
+
+### Troubleshooting PXE Boot
+
+**VMs don't PXE boot:**
+- Check DHCP is offering PXE options (66, 67)
+- Verify Booter is reachable from VM network
+- Check Proxmox firewall rules
+
+**Machines don't appear in Omni:**
+- Verify VMs can reach Omni (check network connectivity)
+- Check Booter logs for connection attempts
+- Ensure SideroLink is properly configured
+
 ## Usage
 
 ### Option A: Automated Resource Discovery (Recommended)
@@ -416,21 +482,43 @@ terraform output gpu_configuration_needed
 
 ## VM Configuration
 
-This Terraform configuration creates VMs by:
-- Mounting the Talos ISO as a CD-ROM (boot device)
-- Creating empty disks (OS and optional data disks)
-- Configuring network with static MAC addresses
-- Setting boot order: CD-ROM first, then disk
+This Terraform configuration supports **two boot methods**:
 
-**Default example configuration creates:**
-- 3 control plane VMs (4 vCPU, 8GB RAM, 50GB OS disk + 100GB data disk)
-- 3 regular worker VMs (8 vCPU, 16GB RAM, 100GB OS disk + optional data disk)
-- 0 GPU worker VMs (configure in terraform.tfvars if needed)
+### ISO Boot Method (`boot_method = "iso"`)
+
+VMs are created with:
+- Talos ISO mounted as CD-ROM
+- Empty OS and data disks
+- Static MAC addresses
+- Boot order: CD-ROM first, then disk (`order=ide2;scsi0`)
 
 **Workflow:**
 1. VMs boot from Talos ISO (maintenance mode)
 2. Sidero Omni discovers the machines
 3. Omni installs Talos to disk and configures the cluster
-4. After installation, VMs boot from disk (Talos installed)
+4. After installation, VMs boot from disk
 
-All VMs are created fresh - no templates or cloning required.
+### PXE Boot Method (`boot_method = "pxe"`) - **Recommended**
+
+VMs are created with:
+- No CD-ROM (empty VMs)
+- Empty OS and data disks
+- Static MAC addresses
+- Boot order: Network first, then disk (`order=net0;scsi0`)
+
+**Workflow:**
+1. VMs boot from network via PXE
+2. Sidero Booter serves Talos image
+3. VMs boot into Talos maintenance mode
+4. Sidero Omni discovers the machines
+5. Omni installs Talos to disk and configures the cluster
+6. After installation, VMs boot from disk
+
+### Default Example Configuration
+
+**Default example creates:**
+- 3 control plane VMs (4 vCPU, 8GB RAM, 50GB OS disk + 100GB data disk)
+- 3 regular worker VMs (8 vCPU, 16GB RAM, 100GB OS disk + optional data disk)
+- 0 GPU worker VMs (configure in terraform.tfvars if needed)
+
+All VMs are created fresh - **no templates or cloning required**.

@@ -57,11 +57,24 @@ network_config = {
 # Talos Configuration
 # =============================================================================
 
-talos_iso    = "local:iso/talos-amd64.iso"  # Talos ISO in Proxmox storage
-talos_version = "v1.10.1"                     # Talos version for documentation
-cluster_name = "talos-cluster"                # Cluster name
+# Boot Method Selection
+# ---------------------
+# Choose how VMs boot Talos:
+#
+# "iso" - Boot from ISO file (good for manual setup, testing)
+#   Requires: talos_iso uploaded to Proxmox
+#   VMs boot into Talos maintenance mode from ISO
+#
+# "pxe" - Boot from network via PXE (recommended for automation)
+#   Requires: Sidero Booter running and DHCP configured for PXE
+#   VMs boot from network and pull Talos image from Booter
+#
+boot_method = "pxe"  # Change to "iso" if you want ISO boot
 
-# How to get Talos ISO:
+# ISO Configuration (only needed if boot_method = "iso")
+talos_iso = "local:iso/talos-amd64.iso"  # Talos ISO in Proxmox storage
+
+# How to get Talos ISO (for ISO boot method):
 # 1. Go to https://factory.talos.dev or https://github.com/siderolabs/talos/releases
 # 2. Download metal-amd64.iso (or use Image Factory for custom extensions)
 # 3. Upload to Proxmox: Datacenter → Storage (local) → ISO Images → Upload
@@ -69,6 +82,10 @@ cluster_name = "talos-cluster"                # Cluster name
 #
 # For GPU workers, you'll need a custom ISO with NVIDIA extensions.
 # See: deployment-methods/iso-templates/schematics/gpu-worker.yaml
+
+# General Configuration
+talos_version = "v1.10.1"      # Talos version for documentation
+cluster_name  = "talos-cluster" # Cluster name
 
 # =============================================================================
 # Control Plane Nodes

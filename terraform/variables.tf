@@ -58,8 +58,31 @@ variable "network_config" {
 # Talos Configuration
 # =============================================================================
 
+variable "boot_method" {
+  description = "VM boot method: 'iso' or 'pxe'"
+  type        = string
+  default     = "iso"
+
+  validation {
+    condition     = contains(["iso", "pxe"], var.boot_method)
+    error_message = "boot_method must be either 'iso' or 'pxe'"
+  }
+
+  # Boot Method Options:
+  #
+  # "iso" - Boot from Talos ISO (requires talos_iso to be set)
+  #   - VMs boot from mounted ISO in maintenance mode
+  #   - Good for: Manual setup, single deployments
+  #   - Requires: ISO uploaded to Proxmox storage
+  #
+  # "pxe" - Boot from network via PXE (requires Sidero Booter)
+  #   - VMs PXE boot and pull Talos image from Sidero Booter
+  #   - Good for: Automated deployments, bare metal feel
+  #   - Requires: Sidero Booter running and DHCP configured for PXE
+}
+
 variable "talos_iso" {
-  description = "Talos ISO file in Proxmox format: 'storage:iso/filename.iso'"
+  description = "Talos ISO file in Proxmox format: 'storage:iso/filename.iso' (only used if boot_method='iso')"
   type        = string
   default     = "local:iso/talos-amd64.iso"
 
