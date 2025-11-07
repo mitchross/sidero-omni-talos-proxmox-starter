@@ -5,16 +5,16 @@
 variable "proxmox_servers" {
   description = "Map of Proxmox servers with their connection details"
   type = map(object({
-    api_url             = string
-    api_token_id        = string
-    api_token_secret    = string
-    node_name           = string
-    tls_insecure        = bool
+    api_url          = string
+    api_token_id     = string
+    api_token_secret = string
+    node_name        = string
+    tls_insecure     = bool
 
     # Storage configuration per server
-    storage_os          = string  # Storage pool for OS disks
-    storage_data        = string  # Storage pool for data disks (optional)
-    network_bridge      = string  # Network bridge (e.g., vmbr0)
+    storage_os     = string # Storage pool for OS disks
+    storage_data   = string # Storage pool for data disks (optional)
+    network_bridge = string # Network bridge (e.g., vmbr0)
   }))
 
   # Example:
@@ -40,10 +40,10 @@ variable "proxmox_servers" {
 variable "network_config" {
   description = "Network configuration for static IP assignments"
   type = object({
-    subnet          = string  # e.g., "192.168.10.0/24"
-    gateway         = string  # e.g., "192.168.10.1"
-    dns_servers     = list(string)  # e.g., ["1.1.1.1", "8.8.8.8"]
-    vlan_id         = number  # Set to 0 for no VLAN, or VLAN ID
+    subnet      = string       # e.g., "192.168.10.0/24"
+    gateway     = string       # e.g., "192.168.10.1"
+    dns_servers = list(string) # e.g., ["1.1.1.1", "8.8.8.8"]
+    vlan_id     = number       # Set to 0 for no VLAN, or VLAN ID
   })
 
   default = {
@@ -77,14 +77,14 @@ variable "cluster_name" {
 variable "control_planes" {
   description = "List of control plane nodes with their configurations"
   type = list(object({
-    name            = string  # e.g., "talos-cp-1"
-    proxmox_server  = string  # Key from proxmox_servers map
-    ip_address      = string  # e.g., "192.168.10.100"
-    mac_address     = string  # e.g., "BC:24:11:01:00:01" or leave empty for auto-generation
-    cpu_cores       = number
-    memory_mb       = number
-    os_disk_size_gb = number
-    data_disk_size_gb = number  # Set to 0 for no data disk
+    name              = string # e.g., "talos-cp-1"
+    proxmox_server    = string # Key from proxmox_servers map
+    ip_address        = string # e.g., "192.168.10.100"
+    mac_address       = string # e.g., "BC:24:11:01:00:01" or leave empty for auto-generation
+    cpu_cores         = number
+    memory_mb         = number
+    os_disk_size_gb   = number
+    data_disk_size_gb = number # Set to 0 for no data disk
   }))
 
   # Example:
@@ -136,7 +136,7 @@ variable "workers" {
     cpu_cores         = number
     memory_mb         = number
     os_disk_size_gb   = number
-    data_disk_size_gb = number  # Set to 0 for no data disk
+    data_disk_size_gb = number # Set to 0 for no data disk
   }))
 
   default = []
@@ -171,7 +171,7 @@ variable "gpu_workers" {
     memory_mb         = number
     os_disk_size_gb   = number
     data_disk_size_gb = number
-    gpu_pci_id        = string  # e.g., "01:00" - Configure manually in Proxmox after creation
+    gpu_pci_id        = string # e.g., "01:00" - Configure manually in Proxmox after creation
   }))
 
   default = []

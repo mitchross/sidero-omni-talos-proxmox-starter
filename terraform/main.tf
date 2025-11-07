@@ -8,7 +8,7 @@ terraform {
   required_providers {
     proxmox = {
       source  = "telmate/proxmox"
-      version = "~> 2.9"
+      version = "3.0.2-rc05"
     }
   }
 }
@@ -92,19 +92,19 @@ locals {
   machine_inventory = {
     for vm_name, vm in local.all_vms :
     vm_name => {
-      hostname        = vm.name
-      role            = vm.role
-      proxmox_server  = vm.proxmox_server
-      proxmox_node    = var.proxmox_servers[vm.proxmox_server].node_name
-      ip_address      = vm.ip_address
-      mac_address     = vm.mac_address
-      cpu_cores       = vm.cpu_cores
-      memory_mb       = vm.memory_mb
-      os_disk_gb      = vm.os_disk_size_gb
-      data_disk_gb    = vm.data_disk_size_gb
-      has_data_disk   = vm.data_disk_size_gb > 0
-      gateway         = var.network_config.gateway
-      dns_servers     = var.network_config.dns_servers
+      hostname       = vm.name
+      role           = vm.role
+      proxmox_server = vm.proxmox_server
+      proxmox_node   = var.proxmox_servers[vm.proxmox_server].node_name
+      ip_address     = vm.ip_address
+      mac_address    = vm.mac_address
+      cpu_cores      = vm.cpu_cores
+      memory_mb      = vm.memory_mb
+      os_disk_gb     = vm.os_disk_size_gb
+      data_disk_gb   = vm.data_disk_size_gb
+      has_data_disk  = vm.data_disk_size_gb > 0
+      gateway        = var.network_config.gateway
+      dns_servers    = var.network_config.dns_servers
       # GPU info for GPU workers
       gpu_pci_id = lookup(vm, "gpu_pci_id", "")
     }
@@ -141,41 +141,41 @@ resource "proxmox_vm_qemu" "control_plane" {
 
   # OS Disk (scsi0)
   disk {
-    slot    = 0
-    size    = "${each.value.os_disk_size_gb}G"
-    type    = "scsi"
-    storage = var.proxmox_servers[each.value.proxmox_server].storage_os
-    iothread = 1
-    discard = "on"
-    ssd     = 1
+    slot        = "scsi0"
+    size        = "${each.value.os_disk_size_gb}G"
+    type        = "disk"
+    storage     = var.proxmox_servers[each.value.proxmox_server].storage_os
+    iothread    = true
+    discard     = true
+    emulatessd  = true
   }
 
   # Data Disk (scsi1) - Only if size > 0
   dynamic "disk" {
     for_each = each.value.data_disk_size_gb > 0 ? [1] : []
     content {
-      slot    = 1
-      size    = "${each.value.data_disk_size_gb}G"
-      type    = "scsi"
-      storage = var.proxmox_servers[each.value.proxmox_server].storage_data
-      iothread = 1
-      discard = "on"
-      ssd     = 1
+      slot        = "scsi1"
+      size        = "${each.value.data_disk_size_gb}G"
+      type        = "disk"
+      storage     = var.proxmox_servers[each.value.proxmox_server].storage_data
+      iothread    = true
+      discard     = true
+      emulatessd  = true
     }
   }
 
   # Network Configuration
   network {
+    id      = 0
     model   = "virtio"
     bridge  = var.proxmox_servers[each.value.proxmox_server].network_bridge
     macaddr = upper(each.value.mac_address)
-    tag     = var.network_config.vlan_id == 0 ? -1 : var.network_config.vlan_id
+    tag     = var.network_config.vlan_id
   }
 
   # VM Options
-  onboot    = var.vm_start_on_boot
-  agent     = var.vm_qemu_agent ? 1 : 0
-  protection = var.vm_protection
+  onboot = var.vm_start_on_boot
+  agent  = var.vm_qemu_agent ? 1 : 0
 
   # Tags for organization
   tags = join(";", [
@@ -188,8 +188,8 @@ resource "proxmox_vm_qemu" "control_plane" {
   # Prevent unnecessary changes
   lifecycle {
     ignore_changes = [
-      network[0].macaddr,  # MAC address set once
-      desc,                 # Description might be modified
+      network[0].macaddr, # MAC address set once
+      desc,               # Description might be modified
     ]
   }
 }
@@ -205,7 +205,7 @@ resource "proxmox_vm_qemu" "worker" {
   target_node = var.proxmox_servers[each.value.proxmox_server].node_name
   desc        = "Talos Worker - Managed by Terraform"
 
-  clone = var.talos_template_name
+  clone      = var.talos_template_name
   full_clone = true
 
   cores   = each.value.cpu_cores
@@ -213,43 +213,43 @@ resource "proxmox_vm_qemu" "worker" {
   memory  = each.value.memory_mb
 
   scsihw = "virtio-scsi-single"
-  boot = "order=scsi0"
+  boot   = "order=scsi0"
 
   # OS Disk
   disk {
-    slot    = 0
-    size    = "${each.value.os_disk_size_gb}G"
-    type    = "scsi"
-    storage = var.proxmox_servers[each.value.proxmox_server].storage_os
-    iothread = 1
-    discard = "on"
-    ssd     = 1
+    slot        = "scsi0"
+    size        = "${each.value.os_disk_size_gb}G"
+    type        = "disk"
+    storage     = var.proxmox_servers[each.value.proxmox_server].storage_os
+    iothread    = true
+    discard     = true
+    emulatessd  = true
   }
 
   # Data Disk (optional)
   dynamic "disk" {
     for_each = each.value.data_disk_size_gb > 0 ? [1] : []
     content {
-      slot    = 1
-      size    = "${each.value.data_disk_size_gb}G"
-      type    = "scsi"
-      storage = var.proxmox_servers[each.value.proxmox_server].storage_data
-      iothread = 1
-      discard = "on"
-      ssd     = 1
+      slot        = "scsi1"
+      size        = "${each.value.data_disk_size_gb}G"
+      type        = "disk"
+      storage     = var.proxmox_servers[each.value.proxmox_server].storage_data
+      iothread    = true
+      discard     = true
+      emulatessd  = true
     }
   }
 
   network {
+    id      = 0
     model   = "virtio"
     bridge  = var.proxmox_servers[each.value.proxmox_server].network_bridge
     macaddr = upper(each.value.mac_address)
-    tag     = var.network_config.vlan_id == 0 ? -1 : var.network_config.vlan_id
+    tag     = var.network_config.vlan_id
   }
 
-  onboot     = var.vm_start_on_boot
-  agent      = var.vm_qemu_agent ? 1 : 0
-  protection = var.vm_protection
+  onboot = var.vm_start_on_boot
+  agent  = var.vm_qemu_agent ? 1 : 0
 
   tags = join(";", [
     "talos",
@@ -277,7 +277,7 @@ resource "proxmox_vm_qemu" "gpu_worker" {
   target_node = var.proxmox_servers[each.value.proxmox_server].node_name
   desc        = "Talos GPU Worker - Managed by Terraform - GPU PCI: ${each.value.gpu_pci_id} (Configure manually)"
 
-  clone = var.talos_template_name
+  clone      = var.talos_template_name
   full_clone = true
 
   cores   = each.value.cpu_cores
@@ -285,47 +285,47 @@ resource "proxmox_vm_qemu" "gpu_worker" {
   memory  = each.value.memory_mb
 
   scsihw = "virtio-scsi-single"
-  boot = "order=scsi0"
+  boot   = "order=scsi0"
 
   # OS Disk
   disk {
-    slot    = 0
-    size    = "${each.value.os_disk_size_gb}G"
-    type    = "scsi"
-    storage = var.proxmox_servers[each.value.proxmox_server].storage_os
-    iothread = 1
-    discard = "on"
-    ssd     = 1
+    slot        = "scsi0"
+    size        = "${each.value.os_disk_size_gb}G"
+    type        = "disk"
+    storage     = var.proxmox_servers[each.value.proxmox_server].storage_os
+    iothread    = true
+    discard     = true
+    emulatessd  = true
   }
 
   # Data Disk (typically needed for GPU workloads)
   dynamic "disk" {
     for_each = each.value.data_disk_size_gb > 0 ? [1] : []
     content {
-      slot    = 1
-      size    = "${each.value.data_disk_size_gb}G"
-      type    = "scsi"
-      storage = var.proxmox_servers[each.value.proxmox_server].storage_data
-      iothread = 1
-      discard = "on"
-      ssd     = 1
+      slot        = "scsi1"
+      size        = "${each.value.data_disk_size_gb}G"
+      type        = "disk"
+      storage     = var.proxmox_servers[each.value.proxmox_server].storage_data
+      iothread    = true
+      discard     = true
+      emulatessd  = true
     }
   }
 
   network {
+    id      = 0
     model   = "virtio"
     bridge  = var.proxmox_servers[each.value.proxmox_server].network_bridge
     macaddr = upper(each.value.mac_address)
-    tag     = var.network_config.vlan_id == 0 ? -1 : var.network_config.vlan_id
+    tag     = var.network_config.vlan_id
   }
 
   # GPU Passthrough - MUST be configured manually in Proxmox UI
   # Uncomment after manual GPU configuration:
   # hostpci0 = "${each.value.gpu_pci_id},pcie=1"
 
-  onboot     = var.vm_start_on_boot
-  agent      = var.vm_qemu_agent ? 1 : 0
-  protection = var.vm_protection
+  onboot = var.vm_start_on_boot
+  agent  = var.vm_qemu_agent ? 1 : 0
 
   tags = join(";", [
     "talos",

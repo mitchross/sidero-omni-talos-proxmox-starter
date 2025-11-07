@@ -101,10 +101,10 @@ output "gpu_configuration_needed" {
   value = [
     for vm_name, vm in local.machine_inventory :
     {
-      hostname   = vm.hostname
-      server     = vm.proxmox_server
-      node       = vm.proxmox_node
-      gpu_pci_id = vm.gpu_pci_id
+      hostname     = vm.hostname
+      server       = vm.proxmox_server
+      node         = vm.proxmox_node
+      gpu_pci_id   = vm.gpu_pci_id
       instructions = "1. SSH to ${vm.proxmox_node}, 2. Run: qm set <VM_ID> -hostpci0 ${vm.gpu_pci_id},pcie=1"
     }
     if vm.role == "gpu-worker" && vm.gpu_pci_id != ""
@@ -155,7 +155,7 @@ output "cluster_summary" {
 
 output "omnictl_ready" {
   description = "Instructions for next steps with omnictl"
-  value = <<-EOT
+  value       = <<-EOT
 
   ✅ Terraform has created ${length(local.machine_inventory)} VMs across ${length(keys(var.proxmox_servers))} Proxmox server(s).
 
@@ -200,7 +200,7 @@ output "machine_configs_data" {
         hostname = vm.hostname
         interfaces = [{
           interface = "eth0"
-          dhcp      = false  # We set static IP
+          dhcp      = false # We set static IP
           addresses = ["${vm.ip_address}/24"]
           routes = [{
             network = "0.0.0.0/0"
@@ -219,7 +219,7 @@ output "machine_configs_data" {
         data_disk = vm.has_data_disk ? {
           device = "/dev/sdb"
           size   = vm.data_disk_gb
-          mount  = "/var/lib/longhorn"  # For Longhorn storage
+          mount  = "/var/lib/longhorn" # For Longhorn storage
         } : null
       }
 
