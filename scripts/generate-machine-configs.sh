@@ -107,68 +107,176 @@ while IFS= read -r machine; do
 ---
 kind: Machine
 name: ${OMNI_UUID}
-labels:
-  role: ${ROLE}
-  hostname: ${HOSTNAME}
 patches:
-  - name: ${HOSTNAME}-network-config
+  - idOverride: 400-cm-${OMNI_UUID}-set-hostname-${HOSTNAME}
+    annotations:
+      name: set-hostname-${HOSTNAME}
     inline:
       machine:
         network:
           hostname: ${HOSTNAME}
-          interfaces:
-            - interface: eth0
-              dhcp: false
-              addresses:
-                - ${IP_ADDRESS}/24
-              routes:
-                - network: 0.0.0.0/0
-                  gateway: ${GATEWAY}
-          nameservers:
-            - ${DNS_SERVERS}
+        nodeLabels:
+          management-ip: ${IP_ADDRESS}
+          node-role: ${ROLE}
+          topology.kubernetes.io/zone: proxmox
 EOF
 
-    # Add secondary disk configuration if present
-    if [[ "${HAS_DATA_DISK}" == "true" ]]; then
-        cat >> "${CONFIG_FILE}" <<EOF
-  - name: ${HOSTNAME}-storage-config
-    inline:
-      machine:
-        kubelet:
-          extraMounts:
-            - destination: /var/lib/longhorn
-              type: bind
-              source: /var/lib/longhorn
-              options:
-                - bind
-                - rshared
-                - rw
-        disks:
-          - device: /dev/sdb
-            partitions:
-              - mountpoint: /var/lib/longhorn
-EOF
+    # Add GPU label for GPU workers
+    if [[ "${ROLE}" == "gpu-worker" ]]; then
+        cat >> "${CONFIG_FILE}" <<'GPULABEL'
+          nvidia.com/gpu: "true"
+GPULABEL
     fi
 
-    # Add GPU-specific configuration for GPU workers
-    if [[ "${ROLE}" == "gpu-worker" ]]; then
+    # Generate role-specific configuration patch
+    if [[ "${ROLE}" == "control-plane" ]]; then
         cat >> "${CONFIG_FILE}" <<EOF
-  - name: ${HOSTNAME}-gpu-config
+  - idOverride: 401-cm-${OMNI_UUID}-control-plane-config
+    annotations:
+      name: control-plane-config
+    inline:
+      cluster:
+        proxy:
+          disabled: true
+      machine:
+        features:
+          hostDNS:
+            enabled: true
+            forwardKubeDNSToHost: true
+          kubePrism:
+            enabled: true
+            port: 7445
+        kernel:
+          modules:
+            - name: br_netfilter
+              parameters:
+                - nf_conntrack_max=131072
+        sysctls:
+          fs.inotify.max_user_instances: "8192"
+          fs.inotify.max_user_watches: "1048576"
+        time:
+          disabled: false
+          servers:
+            - time.cloudflare.com
+EOF
+
+    elif [[ "${ROLE}" == "gpu-worker" ]]; then
+        cat >> "${CONFIG_FILE}" <<EOF
+  - idOverride: 401-cm-${OMNI_UUID}-gpu-worker-config
+    annotations:
+      name: gpu-worker-config
     inline:
       machine:
-        install:
-          extensions:
-            - image: ghcr.io/siderolabs/nvidia-container-toolkit:latest
-            - image: ghcr.io/siderolabs/nonfree-kmod-nvidia:latest
+        features:
+          hostDNS:
+            enabled: true
+            forwardKubeDNSToHost: true
+          kubePrism:
+            enabled: true
+            port: 7445
+        files:
+          - content: |
+              [plugins."io.containerd.grpc.v1.cri"]
+                enable_unprivileged_ports = true
+                enable_unprivileged_icmp = true
+              [plugins."io.containerd.grpc.v1.cri".containerd]
+                default_runtime_name = "nvidia"
+              [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia]
+                privileged_without_host_devices = false
+                runtime_engine = ""
+                runtime_root = ""
+                runtime_type = "io.containerd.runc.v2"
+                [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia.options]
+                  BinaryName = "/usr/bin/nvidia-container-runtime"
+            op: create
+            path: /etc/cri/conf.d/20-customization.part
         kernel:
           modules:
             - name: nvidia
             - name: nvidia_uvm
             - name: nvidia_drm
             - name: nvidia_modeset
+            - name: br_netfilter
+              parameters:
+                - nf_conntrack_max=131072
+EOF
+        # Add Longhorn mount for GPU workers (if they have data disk)
+        if [[ "${HAS_DATA_DISK}" == "true" ]]; then
+            cat >> "${CONFIG_FILE}" <<EOF
         kubelet:
-          extraArgs:
-            feature-gates: DevicePlugins=true
+          extraMounts:
+            - destination: /var/lib/longhorn
+              options:
+                - bind
+                - rshared
+                - rw
+              source: /var/mnt/longhorn
+              type: bind
+EOF
+        fi
+        cat >> "${CONFIG_FILE}" <<EOF
+        sysctls:
+          fs.inotify.max_user_instances: "8192"
+          fs.inotify.max_user_watches: "1048576"
+          net.core.bpf_jit_harden: "1"
+        time:
+          disabled: false
+          servers:
+            - time.cloudflare.com
+EOF
+
+    else  # Regular worker
+        cat >> "${CONFIG_FILE}" <<EOF
+  - idOverride: 401-cm-${OMNI_UUID}-regular-worker-config
+    annotations:
+      name: regular-worker-config
+    inline:
+      cluster:
+        proxy:
+          disabled: true
+      machine:
+        features:
+          hostDNS:
+            enabled: true
+            forwardKubeDNSToHost: true
+          kubePrism:
+            enabled: true
+            port: 7445
+        files:
+          - content: |
+              [plugins."io.containerd.grpc.v1.cri"]
+                enable_unprivileged_ports = true
+                enable_unprivileged_icmp = true
+            op: create
+            path: /etc/cri/conf.d/20-customization.part
+        kernel:
+          modules:
+            - name: br_netfilter
+              parameters:
+                - nf_conntrack_max=131072
+EOF
+        # Add Longhorn mount for regular workers (if they have data disk)
+        if [[ "${HAS_DATA_DISK}" == "true" ]]; then
+            cat >> "${CONFIG_FILE}" <<EOF
+        kubelet:
+          extraMounts:
+            - destination: /var/lib/longhorn
+              options:
+                - bind
+                - rshared
+                - rw
+              source: /var/mnt/longhorn
+              type: bind
+EOF
+        fi
+        cat >> "${CONFIG_FILE}" <<EOF
+        sysctls:
+          fs.inotify.max_user_instances: "8192"
+          fs.inotify.max_user_watches: "1048576"
+        time:
+          disabled: false
+          servers:
+            - time.cloudflare.com
 EOF
     fi
 
@@ -186,6 +294,9 @@ echo "Generating combined cluster template..."
 
 CLUSTER_TEMPLATE="${OUTPUT_DIR}/cluster-template.yaml"
 
+# Get cluster name from Terraform
+CLUSTER_NAME=$(cd "${SCRIPT_DIR}/../terraform" && terraform output -raw cluster_summary 2>/dev/null | jq -r '.cluster_name' 2>/dev/null || echo "talos-cluster")
+
 # Generate cluster template header
 cat > "${CLUSTER_TEMPLATE}" <<EOF
 # =============================================================================
@@ -195,9 +306,16 @@ cat > "${CLUSTER_TEMPLATE}" <<EOF
 #
 # This file contains:
 # - Cluster configuration
-# - Control Plane definition
-# - Worker machine sets
-# - Individual Machine configurations with static IPs
+# - Control Plane definition with untaint patch
+# - Worker machine sets (regular + GPU)
+# - Individual Machine configurations with:
+#   - Hostnames
+#   - Node labels (management-ip, node-role, zone)
+#   - Role-specific configurations (hostDNS, kubePrism, containerd)
+#   - Longhorn mounts (for workers with data disks)
+#   - NVIDIA GPU support (for GPU workers)
+#
+# Network: Using DHCP (PXE boot), not static IPs
 #
 # Apply with:
 #   omnictl cluster template sync -f ${CLUSTER_TEMPLATE}
@@ -208,11 +326,11 @@ cat > "${CLUSTER_TEMPLATE}" <<EOF
 
 ---
 kind: Cluster
-name: talos-cluster
+name: ${CLUSTER_NAME}
 kubernetes:
-  version: v1.30.0
+  version: v1.34.1
 talos:
-  version: v1.7.0
+  version: v1.11.5
 features:
   diskEncryption: false
   enableWorkloadProxy: true
@@ -229,6 +347,18 @@ EOF
     for uuid in "${CONTROL_PLANE_MACHINES[@]}"; do
         echo "  - ${uuid}" >> "${CLUSTER_TEMPLATE}"
     done
+    # Add untaint patch to prevent scheduling workloads on control planes
+    cat >> "${CLUSTER_TEMPLATE}" <<'EOF'
+patches:
+  - idOverride: 400-control-planes-untaint
+    annotations:
+      name: ""
+    inline:
+      cluster:
+        allowSchedulingOnControlPlanes: false
+        proxy:
+          disabled: true
+EOF
 fi
 
 # Add regular workers section
