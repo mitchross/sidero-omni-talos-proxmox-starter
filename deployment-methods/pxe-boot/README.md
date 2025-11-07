@@ -481,9 +481,9 @@ omnictl config new
 ./generate-machine-configs.sh
 # Creates YAML configs with:
 #   - Hostnames (e.g., talos-control-01)
-#   - Static IPs
-#   - Role labels (control-plane, worker, gpu-worker)
-#   - Disk configurations
+#   - Node labels (management-ip, node-role, zone)
+#   - Role-specific configurations (hostDNS, kubePrism)
+#   - Disk configurations (Longhorn mounts)
 #   - GPU configurations (for GPU workers)
 
 # 5. Apply configurations to Omni

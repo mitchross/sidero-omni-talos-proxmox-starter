@@ -101,11 +101,12 @@ Unmatched: 0
 - Reads matched machines from discover-machines.sh
 - Creates Talos Machine YAML documents for each VM
 - Generates patches for:
-  - Static IP configuration
-  - Hostname
-  - Secondary disk mounting (for Longhorn)
-  - GPU drivers (for GPU workers)
-- Creates combined cluster template
+  - Hostname and node labels (management-ip, node-role, zone)
+  - Role-specific configurations (hostDNS, kubePrism, sysctls)
+  - Containerd runtime configs
+  - Optional Longhorn mounts (for workers with data disks)
+  - NVIDIA GPU support (for GPU workers)
+- Creates combined cluster template with ControlPlane untaint patch
 
 **Usage**:
 ```bash
@@ -135,26 +136,38 @@ Total:          8
 ---
 kind: Machine
 name: abc123-def-456-...  # Machine UUID from Omni
-labels:
-  role: control-plane
-  hostname: talos-cp-1
 patches:
-  - name: talos-cp-1-network-config
+  - idOverride: 400-cm-abc123-set-hostname-talos-control-1
+    annotations:
+      name: set-hostname-talos-control-1
     inline:
       machine:
         network:
-          hostname: talos-cp-1
-          interfaces:
-            - interface: eth0
-              dhcp: false
-              addresses:
-                - 192.168.10.100/24
-              routes:
-                - network: 0.0.0.0/0
-                  gateway: 192.168.10.1
-          nameservers:
-            - 1.1.1.1
-            - 8.8.8.8
+          hostname: talos-control-1
+        nodeLabels:
+          management-ip: 192.168.10.120
+          node-role: control-plane
+          topology.kubernetes.io/zone: proxmox
+  - idOverride: 401-cm-abc123-control-plane-config
+    annotations:
+      name: control-plane-config
+    inline:
+      cluster:
+        proxy:
+          disabled: true
+      machine:
+        features:
+          hostDNS:
+            enabled: true
+            forwardKubeDNSToHost: true
+          kubePrism:
+            enabled: true
+            port: 7445
+        kernel:
+          modules:
+            - name: br_netfilter
+              parameters:
+                - nf_conntrack_max=131072
 ```
 
 ### 3. apply-machine-configs.sh
@@ -255,33 +268,26 @@ terraform output gpu_configuration_needed
 
 ## Network Configuration
 
-### Static IP Assignment
+### IP Assignment via DHCP
 
-The scripts configure static IPs in two ways:
+The scripts use DHCP for IP assignment with PXE boot:
 
 1. **DHCP Reservations** (Recommended)
    - MAC addresses assigned by Terraform
-   - DHCP server maps MAC → IP
-   - Machines get consistent IPs on boot
-   - Works with Firewalla, pfSense, router, etc.
+   - DHCP server maps MAC → IP for consistency
+   - Get reservation table: `terraform output dhcp_reservations_table`
+   - Add to your router/DHCP server (Firewalla, pfSense, etc.)
 
-2. **Talos Static IP Patch** (Backup)
-   - Applied via machine configuration
-   - Direct static IP in Talos config
-   - Works without DHCP reservations
-   - Redundant if DHCP reservations work
+2. **Dynamic DHCP** (Fallback)
+   - Machines get IPs from DHCP pool
+   - IPs may change on reboot
+   - Not recommended for production
+
+**No static IP patches are applied** - machines use DHCP via PXE boot. Hostnames and node labels (including management-ip) are set via machine patches for identification in Kubernetes.
 
 ### DNS Configuration
 
-DNS servers are configured in Terraform `network_config`:
-
-```hcl
-network_config = {
-  dns_servers = ["1.1.1.1", "8.8.8.8"]
-}
-```
-
-These are applied to each machine via config patches.
+DNS is handled by your DHCP server. Talos machines use the DNS servers provided by DHCP during network boot.
 
 ## GPU Worker Configuration
 
@@ -344,13 +350,13 @@ qm reboot <VM_ID>
 
 ### Configuration Issues
 
-**Problem**: "Static IPs not applied"
+**Problem**: "Machines not getting expected IPs"
 
 **Solutions**:
-1. Verify DHCP reservations configured
-2. Check machine patches: `omnictl get configpatches`
-3. Reboot machines to get new IP
-4. Check Talos logs in Omni UI
+1. Verify DHCP reservations configured in your router/DHCP server
+2. Check MAC addresses match: `terraform output dhcp_reservations_table`
+3. Reboot machines to get IP from DHCP reservation
+4. Check DHCP server logs for MAC address lease requests
 
 **Problem**: "Hostnames not set"
 

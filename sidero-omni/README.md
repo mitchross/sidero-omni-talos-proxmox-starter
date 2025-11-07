@@ -256,8 +256,9 @@ ss -tuln | grep -E ':(443|8090|8100|50180)'
 After deployment:
 1. Complete the initial setup in the Omni UI
 2. Configure machine registration settings
-3. Set up cluster templates from the `../bootstrap` directory
-4. Start registering Talos machines created by the Terraform configuration in `../terraform`
+3. Deploy Booter for PXE boot (see `../deployment-methods/pxe-boot/README.md`)
+4. Create VMs with Terraform in `../terraform`
+5. Use automation scripts in `../scripts` to match machines and apply configurations
 
 ## Maintenance
 
@@ -678,10 +679,12 @@ nslookup omni.example.com
 ## Integration with Terraform
 
 Once Omni is deployed and running:
-1. Use the cluster templates from `../bootstrap` directory
-2. Configure clusters for VMs created by Terraform in `../terraform`
-3. Machines will automatically register with Omni when they boot with Talos
-4. See [Cluster Templates Documentation](https://docs.siderolabs.com/omni/reference/cluster-templates)
+1. Deploy Booter for PXE network boot (see `../deployment-methods/pxe-boot/`)
+2. Create VMs with Terraform in `../terraform` directory
+3. Machines will automatically PXE boot and register with Omni
+4. Use automation scripts in `../scripts/` to match UUIDs to hostnames/IPs
+5. Create clusters in Omni UI with properly labeled machines
+6. See [Cluster Templates Documentation](https://docs.siderolabs.com/omni/reference/cluster-templates)
 
 ## Quick Reference
 

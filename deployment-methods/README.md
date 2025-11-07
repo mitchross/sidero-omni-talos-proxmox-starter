@@ -1,253 +1,215 @@
-# Talos Cluster Deployment Methods
+# Talos Deployment Methods
 
-This repository supports **four different approaches** to deploy Talos Linux clusters on Proxmox. Choose the method that best fits your needs and skill level.
+This repository supports deploying Talos Linux clusters on Proxmox with different boot methods.
 
-## Quick Comparison
+## Primary Method: Terraform + PXE Boot (Recommended)
 
-| Method | Difficulty | Automation | Flexibility | Best For |
-|--------|-----------|------------|-------------|----------|
-| [**Omni Provider**](#1-omni-infrastructure-provider-easiest) | ⭐ Easy | 🤖 Fully Automated | ⚙️ Medium | **Recommended for most users** |
-| [**ISO Templates**](#2-iso-templates-simple) | ⭐⭐ Simple | 👆 Manual Cloning | ⚙️⚙️ Medium | Proxmox UI comfort, small clusters |
-| [**Terraform**](#3-terraform-advanced) | ⭐⭐⭐ Advanced | 🤖 Fully Automated | ⚙️⚙️⚙️ Very High | IaC experts, large deployments |
-| [**PXE Boot**](#4-pxe-boot-booter-specialized) | ⭐⭐⭐⭐ Expert | 🤖 Network Boot | ⚙️⚙️ Medium | Bare metal, PXE infrastructure |
-
----
-
-## 1. Omni Infrastructure Provider (EASIEST) ✨
-
-**NEW in 2025!** Official Siderolabs tool that auto-provisions VMs directly from Omni UI.
+**This is the tested, documented, and recommended approach for this starter kit.**
 
 ### How It Works
+
 ```
-You → Omni UI → Define Machine Class → Click "Scale Up" → VMs Created Automatically!
-         ↓
-   Proxmox Provider ← Talks to Proxmox API
-         ↓
-   New VMs appear in Proxmox (fully configured)
+1. Deploy Omni (management platform)          → cd sidero-omni && docker compose up
+2. Deploy Booter (PXE boot server)            → cd deployment-methods/pxe-boot && docker compose up
+3. Create VMs with Terraform                  → cd terraform && terraform apply
+4. Match & configure with scripts             → cd scripts && ./discover-machines.sh
+   ↓
+Machines appear in Omni with proper names, IPs, and roles!
 ```
 
-### Pros
-- ✅ **Easiest method** - Everything in Omni UI
-- ✅ **No Terraform/HCL knowledge** required
-- ✅ **Auto-scaling** - Add/remove nodes with a click
-- ✅ **Official Siderolabs** support
-- ✅ **GPU support** via machine class extensions
+### Why This Method?
 
-### Cons
-- ⚠️ Requires self-hosted Omni (already part of this repo)
-- ⚠️ Less granular control than Terraform
-- ⚠️ Network configuration via Omni, not DHCP reservations
-
-### When to Use
-- ✅ You already have Omni running (Phase 1 of this guide)
-- ✅ You want the simplest deployment
-- ✅ You're okay with Omni managing the infrastructure
+✅ **Simple** - 4 clear steps, well-documented
+✅ **Automated** - Scripts handle the complex UUID matching
+✅ **No ISO management** - VMs network boot automatically
+✅ **Production-ready** - Tested with control planes, workers, and GPU workers
+✅ **Reproducible** - Terraform tracks infrastructure as code
 
 ### Quick Start
+
 ```bash
-cd deployment-methods/omni-provider
-./setup-provider.sh
-# Follow prompts, then use Omni UI to create machines
-```
+# 1. Deploy Omni (see sidero-omni/README.md)
+cd sidero-omni
+./check-prerequisites.sh
+./install-docker.sh
+sudo ./setup-certificates.sh
+./generate-gpg-key.sh
+cp .env.example omni.env
+nano omni.env  # Configure
+docker compose --env-file omni.env up -d
 
-**📁 Directory**: [`omni-provider/`](omni-provider/)
+# 2. Deploy Booter
+cd ../deployment-methods/pxe-boot
+nano docker-compose.yml  # Update --api-advertise-address, --dhcp-proxy-iface-or-ip, kernel args
+docker compose up -d
 
----
-
-## 2. ISO Templates (SIMPLE) 📀
-
-Create custom Talos ISOs with pre-baked NVIDIA drivers, then clone VM templates in Proxmox UI.
-
-### How It Works
-```
-1. Generate 3 custom ISOs via Talos Image Factory
-   - Control Plane ISO
-   - Worker ISO
-   - GPU Worker ISO (with NVIDIA drivers pre-installed)
-
-2. Create Proxmox VM templates from ISOs
-
-3. Clone templates in Proxmox UI (right-click → Clone)
-
-4. Run bash script to configure machines via omnictl
-```
-
-### Pros
-- ✅ **No Terraform** - Pure Proxmox UI
-- ✅ **GPU drivers pre-installed** in ISO
-- ✅ **Simple bash scripts** instead of HCL
-- ✅ **Fast cloning** from templates
-- ✅ **Visual** - See VMs in Proxmox UI
-
-### Cons
-- ⚠️ Manual VM creation (clone each VM)
-- ⚠️ Less reproducible than code
-- ⚠️ Need to maintain custom ISOs
-
-### When to Use
-- ✅ You prefer Proxmox UI over code
-- ✅ Small clusters (< 10 VMs)
-- ✅ You have GPU workers (drivers pre-baked)
-- ✅ You're comfortable with bash
-
-### Quick Start
-```bash
-cd deployment-methods/iso-templates
-./generate-isos.sh          # Creates custom ISOs
-./create-templates.sh       # Creates Proxmox templates
-# Clone VMs in Proxmox UI
-./configure-cluster.sh      # Applies configs via omnictl
-```
-
-**📁 Directory**: [`iso-templates/`](iso-templates/)
-
----
-
-## 3. Terraform (ADVANCED) 🏗️
-
-Full Infrastructure as Code with Terraform HCL.
-
-### How It Works
-```
-terraform.tfvars → Terraform → Proxmox API → VMs Created
-                      ↓
-              State tracked in .tfstate
-                      ↓
-            Scripts configure via omnictl
-```
-
-### Pros
-- ✅ **Full IaC** - Everything in code
-- ✅ **Highly reproducible** - Same config = same result
-- ✅ **Version controlled** - Git tracks all changes
-- ✅ **Advanced features** - Conditionals, loops, modules
-- ✅ **Multi-environment** - Dev/Staging/Prod workspaces
-
-### Cons
-- ⚠️ **Steepest learning curve** - Must know Terraform/HCL
-- ⚠️ **State management** - Need to track .tfstate file
-- ⚠️ **Over-engineering** for small deployments
-
-### When to Use
-- ✅ You already know Terraform
-- ✅ Large deployments (10+ VMs)
-- ✅ Need reproducibility and GitOps
-- ✅ Managing multiple environments
-- ✅ Want full automation
-
-### Quick Start
-```bash
-cd terraform
-./recommend-cluster.sh      # Auto-generates config
+# 3. Create VMs
+cd ../../terraform
+cp terraform.tfvars.example terraform.tfvars
+nano terraform.tfvars  # Configure servers and VMs
 terraform init
 terraform apply
+
+# 4. Match and configure machines
 cd ../scripts
-./discover-machines.sh      # Configure via omnictl
+./discover-machines.sh
+./generate-machine-configs.sh
+./apply-machine-configs.sh
+
+# 5. Create cluster in Omni UI
+# Machines now have proper names instead of UUIDs!
+```
+
+### Components
+
+- **Omni** - Cluster management UI and API ([setup guide](../sidero-omni/README.md))
+- **Booter** - PXE boot server for network booting ([setup guide](pxe-boot/README.md))
+- **Terraform** - VM provisioning on Proxmox ([setup guide](../terraform/README.md))
+- **Scripts** - Automation for UUID → hostname/IP mapping ([setup guide](../scripts/README.md))
+
+### Supported Features
+
+✅ Multiple Proxmox servers
+✅ Control planes, workers, GPU workers
+✅ Automatic MAC address assignment
+✅ DHCP reservations (recommended)
+✅ Longhorn storage mounts
+✅ NVIDIA GPU runtime configuration
+✅ Production-ready cluster templates
+
+**📁 Main Documentation**: See [root README.md](../README.md) for complete walkthrough
+
+---
+
+## Alternative: ISO Boot
+
+If PXE boot doesn't work in your environment (network restrictions, isolated VLANs, etc.), you can use ISO boot instead.
+
+### How It Works
+
+```
+1. Upload Talos ISO to Proxmox storage
+2. Terraform creates VMs with ISO mounted
+3. VMs boot from ISO instead of network
+4. Rest of workflow is the same
+```
+
+### When to Use
+
+- ✅ PXE boot not possible (network restrictions)
+- ✅ Isolated networks/VLANs
+- ✅ Prefer explicit boot media over network boot
+
+### Quick Start
+
+```bash
+# 1. Download Talos ISO
+wget https://github.com/siderolabs/talos/releases/download/v1.11.5/metal-amd64.iso
+
+# 2. Upload to Proxmox
+scp metal-amd64.iso root@pve1:/var/lib/vz/template/iso/talos-amd64.iso
+
+# 3. Configure Terraform for ISO boot
+cd terraform
+cp terraform.tfvars.example terraform.tfvars
+nano terraform.tfvars
+# Set: boot_method = "iso"
+# Set: talos_iso = "local:iso/talos-amd64.iso"
+
+# 4. Continue with normal Terraform workflow
+terraform init
+terraform apply
+
+# 5. Use scripts as usual
+cd ../scripts
+./discover-machines.sh
 ./generate-machine-configs.sh
 ./apply-machine-configs.sh
 ```
 
-**📁 Directory**: [`../terraform/`](../terraform/)
+### Differences from PXE Boot
+
+| Feature | PXE Boot | ISO Boot |
+|---------|----------|----------|
+| Setup | Booter + Terraform | ISO upload + Terraform |
+| Network dependency | Required | Not required |
+| Boot speed | Fast | Medium |
+| ISO management | None | Manual upload/updates |
+| Production ready | ✅ Yes | ✅ Yes |
+
+**📁 Documentation**: See [terraform/README.md](../terraform/README.md#alternative-iso-boot-method)
 
 ---
 
-## 4. PXE Boot (Booter) - SPECIALIZED 🌐
+## Experimental: Other Deployment Methods
 
-Network boot Talos machines using Siderolabs Booter.
+The following methods are documented but may not be fully tested or maintained:
 
-### How It Works
-```
-1. Run Booter container on network
-2. Configure VMs to PXE boot
-3. Power on VMs → Auto-download Talos → Boot
-4. Machines register with Omni automatically
-```
+### ISO Templates
 
-### Pros
-- ✅ **No ISO management** - Everything over network
-- ✅ **Fast provisioning** - Boot from network
-- ✅ **Diskless boot** possible
-- ✅ **Bare metal ready** - Works on physical servers
+Create custom Talos ISOs with pre-baked extensions and clone VM templates.
 
-### Cons
-- ⚠️ **Requires PXE infrastructure** - DHCP, TFTP, etc.
-- ⚠️ **Network dependent** - Must be on same subnet
-- ⚠️ **Complexity** - More moving parts
+**Status**: Documented but not the primary workflow
+**📁 Directory**: [`iso-templates/`](iso-templates/)
 
-### When to Use
-- ✅ You have existing PXE infrastructure
-- ✅ Deploying bare metal servers
-- ✅ Need rapid provisioning
-- ✅ Diskless or thin client deployments
+**Use case**: If you prefer Proxmox UI cloning over Terraform
 
-### Quick Start
-```bash
-cd deployment-methods/pxe-boot
-./setup-booter.sh
-# Configure VMs to PXE boot, power on
-```
+### Omni Infrastructure Provider
 
-**📁 Directory**: [`pxe-boot/`](pxe-boot/)
+Auto-provision VMs directly from Omni UI using the official infrastructure provider.
+
+**Status**: Documented but not the primary workflow
+**📁 Directory**: [`omni-provider/`](omni-provider/)
+
+**Use case**: If you want Omni to manage infrastructure provisioning
+
+**Note**: These methods may require additional setup and testing. The primary workflow (Terraform + PXE Boot) is the recommended and most tested approach.
 
 ---
 
-## Decision Tree
+## Comparison Matrix
 
-```
-Start Here
-    │
-    ├─ Do you have Omni running?
-    │  ├─ YES → Use Omni Infrastructure Provider ✨
-    │  └─ NO  → Do you want the simplest deployment?
-    │           ├─ YES → Use ISO Templates 📀
-    │           └─ NO  → Continue...
-    │
-    ├─ Do you know Terraform?
-    │  ├─ YES → Are you deploying > 10 VMs?
-    │  │        ├─ YES → Use Terraform 🏗️
-    │  │        └─ NO  → Use ISO Templates or Omni Provider
-    │  └─ NO  → Use ISO Templates 📀
-    │
-    └─ Do you have PXE infrastructure?
-       ├─ YES → Use PXE Boot (Booter) 🌐
-       └─ NO  → Use one of the above methods
-```
-
-## Recommended Path for New Users
-
-1. **Start with Omni Infrastructure Provider** if you have Omni
-2. **Fall back to ISO Templates** if you want simplicity without Omni provider
-3. **Use Terraform** if you're scaling or need IaC
-4. **Use PXE/Booter** only if you have specific PXE requirements
-
-## Feature Matrix
-
-| Feature | Omni Provider | ISO Templates | Terraform | PXE Boot |
-|---------|--------------|---------------|-----------|----------|
-| Auto-scaling | ✅ Yes | ❌ No | ⚙️ Manual | ❌ No |
-| GPU pre-configured | ✅ Via extensions | ✅ In ISO | ⚠️ Post-install | ✅ Via extensions |
+| Feature | Terraform + PXE | Terraform + ISO | ISO Templates | Omni Provider |
+|---------|----------------|----------------|---------------|---------------|
+| Status | ✅ Primary | ✅ Alternative | ⚠️ Experimental | ⚠️ Experimental |
+| Documentation | ✅ Complete | ✅ Complete | ⚠️ Basic | ⚠️ Basic |
+| Automation | ✅ Full | ✅ Full | ⚠️ Partial | ⚠️ Full |
+| Learning curve | Medium | Medium | Low | Low |
+| ISO management | None | Manual | Manual | None |
+| GitOps ready | ✅ Yes | ✅ Yes | ❌ No | ⚠️ Partial |
 | Multi-server | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes |
-| DHCP reservations | ⚠️ Not needed | ✅ Yes | ✅ Yes | ⚠️ Not needed |
-| GitOps ready | ⚙️ Partial | ❌ No | ✅ Yes | ❌ No |
-| Requires code | ❌ No | ⚠️ Bash only | ✅ HCL | ⚠️ Minimal |
-| State management | ✅ Omni handles | ❌ None | ⚠️ .tfstate | ❌ None |
+| GPU support | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes |
 
-## Next Steps
+## Decision Guide
 
-Choose your deployment method above and follow the guide in its respective directory:
+**Start here:**
 
-- **[omni-provider/](omni-provider/)** - Omni Infrastructure Provider setup
-- **[iso-templates/](iso-templates/)** - Custom ISO creation and templates
-- **[../terraform/](../terraform/)** - Terraform configuration (existing)
-- **[pxe-boot/](pxe-boot/)** - PXE boot with Booter
+1. **Are you following this repo's main guide?**
+   → Use **Terraform + PXE Boot** (recommended)
 
-## Support & Resources
+2. **Does PXE boot not work in your network?**
+   → Use **Terraform + ISO Boot** (alternative)
 
-- [Omni Infrastructure Provider Docs](https://github.com/siderolabs/omni-infra-provider-proxmox)
-- [Talos Image Factory](https://factory.talos.dev)
+3. **Want to try something different?**
+   → Explore **ISO Templates** or **Omni Provider** (experimental)
+
+## Getting Started
+
+Most users should follow the main README:
+
+→ **[Root README.md](../README.md)** - Complete walkthrough of Terraform + PXE Boot method
+
+For alternative methods, see their respective directories.
+
+## Support
+
+- **Primary method (PXE + Terraform)**: Fully documented and tested
+- **Alternative methods**: Community contributions welcome!
+- **Issues**: Open a GitHub issue if you encounter problems
+
+## References
+
+- [Sidero Omni Documentation](https://docs.siderolabs.com/omni/)
+- [Talos Linux](https://www.talos.dev)
 - [Siderolabs Booter](https://github.com/siderolabs/booter)
 - [Terraform Proxmox Provider](https://registry.terraform.io/providers/Telmate/proxmox/latest/docs)
-
-## Questions?
-
-See [../README.md](../README.md) for the main project documentation, or open an issue on GitHub.
