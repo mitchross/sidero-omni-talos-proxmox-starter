@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  booter:
+    image: ghcr.io/siderolabs/omni-infra-provider-bare-metal:latest
+    container_name: sidero-booter
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      - OMNI_ENDPOINT=https://omni.vanillax.me
+      - OMNI_SERVICE_ACCOUNT_KEY=${OMNI_SERVICE_ACCOUNT_KEY}
+    volumes:
+      - ./data:/var/lib/sidero
+    command:
+      - --name=booter
+      - --omni-api-endpoint=https://omni.vanillax.me
+
+# Alternative configuration using the older booter image
+# If the above doesn't work, uncomment this and comment out the above:
+#
+# services:
+#   booter:
+#     image: ghcr.io/siderolabs/booter:v0.3.0
+#     container_name: sidero-booter
+#     network_mode: host
+#     restart: unless-stopped
+#     environment:
+#       - OMNI_ENDPOINT=https://omni.vanillax.me
+#       - OMNI_SERVICE_ACCOUNT_KEY=${OMNI_SERVICE_ACCOUNT_KEY}
+#     volumes:
+#       - ./data:/var/lib/sidero
+#     command:
+#       - --siderolink-api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN
+#       - --events-sink=[fdae:41e4:649b:9303::1]:8091
+#       - --kernel-logs-sink=tcp://[fdae:41e4:649b:9303::1]:8092

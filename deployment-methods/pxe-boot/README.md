@@ -21,32 +21,61 @@ This deployment method uses **Sidero Booter** to PXE boot machines into Talos Li
 - **Network Access**: VMs must reach both Booter and Omni
 - **DHCP Server**: To provide PXE boot options (e.g., Firewalla, pfSense, router)
 
-## Option 1: Deploy Booter via Omni (Recommended)
+## Deploy Booter with Docker Compose (Recommended)
 
-Sidero Omni can automatically deploy and manage Booter for you.
+The easiest way to deploy Booter is using Docker Compose.
 
-### Step 1: Enable Booter in Omni
+### Step 1: Create Service Account in Omni
 
 1. **Login to Omni UI**: `https://your-omni-instance`
 
-2. **Navigate to Settings**:
-   - Click **Settings** in the left sidebar
-   - Go to **Infrastructure Providers** or **Booter** section
+2. **Create Service Account**:
+   - Go to **Settings** → **Service Accounts**
+   - Click **Create Service Account**
+   - Name: `booter`
+   - **Role: Operator** (important!)
+   - Copy the token (starts with `eyJ...`)
 
-3. **Enable Booter**:
-   - Toggle **Enable Booter** to ON
-   - Omni will automatically deploy Booter as a container
+### Step 2: Configure Environment
 
-4. **Get Booter IP Address**:
-   - Note the IP address where Booter is running
-   - This is typically the Omni server's IP or a dedicated service IP
-   - Example: `192.168.10.50`
+```bash
+# Navigate to pxe-boot directory
+cd deployment-methods/pxe-boot
 
-5. **Booter API Endpoint**:
-   - HTTP: `http://<booter-ip>:8081` (API and file server)
-   - TFTP: `<booter-ip>:69` (PXE boot files)
+# Copy the example environment file
+cp .env.example .env
 
-### Step 2: Configure DHCP Server
+# Edit .env with your values
+nano .env
+```
+
+Update `.env` with your credentials:
+```bash
+OMNI_ENDPOINT=https://your-omni-instance.com
+OMNI_SERVICE_ACCOUNT_KEY=eyJuYW1lIjoiYm9vdGVyIiwi...  # Your service account key
+```
+
+### Step 3: Start Booter
+
+```bash
+# Make sure you've exported your environment variables or they're in .env
+docker-compose up -d
+
+# Check logs
+docker logs -f sidero-booter
+```
+
+You should see:
+```
+Starting Omni Infra Provider (Bare Metal)...
+Connected to Omni at https://your-omni-instance.com
+Listening on :8081 (HTTP)
+Listening on :69 (TFTP)
+```
+
+**Note the IP address** of the machine running Booter - you'll need this for DHCP configuration.
+
+### Step 4: Configure DHCP Server
 
 Configure your DHCP server (router, Firewalla, pfSense, etc.) to point to Booter.
 
@@ -112,7 +141,7 @@ enable-tftp
 tftp-root=/var/lib/tftpboot
 ```
 
-### Step 3: Boot VMs
+### Step 5: Boot VMs
 
 1. **Start VMs**:
    ```bash
@@ -141,7 +170,7 @@ tftp-root=/var/lib/tftpboot
    - Your VMs should appear as **unallocated** machines
    - Status: **Maintenance mode**
 
-### Step 4: Accept Machines in Omni
+### Step 6: Accept Machines in Omni
 
 1. **View Discovered Machines**:
    - Omni UI → **Machines**
@@ -156,11 +185,9 @@ tftp-root=/var/lib/tftpboot
    - Select machines for control plane and worker roles
    - Omni will install Talos to disk and configure the cluster
 
-## Option 2: Deploy Booter Manually (Advanced)
+## Alternative: Deploy Booter with Plain Docker
 
-If you want to run Booter separately from Omni:
-
-### Step 1: Run Booter Container
+If you prefer not to use Docker Compose:
 
 ```bash
 # Create directory for Booter data
@@ -172,65 +199,17 @@ docker run -d \
   --restart unless-stopped \
   --network host \
   -v /opt/sidero-booter:/var/lib/sidero \
-  -e SIDERO_LINK_API=grpc://your-omni-ip:8090 \
-  -e API_ENDPOINT=http://0.0.0.0:8081 \
-  ghcr.io/siderolabs/booter:latest
+  -e OMNI_ENDPOINT=https://your-omni-instance.com \
+  -e OMNI_SERVICE_ACCOUNT_KEY=eyJuYW1lIjoiYm9vdGVyIiwi... \
+  ghcr.io/siderolabs/omni-infra-provider-bare-metal:latest \
+  --name=booter \
+  --omni-api-endpoint=https://your-omni-instance.com
+
+# Check logs
+docker logs -f sidero-booter
 ```
 
-**Environment Variables:**
-- `SIDERO_LINK_API`: Omni's SideroLink endpoint (e.g., `grpc://192.168.10.50:8090`)
-- `API_ENDPOINT`: Booter's HTTP API endpoint
-- `TFTP_ADDR`: TFTP server address (default: `:69`)
-
-### Step 2: Download PXE Boot Files
-
-```bash
-# Download iPXE bootloaders
-cd /opt/sidero-booter
-
-# BIOS
-wget -O undionly.kpxe https://boot.ipxe.org/undionly.kpxe
-
-# UEFI
-wget -O ipxe.efi https://boot.ipxe.org/ipxe.efi
-
-# Or use Sidero's pre-built images
-wget https://github.com/siderolabs/sidero/releases/latest/download/undionly.kpxe
-wget https://github.com/siderolabs/sidero/releases/latest/download/ipxe.efi
-```
-
-### Step 3: Configure Booter
-
-Create `/opt/sidero-booter/config.yaml`:
-
-```yaml
-api:
-  endpoint: "http://0.0.0.0:8081"
-
-siderolink:
-  api: "grpc://192.168.10.50:8090"  # Omni SideroLink endpoint
-
-tftp:
-  addr: ":69"
-
-talos:
-  # Booter will automatically fetch Talos images from Omni
-  # Or specify custom Talos version:
-  version: "v1.10.1"
-```
-
-### Step 4: Start Booter with Config
-
-```bash
-docker run -d \
-  --name sidero-booter \
-  --restart unless-stopped \
-  --network host \
-  -v /opt/sidero-booter:/var/lib/sidero \
-  -v /opt/sidero-booter/config.yaml:/etc/sidero/config.yaml \
-  ghcr.io/siderolabs/booter:latest \
-  --config /etc/sidero/config.yaml
-```
+Then follow steps 4-6 above for DHCP configuration and booting VMs.
 
 ## Troubleshooting
 
