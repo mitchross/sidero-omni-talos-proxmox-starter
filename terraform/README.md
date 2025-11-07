@@ -7,7 +7,7 @@ This directory contains Terraform Infrastructure as Code (IaC) to provision virt
 - **Proxmox VE**: 7.x or later (2-3+ servers recommended)
 - **Terraform**: 1.0 or later ([install guide](https://www.terraform.io/downloads))
 - **Proxmox API Tokens**: One per Proxmox server (see setup guide below)
-- **Talos Template VM**: Must exist on all Proxmox servers (same name on each)
+- **Talos ISO**: Uploaded to Proxmox storage (see [ISO Download Guide](#talos-iso-setup) below)
 
 ## Files
 
@@ -174,6 +174,75 @@ Node Name: pve3
 - Use environment variables for CI/CD: `TF_VAR_proxmox_servers`
 - Rotate tokens periodically
 
+## Talos ISO Setup
+
+Before deploying VMs, you need to upload the Talos Linux ISO to your Proxmox server(s).
+
+### Step 1: Download Talos ISO
+
+**Option A: Standard Release (No Extensions)**
+
+```bash
+# Download latest stable Talos ISO
+wget https://github.com/siderolabs/talos/releases/download/v1.10.1/metal-amd64.iso
+
+# Or use curl
+curl -LO https://github.com/siderolabs/talos/releases/download/v1.10.1/metal-amd64.iso
+```
+
+**Option B: Custom ISO with Extensions (Recommended)**
+
+For GPU support or QEMU Guest Agent, use the Talos Image Factory:
+
+1. Go to https://factory.talos.dev
+2. Select your Talos version (e.g., v1.10.1)
+3. Add system extensions:
+   - For standard workers: `siderolabs/qemu-guest-agent`
+   - For GPU workers: See `deployment-methods/iso-templates/schematics/gpu-worker.yaml`
+4. Generate and download the custom ISO
+
+**Pre-configured schematics available in this repo:**
+- `deployment-methods/iso-templates/schematics/worker.yaml` - Standard workers with QEMU agent
+- `deployment-methods/iso-templates/schematics/gpu-worker.yaml` - GPU workers with NVIDIA drivers
+
+### Step 2: Upload ISO to Proxmox
+
+**Option A: Via Web UI (Easiest)**
+
+1. Login to Proxmox web interface: `https://your-proxmox-server:8006`
+2. Navigate to: **Datacenter** → **Storage** → **local** (or your ISO storage)
+3. Click **ISO Images** tab
+4. Click **Upload** button
+5. Select your downloaded ISO file
+6. Wait for upload to complete
+
+**Option B: Via Command Line (Faster for large files)**
+
+```bash
+# From your local machine, SCP the ISO to Proxmox
+scp metal-amd64.iso root@pve1:/var/lib/vz/template/iso/talos-amd64.iso
+
+# For multiple servers, upload to each
+scp metal-amd64.iso root@pve2:/var/lib/vz/template/iso/talos-amd64.iso
+scp metal-amd64.iso root@pve3:/var/lib/vz/template/iso/talos-amd64.iso
+```
+
+### Step 3: Configure Terraform
+
+Update your `terraform.tfvars`:
+
+```hcl
+# Standard Talos ISO (uploaded above)
+talos_iso = "local:iso/talos-amd64.iso"
+
+# If using different storage
+talos_iso = "nfs-storage:iso/talos-amd64.iso"
+```
+
+**Note**: All Proxmox servers need access to the ISO. Either:
+- Upload to each server's `local` storage, OR
+- Use shared storage (NFS, Ceph) accessible by all servers
+
 ## Usage
 
 ### Option A: Automated Resource Discovery (Recommended)
@@ -319,13 +388,15 @@ terraform apply
 
 Type `yes` when prompted. Terraform will:
 1. Connect to each Proxmox server via API
-2. Clone the Talos template VM
-3. Configure VMs with specified resources
+2. Create VMs with Talos ISO mounted as CD-ROM
+3. Configure VMs with specified resources (CPU, RAM, disks)
 4. Set MAC addresses for network interfaces
-5. Create secondary disks (if configured)
-6. Start the VMs
+5. Create OS and data disks as configured
+6. Start the VMs (they will boot from ISO)
 
 **Deployment time**: ~5-10 minutes depending on number of VMs and servers.
+
+**After deployment**: VMs will boot into Talos maintenance mode from the ISO. They're now ready to be discovered and configured by Sidero Omni.
 
 ### 5. Verify Deployment
 
@@ -345,9 +416,21 @@ terraform output gpu_configuration_needed
 
 ## VM Configuration
 
-This configuration will create:
-- 3 control plane VMs (4 vCPU, 8GB RAM, 50GB disk)
-- 3 regular worker VMs (8 vCPU, 16GB RAM, 100GB disk)
-- 2 GPU worker VMs (16 vCPU, 32GB RAM, 200GB disk)
+This Terraform configuration creates VMs by:
+- Mounting the Talos ISO as a CD-ROM (boot device)
+- Creating empty disks (OS and optional data disks)
+- Configuring network with static MAC addresses
+- Setting boot order: CD-ROM first, then disk
 
-All VMs will be configured with the Talos Linux ISO and ready for bootstrapping via Sidero Omni.
+**Default example configuration creates:**
+- 3 control plane VMs (4 vCPU, 8GB RAM, 50GB OS disk + 100GB data disk)
+- 3 regular worker VMs (8 vCPU, 16GB RAM, 100GB OS disk + optional data disk)
+- 0 GPU worker VMs (configure in terraform.tfvars if needed)
+
+**Workflow:**
+1. VMs boot from Talos ISO (maintenance mode)
+2. Sidero Omni discovers the machines
+3. Omni installs Talos to disk and configures the cluster
+4. After installation, VMs boot from disk (Talos installed)
+
+All VMs are created fresh - no templates or cloning required.

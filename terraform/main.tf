@@ -120,13 +120,7 @@ resource "proxmox_vm_qemu" "control_plane" {
 
   name        = each.value.name
   target_node = var.proxmox_servers[each.value.proxmox_server].node_name
-  desc        = "Talos Control Plane - Managed by Terraform"
-
-  # Clone from Talos template
-  clone = var.talos_template_name
-
-  # Full clone for independent VMs
-  full_clone = true
+  desc        = "Talos Control Plane - Managed by Terraform - Talos ${var.talos_version}"
 
   # VM Resources
   cores   = each.value.cpu_cores
@@ -136,8 +130,14 @@ resource "proxmox_vm_qemu" "control_plane" {
   # SCSI Controller
   scsihw = "virtio-scsi-single"
 
-  # Boot order
-  boot = "order=scsi0"
+  # Boot from CD-ROM first (for Talos install), then disk
+  boot = "order=ide2;scsi0"
+
+  # CD-ROM with Talos ISO
+  cdrom {
+    type = "iso"
+    iso  = var.talos_iso
+  }
 
   # OS Disk (scsi0)
   disk {
@@ -203,17 +203,20 @@ resource "proxmox_vm_qemu" "worker" {
 
   name        = each.value.name
   target_node = var.proxmox_servers[each.value.proxmox_server].node_name
-  desc        = "Talos Worker - Managed by Terraform"
-
-  clone      = var.talos_template_name
-  full_clone = true
+  desc        = "Talos Worker - Managed by Terraform - Talos ${var.talos_version}"
 
   cores   = each.value.cpu_cores
   sockets = 1
   memory  = each.value.memory_mb
 
   scsihw = "virtio-scsi-single"
-  boot   = "order=scsi0"
+  boot   = "order=ide2;scsi0"
+
+  # CD-ROM with Talos ISO
+  cdrom {
+    type = "iso"
+    iso  = var.talos_iso
+  }
 
   # OS Disk
   disk {
@@ -275,17 +278,20 @@ resource "proxmox_vm_qemu" "gpu_worker" {
 
   name        = each.value.name
   target_node = var.proxmox_servers[each.value.proxmox_server].node_name
-  desc        = "Talos GPU Worker - Managed by Terraform - GPU PCI: ${each.value.gpu_pci_id} (Configure manually)"
-
-  clone      = var.talos_template_name
-  full_clone = true
+  desc        = "Talos GPU Worker - Managed by Terraform - Talos ${var.talos_version} - GPU PCI: ${each.value.gpu_pci_id} (Configure manually)"
 
   cores   = each.value.cpu_cores
   sockets = 1
   memory  = each.value.memory_mb
 
   scsihw = "virtio-scsi-single"
-  boot   = "order=scsi0"
+  boot   = "order=ide2;scsi0"
+
+  # CD-ROM with Talos ISO (should be GPU-enabled ISO from Image Factory)
+  cdrom {
+    type = "iso"
+    iso  = var.talos_iso
+  }
 
   # OS Disk
   disk {

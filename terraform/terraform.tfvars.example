@@ -57,8 +57,18 @@ network_config = {
 # Talos Configuration
 # =============================================================================
 
-talos_template_name = "talos-template"  # Name of Talos template VM in Proxmox
-cluster_name        = "talos-cluster"   # Cluster name
+talos_iso    = "local:iso/talos-amd64.iso"  # Talos ISO in Proxmox storage
+talos_version = "v1.10.1"                     # Talos version for documentation
+cluster_name = "talos-cluster"                # Cluster name
+
+# How to get Talos ISO:
+# 1. Go to https://factory.talos.dev or https://github.com/siderolabs/talos/releases
+# 2. Download metal-amd64.iso (or use Image Factory for custom extensions)
+# 3. Upload to Proxmox: Datacenter → Storage (local) → ISO Images → Upload
+# 4. Set talos_iso to: "local:iso/metal-amd64.iso" (or your storage:iso/filename)
+#
+# For GPU workers, you'll need a custom ISO with NVIDIA extensions.
+# See: deployment-methods/iso-templates/schematics/gpu-worker.yaml
 
 # =============================================================================
 # Control Plane Nodes
@@ -162,7 +172,6 @@ gpu_workers = [
 mac_address_prefix = "BC:24:11"  # Prefix for auto-generated MAC addresses
 vm_start_on_boot   = true        # Start VMs on Proxmox boot
 vm_qemu_agent      = false       # QEMU agent (not used by Talos)
-vm_protection      = false       # Prevent accidental VM deletion
 
 # =============================================================================
 # Quick Start Examples

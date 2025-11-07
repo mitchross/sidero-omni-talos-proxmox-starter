@@ -58,10 +58,22 @@ variable "network_config" {
 # Talos Configuration
 # =============================================================================
 
-variable "talos_template_name" {
-  description = "Name of the Talos template VM in Proxmox (must exist on all Proxmox servers)"
+variable "talos_iso" {
+  description = "Talos ISO file in Proxmox format: 'storage:iso/filename.iso'"
   type        = string
-  default     = "talos-template"
+  default     = "local:iso/talos-amd64.iso"
+
+  # To download Talos ISO:
+  # 1. Go to https://factory.talos.dev or https://github.com/siderolabs/talos/releases
+  # 2. Download the ISO (e.g., metal-amd64.iso)
+  # 3. Upload to Proxmox: Datacenter → Storage → ISO Images → Upload
+  # 4. Set this variable to: "local:iso/metal-amd64.iso" or your storage:iso/filename
+}
+
+variable "talos_version" {
+  description = "Talos version for documentation purposes"
+  type        = string
+  default     = "v1.10.1"
 }
 
 variable "cluster_name" {
