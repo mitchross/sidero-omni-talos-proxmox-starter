@@ -19,6 +19,11 @@ services:
       # API port (default 50084)
       - "--api-port=50084"
 
+      # OPTIONAL: Talos Image Factory schematic for system extensions
+      # Includes: iscsi-tools, nfsd, qemu-guest-agent, util-linux-tools
+      # Run ./generate-schematic.sh to get your schematic ID, then uncomment:
+      # - "--default-schematic=YOUR_SCHEMATIC_ID_HERE"
+
       # Kernel args from Omni UI (Overview → Copy Kernel Parameters)
       - "--extra-kernel-args=siderolink.api=https://omni.vanillax.me:8090/?jointoken=YOUR_TOKEN_HERE talos.events.sink=[fdae:41e4:649b:9303::1]:8091 talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092"
 
@@ -26,10 +31,16 @@ services:
     #
     # 1. Replace 192.168.10.15 with your Booter host IP
     # 2. Replace enp1s0 with your network interface (find with: ip addr show)
-    # 3. Replace kernel args with your actual Omni join token and endpoints
+    # 3. OPTIONAL: Run ./generate-schematic.sh to add system extensions
+    # 4. Replace kernel args with your actual Omni join token and endpoints
     #
     # To get kernel args:
     #   - Login to Omni UI
     #   - Go to Overview page
     #   - Click "Copy Kernel Parameters"
     #   - Paste the entire string after --extra-kernel-args=
+    #
+    # To add system extensions (iscsi-tools, nfsd, qemu-guest-agent, util-linux-tools):
+    #   - Run: ./generate-schematic.sh
+    #   - Follow prompts to update this file with schematic ID
+    #   - Restart Booter: docker compose restart

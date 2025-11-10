@@ -116,7 +116,65 @@ For Firewalla users:
 
 The same applies to pfSense, OPNsense, or any other DHCP server - remove manual PXE boot options.
 
-### Step 5: Boot VMs
+### Step 5: Add System Extensions (Optional but Recommended)
+
+Talos system extensions add functionality like iSCSI support, NFS, and QEMU guest agent integration. You can configure Booter to serve Talos images with these extensions pre-installed.
+
+**Extensions included**:
+- **iscsi-tools**: iSCSI support for distributed storage (Longhorn, etc.)
+- **nfsd**: NFS server/client for persistent volumes
+- **qemu-guest-agent**: Proxmox VM integration (IP visibility, graceful shutdown)
+- **util-linux-tools**: Essential Linux utilities (`lsblk`, `mount`, etc.)
+
+**Note**: GPU-specific extensions (NVIDIA drivers) are added via Omni cluster templates, not here.
+
+#### Generate and Configure Schematic
+
+```bash
+# Navigate to pxe-boot directory
+cd deployment-methods/pxe-boot
+
+# Run the schematic generator script
+./generate-schematic.sh
+
+# The script will:
+# 1. Upload the schematic to Talos Image Factory
+# 2. Get a schematic ID
+# 3. Offer to automatically update docker-compose.yml
+
+# If you choose automatic update, restart Booter:
+docker compose restart
+```
+
+**Manual Configuration**:
+
+If you prefer to configure manually, the script will show you the schematic ID to add:
+
+```yaml
+services:
+  booter:
+    command:
+      - "--api-advertise-address=192.168.10.15"
+      - "--dhcp-proxy-iface-or-ip=enp1s0"
+      - "--api-port=50084"
+      - "--default-schematic=YOUR_SCHEMATIC_ID_HERE"  # Add this line
+      - "--extra-kernel-args=..."
+```
+
+Then restart Booter:
+```bash
+docker compose restart
+```
+
+**Verify**:
+
+When machines boot, they'll have the extensions pre-installed. You can verify in Omni UI after machines register:
+- Omni UI → Machines → Select a machine → Extensions
+- Should show: iscsi-tools, nfsd, qemu-guest-agent, util-linux-tools
+
+**Alternative**: You can also add extensions via Omni cluster templates (recommended if you're using the automation scripts in `/scripts`).
+
+### Step 6: Boot VMs
 
 1. **Start VMs**:
    ```bash
@@ -145,7 +203,7 @@ The same applies to pfSense, OPNsense, or any other DHCP server - remove manual 
    - Your VMs should appear as **unallocated** machines
    - Status: **Maintenance mode**
 
-### Step 6: Accept Machines in Omni
+### Step 7: Accept Machines in Omni
 
 1. **View Discovered Machines**:
    - Omni UI → **Machines**
