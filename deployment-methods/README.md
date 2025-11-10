@@ -20,10 +20,11 @@ Machines appear in Omni with proper names, IPs, and roles!
 ### Why This Method?
 
 ✅ **Simple** - 4 clear steps, well-documented
-✅ **Automated** - Scripts handle the complex UUID matching
+✅ **Automated** - Scripts handle UUID matching and cluster creation
 ✅ **No ISO management** - VMs network boot automatically
 ✅ **Production-ready** - Tested with control planes, workers, and GPU workers
 ✅ **Reproducible** - Terraform tracks infrastructure as code
+✅ **Flexible** - Add machines to existing clusters or update configurations
 
 ### Quick Start
 
@@ -56,8 +57,9 @@ cd ../scripts
 ./generate-machine-configs.sh
 ./apply-machine-configs.sh
 
-# 5. Create cluster in Omni UI
-# Machines now have proper names instead of UUIDs!
+# 5. Cluster is created!
+# Monitor cluster creation in Omni UI
+# Machines have proper names and labels
 ```
 
 ### Components
