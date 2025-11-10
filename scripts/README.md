@@ -173,50 +173,104 @@ patches:
 
 ### 3. apply-machine-configs.sh
 
-**Purpose**: Apply machine configurations to Omni
+**Purpose**: Apply machine configurations to Omni with intelligent cluster state handling
 
 **What it does**:
-- Validates omnictl connectivity
-- Shows configuration preview
-- Applies cluster template via omnictl
-- Verifies application
+- Detects if cluster exists
+- **Scenario 1 - New cluster**: Creates cluster with all machines
+- **Scenario 2 - Existing cluster**: Adds new machines and updates patches
+- **Scenario 3 - Update only**: Updates patches on existing machines
+- Shows configuration preview based on scenario
+- Applies via omnictl with dry-run validation
 
 **Usage**:
 ```bash
 ./apply-machine-configs.sh
 ```
 
-**Interactive Prompts**:
+**Scenario 1: Creating New Cluster**
 ```
+Detecting Cluster State:
+• Cluster 'talos-prod-cluster' does not exist
+
 Configuration Preview:
-  Control Planes: 3
-  Workers:        3
-  GPU Workers:    2
-  Total:          8
+Action: Create new cluster with machines
 
-Apply this configuration to Omni? (yes/no): yes
+This will:
+  ✓ Create cluster 'talos-prod-cluster'
+  ✓ Assign 3 control plane machines
+  ✓ Assign 5 worker machines
+  ✓ Assign 1 GPU worker machines
+  ✓ Apply all machine patches (hostnames, labels, configs)
 
-✓ Cluster template applied successfully
+Create cluster 'talos-prod-cluster' with 9 machines? (yes/no): yes
+
+✓ Cluster created successfully
+```
+
+**Scenario 2: Adding Machines to Existing Cluster**
+```
+Detecting Cluster State:
+✓ Cluster 'talos-prod-cluster' already exists
+
+Analyzing Existing Cluster:
+  Existing machines in cluster: 9
+  New machines to add: 3
+
+New machines:
+  - talos-worker-6 (abc123...)
+  - talos-worker-7 (def456...)
+  - talos-worker-8 (ghi789...)
+
+Add 3 new machines and update existing patches? (yes/no): yes
+
+✓ Cluster updated successfully
+```
+
+**Scenario 3: Updating Existing Patches**
+```
+Detecting Cluster State:
+✓ Cluster 'talos-prod-cluster' already exists
+
+Analyzing Existing Cluster:
+  Existing machines in cluster: 9
+  New machines to add: 0
+
+Update patches on 9 existing machines? (yes/no): yes
+
+✓ Patches updated successfully
 ```
 
 **What Happens**:
-1. Omni receives the cluster template
-2. Machine patches are created/updated
-3. Talos machines receive new configuration
-4. Static IPs and hostnames are applied
-5. Secondary disks are mounted (if configured)
+1. Script detects cluster state via `omnictl get cluster`
+2. If cluster exists, fetches existing machines
+3. Compares with template to identify new machines
+4. Runs dry-run validation first
+5. Applies cluster template (Omni handles merging)
+6. Machine patches are created/updated
+7. Talos machines receive configurations
+8. Hostnames, node labels, and configs are applied
 
 **Verification**:
 ```bash
-# Check machine status
-omnictl get machines -o wide
+# Check cluster status
+omnictl get cluster talos-prod-cluster
 
-# Verify hostnames
-omnictl get machines -o json | jq '.items[] | {name: .metadata.name, hostname: .spec.hostname}'
+# Check machine status
+omnictl get machines
+
+# Verify hostnames and labels
+omnictl get machines -o json | jq '.items[] | {uuid: .metadata.id, hostname: .spec.network.hostname}'
 
 # Check patches
 omnictl get configpatches
 ```
+
+**Re-running the Script**:
+The script is idempotent and can be run multiple times:
+- After adding machines in Terraform: Adds new machines to cluster
+- After editing generate-machine-configs.sh: Updates patches on all machines
+- After any config changes: Safely applies updates
 
 ## Complete Workflow
 
@@ -255,11 +309,12 @@ cd ../scripts
 # 6. Generate machine configs
 ./generate-machine-configs.sh
 
-# 7. Apply configs to Omni
+# 7. Apply configs to Omni (creates cluster automatically)
 ./apply-machine-configs.sh
 
-# 8. Create cluster in Omni UI
-# Or use omnictl cluster template
+# 8. Monitor cluster creation
+omnictl get cluster talos-prod-cluster
+omnictl get machines --watch
 
 # 9. For GPU workers, configure GPU passthrough manually
 cd ../terraform
@@ -398,24 +453,47 @@ omnictl get machines
 
 ## Advanced Usage
 
-### Regenerate Configs
+### Adding Machines to Existing Cluster
 
-To regenerate machine configs after Terraform changes:
+To add machines to an existing cluster:
 
 ```bash
-# Update Terraform
+# 1. Update terraform.tfvars with new machines
 cd ../terraform
+nano terraform.tfvars
+# Add new control planes or workers
+
+# 2. Apply Terraform changes
 terraform apply
 
-# Rediscover machines
+# 3. Wait for new VMs to boot and register (2-5 min)
+
+# 4. Rediscover machines (includes new ones)
 cd ../scripts
 ./discover-machines.sh
 
-# Regenerate configs
+# 5. Regenerate configs (includes new machines)
 ./generate-machine-configs.sh
 
-# Reapply
+# 6. Apply (script detects new machines and adds them)
 ./apply-machine-configs.sh
+# Script will detect existing cluster and only add new machines
+```
+
+### Updating Machine Configurations
+
+To update patches on existing machines:
+
+```bash
+# 1. Edit the generation script with your changes
+nano generate-machine-configs.sh
+
+# 2. Regenerate configs
+./generate-machine-configs.sh
+
+# 3. Apply updates
+./apply-machine-configs.sh
+# Script will detect existing cluster and update patches
 ```
 
 ### Manual Config Edits
