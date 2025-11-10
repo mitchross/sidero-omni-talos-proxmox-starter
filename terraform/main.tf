@@ -188,6 +188,9 @@ resource "proxmox_vm_qemu" "control_plane" {
   onboot = var.vm_start_on_boot
   agent  = 1  # QEMU Guest Agent enabled (requires qemu-guest-agent system extension in Talos)
 
+  # Don't wait for guest agent during VM creation (agent won't be available until Talos boots)
+  define_connection_info = false
+
   # Tags for organization
   tags = join(";", [
     "talos",
@@ -270,6 +273,9 @@ resource "proxmox_vm_qemu" "worker" {
 
   onboot = var.vm_start_on_boot
   agent  = 1  # QEMU Guest Agent enabled (requires qemu-guest-agent system extension in Talos)
+
+  # Don't wait for guest agent during VM creation (agent won't be available until Talos boots)
+  define_connection_info = false
 
   tags = join(";", [
     "talos",
@@ -356,6 +362,9 @@ resource "proxmox_vm_qemu" "gpu_worker" {
 
   onboot = var.vm_start_on_boot
   agent  = 1  # QEMU Guest Agent enabled (requires qemu-guest-agent system extension in Talos)
+
+  # Don't wait for guest agent during VM creation (agent won't be available until Talos boots)
+  define_connection_info = false
 
   tags = join(";", [
     "talos",
