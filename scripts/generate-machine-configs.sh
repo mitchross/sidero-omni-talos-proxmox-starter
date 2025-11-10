@@ -8,9 +8,11 @@ set -euo pipefail
 # This script:
 # 1. Reads matched machines from discover-machines.sh output
 # 2. Generates Talos Machine YAML documents with patches for:
-#    - Static IP configuration
-#    - Hostname
-#    - Secondary disk mounting (for Longhorn)
+#    - Hostname and node labels
+#    - System extensions (iscsi-tools, nfsd, qemu-guest-agent, util-linux-tools)
+#    - NVIDIA extensions (for GPU workers: nonfree-kmod-nvidia, nvidia-container-toolkit)
+#    - Role-specific configurations (hostDNS, kubePrism, containerd)
+#    - Secondary disk mounting (for Longhorn on workers)
 # 3. Creates omnictl-compatible YAML files
 #
 # Prerequisites:
@@ -192,6 +194,12 @@ GPULABEL
           kubePrism:
             enabled: true
             port: 7445
+        install:
+          extensions:
+            - image: ghcr.io/siderolabs/iscsi-tools:v0.1.6
+            - image: ghcr.io/siderolabs/nfsd:v1.11.0
+            - image: ghcr.io/siderolabs/qemu-guest-agent:9.1.2
+            - image: ghcr.io/siderolabs/util-linux-tools:2.40.2
         kernel:
           modules:
             - name: br_netfilter
@@ -236,6 +244,14 @@ EOF
                   BinaryName = "/usr/bin/nvidia-container-runtime"
             op: create
             path: /etc/cri/conf.d/20-customization.part
+        install:
+          extensions:
+            - image: ghcr.io/siderolabs/iscsi-tools:v0.1.6
+            - image: ghcr.io/siderolabs/nfsd:v1.11.0
+            - image: ghcr.io/siderolabs/nonfree-kmod-nvidia-production:550.127.05-v1.11.0
+            - image: ghcr.io/siderolabs/nvidia-container-toolkit-production:550.127.05-v1.11.0
+            - image: ghcr.io/siderolabs/qemu-guest-agent:9.1.2
+            - image: ghcr.io/siderolabs/util-linux-tools:2.40.2
         kernel:
           modules:
             - name: nvidia
@@ -295,6 +311,12 @@ EOF
                 enable_unprivileged_icmp = true
             op: create
             path: /etc/cri/conf.d/20-customization.part
+        install:
+          extensions:
+            - image: ghcr.io/siderolabs/iscsi-tools:v0.1.6
+            - image: ghcr.io/siderolabs/nfsd:v1.11.0
+            - image: ghcr.io/siderolabs/qemu-guest-agent:9.1.2
+            - image: ghcr.io/siderolabs/util-linux-tools:2.40.2
         kernel:
           modules:
             - name: br_netfilter
@@ -353,10 +375,11 @@ cat > "${CLUSTER_TEMPLATE}" <<EOF
 # - Worker machine sets (regular + GPU)
 # - Individual Machine configurations with:
 #   - Hostnames
-#   - Node labels (management-ip, node-role, zone)
+#   - Node labels (management-ip, node-role, zone, proxmox node)
+#   - System extensions (iscsi-tools, nfsd, qemu-guest-agent, util-linux-tools)
+#   - NVIDIA extensions (GPU workers: nonfree-kmod-nvidia, nvidia-container-toolkit)
 #   - Role-specific configurations (hostDNS, kubePrism, containerd)
 #   - Longhorn mounts (for workers with data disks)
-#   - NVIDIA GPU support (for GPU workers)
 #
 # Network: Using DHCP (PXE boot), not static IPs
 #
