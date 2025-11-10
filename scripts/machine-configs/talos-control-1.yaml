@@ -1,8 +1,8 @@
 ---
 kind: Machine
-name: 406b1a6e-84da-4402-a918-e5549177cacd
+name: 49d1519a-3f12-48cf-8384-f96e657f6503
 patches:
-  - idOverride: 400-cm-406b1a6e-84da-4402-a918-e5549177cacd-set-hostname-talos-control-1
+  - idOverride: 400-cm-49d1519a-3f12-48cf-8384-f96e657f6503-set-hostname-talos-control-1
     annotations:
       name: set-hostname-talos-control-1
     inline:
@@ -14,7 +14,7 @@ patches:
           node-role: control-plane
           topology.kubernetes.io/zone: proxmox
           topology.proxmox.io/node: null
-  - idOverride: 401-cm-406b1a6e-84da-4402-a918-e5549177cacd-control-plane-config
+  - idOverride: 401-cm-49d1519a-3f12-48cf-8384-f96e657f6503-control-plane-config
     annotations:
       name: control-plane-config
     inline:
