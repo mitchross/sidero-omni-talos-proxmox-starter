@@ -34,16 +34,12 @@ talos:
 features:
   diskEncryption: false
   enableWorkloadProxy: true
-patches:
-  - name: system-extensions
-    inline:
-      machine:
-        install:
-          extensions:
-            - image: ghcr.io/siderolabs/iscsi-tools:v0.1.6
-            - image: ghcr.io/siderolabs/nfsd:v1.11.0
-            - image: ghcr.io/siderolabs/qemu-guest-agent:9.1.2
-            - image: ghcr.io/siderolabs/util-linux-tools:2.40.2
+systemExtensions:
+  officialExtensions:
+    - siderolabs/iscsi-tools
+    - siderolabs/nfsd
+    - siderolabs/qemu-guest-agent
+    - siderolabs/util-linux-tools
 
 ---
 kind: ControlPlane
@@ -74,16 +70,12 @@ machines:
 ---
 kind: Workers
 name: gpu-workers
+systemExtensions:
+  officialExtensions:
+    - siderolabs/nonfree-kmod-nvidia-production
+    - siderolabs/nvidia-container-toolkit-production
 machines:
   - 74c801b7-6b6b-49fd-ab5c-4fc7ed2ee3fc
-patches:
-  - name: nvidia-extensions
-    inline:
-      machine:
-        install:
-          extensions:
-            - image: ghcr.io/siderolabs/nonfree-kmod-nvidia-production:550.127.05-v1.11.0
-            - image: ghcr.io/siderolabs/nvidia-container-toolkit-production:550.127.05-v1.11.0
 
 # ==============================================================================
 # Machine Configurations
