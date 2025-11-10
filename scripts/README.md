@@ -101,11 +101,12 @@ Unmatched: 0
 - Reads matched machines from discover-machines.sh
 - Creates Talos Machine YAML documents for each VM
 - Generates patches for:
-  - Hostname and node labels (management-ip, node-role, zone)
+  - Hostname and node labels (management-ip, node-role, zone, proxmox node)
+  - System extensions (iscsi-tools, nfsd, qemu-guest-agent, util-linux-tools)
+  - NVIDIA extensions (GPU workers: nonfree-kmod-nvidia, nvidia-container-toolkit)
   - Role-specific configurations (hostDNS, kubePrism, sysctls)
   - Containerd runtime configs
   - Optional Longhorn mounts (for workers with data disks)
-  - NVIDIA GPU support (for GPU workers)
 - Creates combined cluster template with ControlPlane untaint patch
 
 **Usage**:
@@ -164,6 +165,12 @@ patches:
           kubePrism:
             enabled: true
             port: 7445
+        install:
+          extensions:
+            - image: ghcr.io/siderolabs/iscsi-tools:v0.1.6
+            - image: ghcr.io/siderolabs/nfsd:v1.11.0
+            - image: ghcr.io/siderolabs/qemu-guest-agent:9.1.2
+            - image: ghcr.io/siderolabs/util-linux-tools:2.40.2
         kernel:
           modules:
             - name: br_netfilter
@@ -321,6 +328,43 @@ cd ../terraform
 terraform output gpu_configuration_needed
 # Follow instructions for each GPU worker
 ```
+
+## System Extensions
+
+All machines are configured with Talos system extensions to provide additional functionality:
+
+### Common Extensions (All Machines)
+
+| Extension | Version | Purpose |
+|-----------|---------|---------|
+| iscsi-tools | v0.1.6 | iSCSI initiator for storage (Longhorn, etc.) |
+| nfsd | v1.11.0 | NFS server/client support for persistent volumes |
+| qemu-guest-agent | 9.1.2 | Proxmox VM guest agent for better integration |
+| util-linux-tools | 2.40.2 | Essential Linux utilities |
+
+### GPU Worker Extensions (Additional)
+
+| Extension | Version | Purpose |
+|-----------|---------|---------|
+| nonfree-kmod-nvidia-production | 550.127.05-v1.11.0 | NVIDIA GPU kernel drivers |
+| nvidia-container-toolkit-production | 550.127.05-v1.11.0 | NVIDIA container runtime |
+
+### Why These Extensions?
+
+- **iSCSI Tools**: Required for Longhorn distributed storage, iSCSI-based persistent volumes, and enterprise storage integration
+- **NFS Support**: Enables NFS-based persistent volumes and shared storage between nodes
+- **QEMU Guest Agent**: Provides Proxmox with VM status, IP addresses, and enables graceful shutdown
+- **Util-Linux Tools**: Common utilities like `lsblk`, `blkid`, `mount` helpers for disk management
+- **NVIDIA Extensions**: GPU worker-specific drivers and container runtime for GPU workloads
+
+### Extension Versions
+
+Extension versions are pinned to ensure compatibility with:
+- Talos Linux v1.11.5
+- NVIDIA Driver 550.127.05 (for GPU workers)
+- Kubernetes v1.34.1
+
+To update extension versions, edit `scripts/generate-machine-configs.sh` and search for the `install.extensions` sections.
 
 ## Network Configuration
 
