@@ -381,11 +381,10 @@ features:
   diskEncryption: false
   enableWorkloadProxy: true
 systemExtensions:
-  officialExtensions:
-    - siderolabs/iscsi-tools
-    - siderolabs/nfsd
-    - siderolabs/qemu-guest-agent
-    - siderolabs/util-linux-tools
+  - siderolabs/iscsi-tools
+  - siderolabs/nfsd
+  - siderolabs/qemu-guest-agent
+  - siderolabs/util-linux-tools
 EOF
 
 # Add control plane section
@@ -435,9 +434,8 @@ if [[ ${#GPU_WORKER_MACHINES[@]} -gt 0 ]]; then
 kind: Workers
 name: gpu-workers
 systemExtensions:
-  officialExtensions:
-    - siderolabs/nonfree-kmod-nvidia-production
-    - siderolabs/nvidia-container-toolkit-production
+  - siderolabs/nonfree-kmod-nvidia-production
+  - siderolabs/nvidia-container-toolkit-production
 machines:
 EOF
     for uuid in "${GPU_WORKER_MACHINES[@]}"; do
