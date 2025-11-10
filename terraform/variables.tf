@@ -262,9 +262,9 @@ variable "vm_start_on_boot" {
 }
 
 variable "vm_qemu_agent" {
-  description = "Enable QEMU guest agent (not used by Talos, but safe to enable)"
+  description = "Enable QEMU guest agent (used by Talos via qemu-guest-agent system extension)"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "vm_protection" {

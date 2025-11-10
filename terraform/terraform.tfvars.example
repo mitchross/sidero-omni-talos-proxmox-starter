@@ -215,7 +215,7 @@ gpu_workers = [
 
 mac_address_prefix = "BC:24:11"  # Prefix for auto-generated MAC addresses
 vm_start_on_boot   = true        # Start VMs on Proxmox boot
-vm_qemu_agent      = false       # QEMU agent (not used by Talos)
+vm_qemu_agent      = true        # QEMU guest agent (provides VM info to Proxmox via qemu-guest-agent extension)
 
 # =============================================================================
 # Quick Start Examples
