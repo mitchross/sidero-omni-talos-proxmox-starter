@@ -119,6 +119,7 @@ resource "proxmox_vm_qemu" "control_plane" {
   for_each = { for vm in local.control_planes_with_mac : vm.name => vm }
 
   name        = each.value.name
+  vmid        = 100 + each.value.index  # Control planes: 100, 101, 102, ...
   target_node = var.proxmox_servers[each.value.proxmox_server].node_name
   description = "Talos Control Plane - Managed by Terraform - Talos ${var.talos_version} - Boot: ${upper(var.boot_method)}"
 
@@ -212,6 +213,7 @@ resource "proxmox_vm_qemu" "worker" {
   for_each = { for vm in local.workers_with_mac : vm.name => vm }
 
   name        = each.value.name
+  vmid        = 110 + each.value.index  # Workers: 110, 111, 112, ...
   target_node = var.proxmox_servers[each.value.proxmox_server].node_name
   description = "Talos Worker - Managed by Terraform - Talos ${var.talos_version} - Boot: ${upper(var.boot_method)}"
 
@@ -292,6 +294,7 @@ resource "proxmox_vm_qemu" "gpu_worker" {
   for_each = { for vm in local.gpu_workers_with_mac : vm.name => vm }
 
   name        = each.value.name
+  vmid        = 120 + each.value.index  # GPU Workers: 120, 121, 122, ...
   target_node = var.proxmox_servers[each.value.proxmox_server].node_name
   description = "Talos GPU Worker - Managed by Terraform - Talos ${var.talos_version} - Boot: ${upper(var.boot_method)} - GPU PCI: ${each.value.gpu_pci_id} (Configure manually)"
 
