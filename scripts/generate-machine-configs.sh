@@ -71,6 +71,42 @@ echo "Found ${MACHINE_COUNT} matched machines"
 echo ""
 
 # =============================================================================
+# Prompt for Cluster Name
+# =============================================================================
+
+# Get default cluster name from Terraform
+DEFAULT_CLUSTER_NAME=$(cd "${SCRIPT_DIR}/../terraform" && terraform output -raw cluster_summary 2>/dev/null | jq -r '.cluster_name' 2>/dev/null || echo "talos-cluster")
+
+echo "======================================"
+echo "Cluster Configuration"
+echo "======================================"
+echo ""
+echo "Enter a name for your Talos cluster."
+echo "This name will be used in Omni to identify the cluster."
+echo ""
+read -p "Cluster name [${DEFAULT_CLUSTER_NAME}]: " CLUSTER_NAME
+
+if [[ -z "${CLUSTER_NAME}" ]]; then
+    CLUSTER_NAME="${DEFAULT_CLUSTER_NAME}"
+fi
+
+# Validate cluster name (lowercase alphanumeric and hyphens only)
+if ! [[ "${CLUSTER_NAME}" =~ ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$ ]]; then
+    echo ""
+    echo "⚠️  Invalid cluster name: ${CLUSTER_NAME}"
+    echo "Cluster name must:"
+    echo "  - Start and end with lowercase letter or number"
+    echo "  - Contain only lowercase letters, numbers, and hyphens"
+    echo ""
+    echo "Using default: ${DEFAULT_CLUSTER_NAME}"
+    CLUSTER_NAME="${DEFAULT_CLUSTER_NAME}"
+fi
+
+echo ""
+echo "✓ Cluster name: ${CLUSTER_NAME}"
+echo ""
+
+# =============================================================================
 # Generate Machine Configurations
 # =============================================================================
 
@@ -304,10 +340,7 @@ echo "Generating combined cluster template..."
 
 CLUSTER_TEMPLATE="${OUTPUT_DIR}/cluster-template.yaml"
 
-# Get cluster name from Terraform
-CLUSTER_NAME=$(cd "${SCRIPT_DIR}/../terraform" && terraform output -raw cluster_summary 2>/dev/null | jq -r '.cluster_name' 2>/dev/null || echo "talos-cluster")
-
-# Generate cluster template header
+# Generate cluster template header (CLUSTER_NAME was set earlier via user prompt)
 cat > "${CLUSTER_TEMPLATE}" <<EOF
 # =============================================================================
 # Talos Cluster Template for Omni

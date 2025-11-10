@@ -371,12 +371,11 @@
         "labels": {
           "omni.sidero.dev/arch": "amd64",
           "omni.sidero.dev/available": null,
-          "omni.sidero.dev/connected": null,
           "omni.sidero.dev/cores": 4,
           "omni.sidero.dev/cpu": "qemu",
+          "omni.sidero.dev/disconnected": null,
           "omni.sidero.dev/mem": "16GiB",
           "omni.sidero.dev/platform": "metal",
-          "omni.sidero.dev/ready-to-use": null,
           "omni.sidero.dev/reporting-events": null,
           "omni.sidero.dev/storage": "64GB",
           "omni.sidero.dev/talos-version": "v1.11.5"
@@ -385,12 +384,12 @@
         "owner": "MachineStatusController",
         "phase": "running",
         "type": "MachineStatuses.omni.sidero.dev",
-        "updated": "2025-11-10T05:44:14Z",
-        "version": 8
+        "updated": "2025-11-10T05:55:14Z",
+        "version": 9
       },
       "spec": {
         "cluster": "",
-        "connected": true,
+        "connected": false,
         "diagnostics": [],
         "hardware": {
           "arch": "amd64",
@@ -663,8 +662,8 @@
     "mac_address": "BC:24:11:02:00:01",
     "ip_address": "192.168.10.111",
     "role": "worker",
-    "omni_uuid": "1584331b-d327-45cd-b857-608653e6b008",
-    "omni_name": "1584331b-d327-45cd-b857-608653e6b008",
+    "omni_uuid": "04fa3b27-2120-49de-bab2-4547703e0a62",
+    "omni_name": "04fa3b27-2120-49de-bab2-4547703e0a62",
     "terraform_data": {
       "cpu_cores": 8,
       "data_disk_gb": 200,
@@ -689,15 +688,15 @@
         "annotations": {
           "omni.sidero.dev/kernel-args-initialized": null
         },
-        "created": "2025-11-10T05:44:04Z",
+        "created": "2025-11-10T05:54:25Z",
         "finalizers": [
+          "KernelArgsStatusController",
+          "MachineConfigGenOptionsController",
           "MachineUpgradeStatusController",
           "MachineTeardownController",
-          "MachineConfigGenOptionsController",
-          "LabelsExtractor[MachineStatuses.omni.sidero.dev]",
-          "KernelArgsStatusController"
+          "LabelsExtractor[MachineStatuses.omni.sidero.dev]"
         ],
-        "id": "1584331b-d327-45cd-b857-608653e6b008",
+        "id": "04fa3b27-2120-49de-bab2-4547703e0a62",
         "labels": {
           "omni.sidero.dev/arch": "amd64",
           "omni.sidero.dev/available": null,
@@ -715,7 +714,7 @@
         "owner": "MachineStatusController",
         "phase": "running",
         "type": "MachineStatuses.omni.sidero.dev",
-        "updated": "2025-11-10T05:44:04Z",
+        "updated": "2025-11-10T05:54:26Z",
         "version": 8
       },
       "spec": {
@@ -775,7 +774,7 @@
         "kernelcmdline": "talos.platform=metal console=tty0 console=ttyS0 init_on_alloc=1 slab_nomerge pti=on consoleblank=0 nvme_core.io_timeout=4294967295 printk.devkmsg=on selinux=1 siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN talos.events.sink=[fdae:41e4:649b:9303::1]:8091 talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092",
         "lasterror": "",
         "maintenance": true,
-        "managementaddress": "fdae:41e4:649b:9303:63e7:5343:2acf:ef02",
+        "managementaddress": "fdae:41e4:649b:9303:197b:de36:d9c:a1b2",
         "network": {
           "addresses": [
             "192.168.10.142/24"
@@ -797,7 +796,7 @@
         },
         "platformmetadata": {
           "hostname": "",
-          "instanceid": "1584331b-d327-45cd-b857-608653e6b008",
+          "instanceid": "04fa3b27-2120-49de-bab2-4547703e0a62",
           "instancetype": "",
           "platform": "metal",
           "providerid": "",
@@ -880,12 +879,11 @@
         "labels": {
           "omni.sidero.dev/arch": "amd64",
           "omni.sidero.dev/available": null,
-          "omni.sidero.dev/connected": null,
           "omni.sidero.dev/cores": 8,
           "omni.sidero.dev/cpu": "qemu",
+          "omni.sidero.dev/disconnected": null,
           "omni.sidero.dev/mem": "31GiB",
           "omni.sidero.dev/platform": "metal",
-          "omni.sidero.dev/ready-to-use": null,
           "omni.sidero.dev/reporting-events": null,
           "omni.sidero.dev/storage": "284GB",
           "omni.sidero.dev/talos-version": "v1.11.5"
@@ -894,12 +892,12 @@
         "owner": "MachineStatusController",
         "phase": "running",
         "type": "MachineStatuses.omni.sidero.dev",
-        "updated": "2025-11-10T05:44:14Z",
-        "version": 8
+        "updated": "2025-11-10T05:55:14Z",
+        "version": 9
       },
       "spec": {
         "cluster": "",
-        "connected": true,
+        "connected": false,
         "diagnostics": [],
         "hardware": {
           "arch": "amd64",
