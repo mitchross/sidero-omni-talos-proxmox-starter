@@ -380,16 +380,12 @@ talos:
 features:
   diskEncryption: false
   enableWorkloadProxy: true
-patches:
-  - name: system-extensions
-    inline:
-      machine:
-        install:
-          extensions:
-            - image: ghcr.io/siderolabs/iscsi-tools:v0.1.6
-            - image: ghcr.io/siderolabs/nfsd:v1.11.0
-            - image: ghcr.io/siderolabs/qemu-guest-agent:9.1.2
-            - image: ghcr.io/siderolabs/util-linux-tools:2.40.2
+systemExtensions:
+  officialExtensions:
+    - siderolabs/iscsi-tools
+    - siderolabs/nfsd
+    - siderolabs/qemu-guest-agent
+    - siderolabs/util-linux-tools
 EOF
 
 # Add control plane section
@@ -438,22 +434,15 @@ if [[ ${#GPU_WORKER_MACHINES[@]} -gt 0 ]]; then
 ---
 kind: Workers
 name: gpu-workers
+systemExtensions:
+  officialExtensions:
+    - siderolabs/nonfree-kmod-nvidia-production
+    - siderolabs/nvidia-container-toolkit-production
 machines:
 EOF
     for uuid in "${GPU_WORKER_MACHINES[@]}"; do
         echo "  - ${uuid}" >> "${CLUSTER_TEMPLATE}"
     done
-    # Add GPU-specific extensions
-    cat >> "${CLUSTER_TEMPLATE}" <<'EOF'
-patches:
-  - name: nvidia-extensions
-    inline:
-      machine:
-        install:
-          extensions:
-            - image: ghcr.io/siderolabs/nonfree-kmod-nvidia-production:550.127.05-v1.11.0
-            - image: ghcr.io/siderolabs/nvidia-container-toolkit-production:550.127.05-v1.11.0
-EOF
 fi
 
 # Append all individual machine configs
