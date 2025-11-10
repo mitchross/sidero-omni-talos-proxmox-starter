@@ -9,10 +9,11 @@
 # - Worker machine sets (regular + GPU)
 # - Individual Machine configurations with:
 #   - Hostnames
-#   - Node labels (management-ip, node-role, zone)
+#   - Node labels (management-ip, node-role, zone, proxmox node)
+#   - System extensions (iscsi-tools, nfsd, qemu-guest-agent, util-linux-tools)
+#   - NVIDIA extensions (GPU workers: nonfree-kmod-nvidia, nvidia-container-toolkit)
 #   - Role-specific configurations (hostDNS, kubePrism, containerd)
 #   - Longhorn mounts (for workers with data disks)
-#   - NVIDIA GPU support (for GPU workers)
 #
 # Network: Using DHCP (PXE boot), not static IPs
 #
@@ -33,13 +34,23 @@ talos:
 features:
   diskEncryption: false
   enableWorkloadProxy: true
+patches:
+  - name: system-extensions
+    inline:
+      machine:
+        install:
+          extensions:
+            - image: ghcr.io/siderolabs/iscsi-tools:v0.1.6
+            - image: ghcr.io/siderolabs/nfsd:v1.11.0
+            - image: ghcr.io/siderolabs/qemu-guest-agent:9.1.2
+            - image: ghcr.io/siderolabs/util-linux-tools:2.40.2
 
 ---
 kind: ControlPlane
 machines:
-  - 49d1519a-3f12-48cf-8384-f96e657f6503
-  - 24205e62-a8e2-461a-ac00-7ba6746793ef
-  - 408fb205-61f6-470c-b1cf-272e9795342d
+  - c9eaebc0-7802-4038-80bd-0fe9a23be025
+  - 617989ff-3f8d-444b-8fae-395c8048bfe4
+  - 5693a444-a810-45c7-8062-81569b2d16fb
 patches:
   - idOverride: 400-control-planes-untaint
     annotations:
@@ -56,7 +67,7 @@ name: workers
 machines:
   - 49ce51a6-62ce-4849-bcac-4872023547ea
   - 04fa3b27-2120-49de-bab2-4547703e0a62
-  - 6e5761f0-8781-4632-9f32-0b36a617449f
+  - a2a593bd-bdaa-4d55-980a-78453a4d0598
   - 86e086fa-8ed2-43c4-b829-0befff3af747
   - 109fcdc3-1981-4869-835f-b99b5f79b3db
 
@@ -64,7 +75,15 @@ machines:
 kind: Workers
 name: gpu-workers
 machines:
-  - 0b427fdb-25dc-4d46-9431-e82d21f5cd96
+  - 74c801b7-6b6b-49fd-ab5c-4fc7ed2ee3fc
+patches:
+  - name: nvidia-extensions
+    inline:
+      machine:
+        install:
+          extensions:
+            - image: ghcr.io/siderolabs/nonfree-kmod-nvidia-production:550.127.05-v1.11.0
+            - image: ghcr.io/siderolabs/nvidia-container-toolkit-production:550.127.05-v1.11.0
 
 # ==============================================================================
 # Machine Configurations
@@ -72,9 +91,9 @@ machines:
 
 ---
 kind: Machine
-name: 49d1519a-3f12-48cf-8384-f96e657f6503
+name: c9eaebc0-7802-4038-80bd-0fe9a23be025
 patches:
-  - idOverride: 400-cm-49d1519a-3f12-48cf-8384-f96e657f6503-set-hostname-talos-control-1
+  - idOverride: 400-cm-c9eaebc0-7802-4038-80bd-0fe9a23be025-set-hostname-talos-control-1
     annotations:
       name: set-hostname-talos-control-1
     inline:
@@ -85,8 +104,8 @@ patches:
           management-ip: 192.168.10.100
           node-role: control-plane
           topology.kubernetes.io/zone: proxmox
-          topology.proxmox.io/node: null
-  - idOverride: 401-cm-49d1519a-3f12-48cf-8384-f96e657f6503-control-plane-config
+          topology.proxmox.io/node: hp-server-1
+  - idOverride: 401-cm-c9eaebc0-7802-4038-80bd-0fe9a23be025-control-plane-config
     annotations:
       name: control-plane-config
     inline:
@@ -116,9 +135,9 @@ patches:
 
 ---
 kind: Machine
-name: 24205e62-a8e2-461a-ac00-7ba6746793ef
+name: 617989ff-3f8d-444b-8fae-395c8048bfe4
 patches:
-  - idOverride: 400-cm-24205e62-a8e2-461a-ac00-7ba6746793ef-set-hostname-talos-control-2
+  - idOverride: 400-cm-617989ff-3f8d-444b-8fae-395c8048bfe4-set-hostname-talos-control-2
     annotations:
       name: set-hostname-talos-control-2
     inline:
@@ -129,8 +148,8 @@ patches:
           management-ip: 192.168.10.101
           node-role: control-plane
           topology.kubernetes.io/zone: proxmox
-          topology.proxmox.io/node: null
-  - idOverride: 401-cm-24205e62-a8e2-461a-ac00-7ba6746793ef-control-plane-config
+          topology.proxmox.io/node: hp-server-1
+  - idOverride: 401-cm-617989ff-3f8d-444b-8fae-395c8048bfe4-control-plane-config
     annotations:
       name: control-plane-config
     inline:
@@ -160,9 +179,9 @@ patches:
 
 ---
 kind: Machine
-name: 408fb205-61f6-470c-b1cf-272e9795342d
+name: 5693a444-a810-45c7-8062-81569b2d16fb
 patches:
-  - idOverride: 400-cm-408fb205-61f6-470c-b1cf-272e9795342d-set-hostname-talos-control-3
+  - idOverride: 400-cm-5693a444-a810-45c7-8062-81569b2d16fb-set-hostname-talos-control-3
     annotations:
       name: set-hostname-talos-control-3
     inline:
@@ -173,8 +192,8 @@ patches:
           management-ip: 192.168.10.102
           node-role: control-plane
           topology.kubernetes.io/zone: proxmox
-          topology.proxmox.io/node: null
-  - idOverride: 401-cm-408fb205-61f6-470c-b1cf-272e9795342d-control-plane-config
+          topology.proxmox.io/node: hp-server-1
+  - idOverride: 401-cm-5693a444-a810-45c7-8062-81569b2d16fb-control-plane-config
     annotations:
       name: control-plane-config
     inline:
@@ -217,7 +236,7 @@ patches:
           management-ip: 192.168.10.110
           node-role: worker
           topology.kubernetes.io/zone: proxmox
-          topology.proxmox.io/node: null
+          topology.proxmox.io/node: hp-server-1
   - idOverride: 401-cm-49ce51a6-62ce-4849-bcac-4872023547ea-regular-worker-config
     annotations:
       name: regular-worker-config
@@ -268,7 +287,7 @@ patches:
           management-ip: 192.168.10.111
           node-role: worker
           topology.kubernetes.io/zone: proxmox
-          topology.proxmox.io/node: null
+          topology.proxmox.io/node: hp-server-1
   - idOverride: 401-cm-04fa3b27-2120-49de-bab2-4547703e0a62-regular-worker-config
     annotations:
       name: regular-worker-config
@@ -315,9 +334,9 @@ patches:
 
 ---
 kind: Machine
-name: 6e5761f0-8781-4632-9f32-0b36a617449f
+name: a2a593bd-bdaa-4d55-980a-78453a4d0598
 patches:
-  - idOverride: 400-cm-6e5761f0-8781-4632-9f32-0b36a617449f-set-hostname-talos-worker-3
+  - idOverride: 400-cm-a2a593bd-bdaa-4d55-980a-78453a4d0598-set-hostname-talos-worker-3
     annotations:
       name: set-hostname-talos-worker-3
     inline:
@@ -328,8 +347,8 @@ patches:
           management-ip: 192.168.10.112
           node-role: worker
           topology.kubernetes.io/zone: proxmox
-          topology.proxmox.io/node: null
-  - idOverride: 401-cm-6e5761f0-8781-4632-9f32-0b36a617449f-regular-worker-config
+          topology.proxmox.io/node: hp-server-1
+  - idOverride: 401-cm-a2a593bd-bdaa-4d55-980a-78453a4d0598-regular-worker-config
     annotations:
       name: regular-worker-config
     inline:
@@ -388,7 +407,7 @@ patches:
           management-ip: 192.168.10.113
           node-role: worker
           topology.kubernetes.io/zone: proxmox
-          topology.proxmox.io/node: null
+          topology.proxmox.io/node: hp-server-1
   - idOverride: 401-cm-86e086fa-8ed2-43c4-b829-0befff3af747-regular-worker-config
     annotations:
       name: regular-worker-config
@@ -448,7 +467,7 @@ patches:
           management-ip: 192.168.10.114
           node-role: worker
           topology.kubernetes.io/zone: proxmox
-          topology.proxmox.io/node: null
+          topology.proxmox.io/node: hp-server-1
   - idOverride: 401-cm-109fcdc3-1981-4869-835f-b99b5f79b3db-regular-worker-config
     annotations:
       name: regular-worker-config
@@ -495,9 +514,9 @@ patches:
 
 ---
 kind: Machine
-name: 0b427fdb-25dc-4d46-9431-e82d21f5cd96
+name: 74c801b7-6b6b-49fd-ab5c-4fc7ed2ee3fc
 patches:
-  - idOverride: 400-cm-0b427fdb-25dc-4d46-9431-e82d21f5cd96-set-hostname-talos-worker-gpu-1
+  - idOverride: 400-cm-74c801b7-6b6b-49fd-ab5c-4fc7ed2ee3fc-set-hostname-talos-worker-gpu-1
     annotations:
       name: set-hostname-talos-worker-gpu-1
     inline:
@@ -508,9 +527,9 @@ patches:
           management-ip: 192.168.10.115
           node-role: gpu-worker
           topology.kubernetes.io/zone: proxmox
-          topology.proxmox.io/node: null
+          topology.proxmox.io/node: hp-server-1
           nvidia.com/gpu: "true"
-  - idOverride: 401-cm-0b427fdb-25dc-4d46-9431-e82d21f5cd96-gpu-worker-config
+  - idOverride: 401-cm-74c801b7-6b6b-49fd-ab5c-4fc7ed2ee3fc-gpu-worker-config
     annotations:
       name: gpu-worker-config
     inline:

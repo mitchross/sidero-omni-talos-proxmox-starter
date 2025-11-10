@@ -13,7 +13,7 @@ patches:
           management-ip: 192.168.10.111
           node-role: worker
           topology.kubernetes.io/zone: proxmox
-          topology.proxmox.io/node: null
+          topology.proxmox.io/node: hp-server-1
   - idOverride: 401-cm-04fa3b27-2120-49de-bab2-4547703e0a62-regular-worker-config
     annotations:
       name: regular-worker-config
