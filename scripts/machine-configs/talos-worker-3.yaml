@@ -1,0 +1,59 @@
+---
+kind: Machine
+name: 6e5761f0-8781-4632-9f32-0b36a617449f
+patches:
+  - idOverride: 400-cm-6e5761f0-8781-4632-9f32-0b36a617449f-set-hostname-talos-worker-3
+    annotations:
+      name: set-hostname-talos-worker-3
+    inline:
+      machine:
+        network:
+          hostname: talos-worker-3
+        nodeLabels:
+          management-ip: 192.168.10.112
+          node-role: worker
+          topology.kubernetes.io/zone: proxmox
+          topology.proxmox.io/node: null
+  - idOverride: 401-cm-6e5761f0-8781-4632-9f32-0b36a617449f-regular-worker-config
+    annotations:
+      name: regular-worker-config
+    inline:
+      cluster:
+        proxy:
+          disabled: true
+      machine:
+        features:
+          hostDNS:
+            enabled: true
+            forwardKubeDNSToHost: true
+          kubePrism:
+            enabled: true
+            port: 7445
+        files:
+          - content: |
+              [plugins."io.containerd.grpc.v1.cri"]
+                enable_unprivileged_ports = true
+                enable_unprivileged_icmp = true
+            op: create
+            path: /etc/cri/conf.d/20-customization.part
+        kernel:
+          modules:
+            - name: br_netfilter
+              parameters:
+                - nf_conntrack_max=131072
+        kubelet:
+          extraMounts:
+            - destination: /var/lib/longhorn
+              options:
+                - bind
+                - rshared
+                - rw
+              source: /var/mnt/longhorn
+              type: bind
+        sysctls:
+          fs.inotify.max_user_instances: "8192"
+          fs.inotify.max_user_watches: "1048576"
+        time:
+          disabled: false
+          servers:
+            - time.cloudflare.com

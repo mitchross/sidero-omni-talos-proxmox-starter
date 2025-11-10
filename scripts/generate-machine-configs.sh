@@ -22,9 +22,21 @@ DATA_DIR="${SCRIPT_DIR}/machine-data"
 OUTPUT_DIR="${SCRIPT_DIR}/machine-configs"
 MATCHED_FILE="${DATA_DIR}/matched-machines.json"
 
-echo "======================================"
+echo "====================================="
 echo "Omni Machine Config Generator"
-echo "======================================"
+echo "====================================="
+echo ""
+
+# =============================================================================
+# Clean Previous Configurations
+# =============================================================================
+
+echo "Cleaning previous machine configurations..."
+if [[ -d "${OUTPUT_DIR}" ]]; then
+    rm -rf "${OUTPUT_DIR}"
+    echo "✓ Removed ${OUTPUT_DIR}"
+fi
+mkdir -p "${OUTPUT_DIR}"
 echo ""
 
 # =============================================================================
@@ -57,10 +69,6 @@ fi
 
 echo "Found ${MACHINE_COUNT} matched machines"
 echo ""
-
-# Create output directory
-mkdir -p "${OUTPUT_DIR}"
-rm -f "${OUTPUT_DIR}"/*.yaml 2>/dev/null || true
 
 # =============================================================================
 # Generate Machine Configurations

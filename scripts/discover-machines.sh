@@ -20,9 +20,21 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 TERRAFORM_DIR="${PROJECT_ROOT}/terraform"
 OUTPUT_DIR="${SCRIPT_DIR}/machine-data"
 
-echo "======================================"
+echo "====================================="
 echo "Omni Machine Discovery"
-echo "======================================"
+echo "====================================="
+echo ""
+
+# =============================================================================
+# Clean Previous Data
+# =============================================================================
+
+echo "Cleaning previous discovery data..."
+if [[ -d "${OUTPUT_DIR}" ]]; then
+    rm -rf "${OUTPUT_DIR}"
+    echo "✓ Removed ${OUTPUT_DIR}"
+fi
+mkdir -p "${OUTPUT_DIR}"
 echo ""
 
 # =============================================================================

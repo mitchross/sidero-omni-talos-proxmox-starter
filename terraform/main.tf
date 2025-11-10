@@ -120,12 +120,14 @@ resource "proxmox_vm_qemu" "control_plane" {
 
   name        = each.value.name
   target_node = var.proxmox_servers[each.value.proxmox_server].node_name
-  desc        = "Talos Control Plane - Managed by Terraform - Talos ${var.talos_version} - Boot: ${upper(var.boot_method)}"
+  description = "Talos Control Plane - Managed by Terraform - Talos ${var.talos_version} - Boot: ${upper(var.boot_method)}"
 
   # VM Resources
-  cores   = each.value.cpu_cores
-  sockets = 1
   memory  = each.value.memory_mb
+  cpu {
+    cores   = each.value.cpu_cores
+    sockets = 1
+  }
 
   # SCSI Controller
   scsihw = "virtio-scsi-single"
@@ -147,26 +149,26 @@ resource "proxmox_vm_qemu" "control_plane" {
 
   # OS Disk (scsi0)
   disk {
-    slot        = "scsi0"
-    size        = "${each.value.os_disk_size_gb}G"
-    type        = "disk"
-    storage     = var.proxmox_servers[each.value.proxmox_server].storage_os
-    iothread    = true
-    discard     = true
-    emulatessd  = true
+    slot       = "scsi0"
+    size       = "${each.value.os_disk_size_gb}G"
+    type       = "disk"
+    storage    = each.value.storage_os_override != "" ? each.value.storage_os_override : var.proxmox_servers[each.value.proxmox_server].storage_control_plane_os
+    iothread   = true
+    discard    = true
+    emulatessd = true
   }
 
   # Data Disk (scsi1) - Only if size > 0
   dynamic "disk" {
     for_each = each.value.data_disk_size_gb > 0 ? [1] : []
     content {
-      slot        = "scsi1"
-      size        = "${each.value.data_disk_size_gb}G"
-      type        = "disk"
-      storage     = var.proxmox_servers[each.value.proxmox_server].storage_data
-      iothread    = true
-      discard     = true
-      emulatessd  = true
+      slot       = "scsi1"
+      size       = "${each.value.data_disk_size_gb}G"
+      type       = "disk"
+      storage    = each.value.storage_data_override != "" ? each.value.storage_data_override : var.proxmox_servers[each.value.proxmox_server].storage_control_plane_data
+      iothread   = true
+      discard    = true
+      emulatessd = true
     }
   }
 
@@ -195,7 +197,7 @@ resource "proxmox_vm_qemu" "control_plane" {
   lifecycle {
     ignore_changes = [
       network[0].macaddr, # MAC address set once
-      desc,               # Description might be modified
+      description,        # Description might be modified
     ]
   }
 }
@@ -209,14 +211,15 @@ resource "proxmox_vm_qemu" "worker" {
 
   name        = each.value.name
   target_node = var.proxmox_servers[each.value.proxmox_server].node_name
-  desc        = "Talos Worker - Managed by Terraform - Talos ${var.talos_version} - Boot: ${upper(var.boot_method)}"
+  description = "Talos Worker - Managed by Terraform - Talos ${var.talos_version} - Boot: ${upper(var.boot_method)}"
 
-  cores   = each.value.cpu_cores
-  sockets = 1
   memory  = each.value.memory_mb
-
   scsihw = "virtio-scsi-single"
   boot   = var.boot_method == "iso" ? "order=ide2;scsi0" : "order=net0;scsi0"
+  cpu {
+    cores   = each.value.cpu_cores
+    sockets = 1
+  }
 
   # CD-ROM with Talos ISO (only for ISO boot method)
   dynamic "disk" {
@@ -230,26 +233,26 @@ resource "proxmox_vm_qemu" "worker" {
 
   # OS Disk
   disk {
-    slot        = "scsi0"
-    size        = "${each.value.os_disk_size_gb}G"
-    type        = "disk"
-    storage     = var.proxmox_servers[each.value.proxmox_server].storage_os
-    iothread    = true
-    discard     = true
-    emulatessd  = true
+    slot       = "scsi0"
+    size       = "${each.value.os_disk_size_gb}G"
+    type       = "disk"
+    storage    = each.value.storage_os_override != "" ? each.value.storage_os_override : var.proxmox_servers[each.value.proxmox_server].storage_worker_os
+    iothread   = true
+    discard    = true
+    emulatessd = true
   }
 
   # Data Disk (optional)
   dynamic "disk" {
     for_each = each.value.data_disk_size_gb > 0 ? [1] : []
     content {
-      slot        = "scsi1"
-      size        = "${each.value.data_disk_size_gb}G"
-      type        = "disk"
-      storage     = var.proxmox_servers[each.value.proxmox_server].storage_data
-      iothread    = true
-      discard     = true
-      emulatessd  = true
+      slot       = "scsi1"
+      size       = "${each.value.data_disk_size_gb}G"
+      type       = "disk"
+      storage    = each.value.storage_data_override != "" ? each.value.storage_data_override : var.proxmox_servers[each.value.proxmox_server].storage_worker_data
+      iothread   = true
+      discard    = true
+      emulatessd = true
     }
   }
 
@@ -274,7 +277,7 @@ resource "proxmox_vm_qemu" "worker" {
   lifecycle {
     ignore_changes = [
       network[0].macaddr,
-      desc,
+      description,
     ]
   }
 }
@@ -288,14 +291,15 @@ resource "proxmox_vm_qemu" "gpu_worker" {
 
   name        = each.value.name
   target_node = var.proxmox_servers[each.value.proxmox_server].node_name
-  desc        = "Talos GPU Worker - Managed by Terraform - Talos ${var.talos_version} - Boot: ${upper(var.boot_method)} - GPU PCI: ${each.value.gpu_pci_id} (Configure manually)"
+  description = "Talos GPU Worker - Managed by Terraform - Talos ${var.talos_version} - Boot: ${upper(var.boot_method)} - GPU PCI: ${each.value.gpu_pci_id} (Configure manually)"
 
-  cores   = each.value.cpu_cores
-  sockets = 1
   memory  = each.value.memory_mb
-
   scsihw = "virtio-scsi-single"
   boot   = var.boot_method == "iso" ? "order=ide2;scsi0" : "order=net0;scsi0"
+  cpu {
+    cores   = each.value.cpu_cores
+    sockets = 1
+  }
 
   # CD-ROM with Talos ISO (only for ISO boot method)
   # Note: For GPU workers with ISO boot, use GPU-enabled ISO from Talos Image Factory
@@ -310,26 +314,26 @@ resource "proxmox_vm_qemu" "gpu_worker" {
 
   # OS Disk
   disk {
-    slot        = "scsi0"
-    size        = "${each.value.os_disk_size_gb}G"
-    type        = "disk"
-    storage     = var.proxmox_servers[each.value.proxmox_server].storage_os
-    iothread    = true
-    discard     = true
-    emulatessd  = true
+    slot       = "scsi0"
+    size       = "${each.value.os_disk_size_gb}G"
+    type       = "disk"
+    storage    = each.value.storage_os_override != "" ? each.value.storage_os_override : (var.proxmox_servers[each.value.proxmox_server].storage_gpu_worker_os != "" ? var.proxmox_servers[each.value.proxmox_server].storage_gpu_worker_os : var.proxmox_servers[each.value.proxmox_server].storage_worker_os)
+    iothread   = true
+    discard    = true
+    emulatessd = true
   }
 
   # Data Disk (typically needed for GPU workloads)
   dynamic "disk" {
     for_each = each.value.data_disk_size_gb > 0 ? [1] : []
     content {
-      slot        = "scsi1"
-      size        = "${each.value.data_disk_size_gb}G"
-      type        = "disk"
-      storage     = var.proxmox_servers[each.value.proxmox_server].storage_data
-      iothread    = true
-      discard     = true
-      emulatessd  = true
+      slot       = "scsi1"
+      size       = "${each.value.data_disk_size_gb}G"
+      type       = "disk"
+      storage    = each.value.storage_data_override != "" ? each.value.storage_data_override : (var.proxmox_servers[each.value.proxmox_server].storage_gpu_worker_data != "" ? var.proxmox_servers[each.value.proxmox_server].storage_gpu_worker_data : var.proxmox_servers[each.value.proxmox_server].storage_worker_data)
+      iothread   = true
+      discard    = true
+      emulatessd = true
     }
   }
 
@@ -359,7 +363,7 @@ resource "proxmox_vm_qemu" "gpu_worker" {
   lifecycle {
     ignore_changes = [
       network[0].macaddr,
-      desc,
+      description,
       # Ignore GPU passthrough changes (configured manually)
       # hostpci0,
     ]

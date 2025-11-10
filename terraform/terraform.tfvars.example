@@ -11,34 +11,47 @@ proxmox_servers = {
     node_name        = "pve1"
     tls_insecure     = true  # Set to false if using valid SSL certificates
 
-    # Storage configuration for this server
-    storage_os   = "local-lvm"    # Storage pool for OS disks
-    storage_data = "local-lvm"    # Storage pool for data disks
-    network_bridge = "vmbr0"       # Network bridge
+    # Storage configuration per VM type
+    # List your storage pools: pvesm status (on Proxmox)
+    storage_control_plane_os   = "local-lvm"  # Default OS storage for control planes
+    storage_control_plane_data = ""           # Default data storage for control planes (empty = no data disk)
+    storage_worker_os          = "local-lvm"  # Default OS storage for workers
+    storage_worker_data        = "local-lvm"  # Default data storage for workers
+    storage_gpu_worker_os      = ""           # Default OS storage for GPU workers (empty = use worker_os)
+    storage_gpu_worker_data    = ""           # Default data storage for GPU workers (empty = use worker_data)
+    network_bridge             = "vmbr0"      # Network bridge
   }
 
   # Second Proxmox server (optional)
   # "pve2" = {
-  #   api_url          = "https://192.168.10.161:8006/api2/json"
-  #   api_token_id     = "terraform@pve!terraform"
-  #   api_token_secret = "your-secret-here"
-  #   node_name        = "pve2"
-  #   tls_insecure     = true
-  #   storage_os       = "local-lvm"
-  #   storage_data     = "nvme-pool"  # Different storage for data
-  #   network_bridge   = "vmbr0"
+  #   api_url                    = "https://192.168.10.161:8006/api2/json"
+  #   api_token_id               = "terraform@pve!terraform"
+  #   api_token_secret           = "your-secret-here"
+  #   node_name                  = "pve2"
+  #   tls_insecure               = true
+  #   storage_control_plane_os   = "local-lvm"
+  #   storage_control_plane_data = ""
+  #   storage_worker_os          = "nvme-pool"  # Workers on faster storage
+  #   storage_worker_data        = "nvme-pool"
+  #   storage_gpu_worker_os      = ""           # Falls back to worker_os
+  #   storage_gpu_worker_data    = ""
+  #   network_bridge             = "vmbr0"
   # }
 
   # Third Proxmox server (optional)
   # "pve3" = {
-  #   api_url          = "https://192.168.10.162:8006/api2/json"
-  #   api_token_id     = "terraform@pve!terraform"
-  #   api_token_secret = "your-secret-here"
-  #   node_name        = "pve3"
-  #   tls_insecure     = true
-  #   storage_os       = "local-lvm"
-  #   storage_data     = "ceph-pool"  # Ceph storage for data
-  #   network_bridge   = "vmbr0"
+  #   api_url                    = "https://192.168.10.162:8006/api2/json"
+  #   api_token_id               = "terraform@pve!terraform"
+  #   api_token_secret           = "your-secret-here"
+  #   node_name                  = "pve3"
+  #   tls_insecure               = true
+  #   storage_control_plane_os   = "local-lvm"
+  #   storage_control_plane_data = ""
+  #   storage_worker_os          = "ceph-pool"  # Workers on Ceph storage
+  #   storage_worker_data        = "ceph-pool"
+  #   storage_gpu_worker_os      = ""
+  #   storage_gpu_worker_data    = ""
+  #   network_bridge             = "vmbr0"
   # }
 }
 
@@ -95,34 +108,40 @@ cluster_name  = "talos-cluster" # Cluster name
 
 control_planes = [
   {
-    name              = "talos-cp-1"
-    proxmox_server    = "pve1"
-    ip_address        = "192.168.10.100"
-    mac_address       = ""  # Leave empty for auto-generation
-    cpu_cores         = 4
-    memory_mb         = 8192
-    os_disk_size_gb   = 50
-    data_disk_size_gb = 100  # Set to 0 for no data disk
+    name                  = "talos-cp-1"
+    proxmox_server        = "pve1"
+    ip_address            = "192.168.10.100"
+    mac_address           = ""    # Leave empty for auto-generation
+    cpu_cores             = 4
+    memory_mb             = 8192
+    os_disk_size_gb       = 50
+    data_disk_size_gb     = 100   # Set to 0 for no data disk
+    storage_os_override   = ""    # Optional: Override storage pool for OS disk
+    storage_data_override = ""    # Optional: Override storage pool for data disk
   },
   {
-    name              = "talos-cp-2"
-    proxmox_server    = "pve1"  # Change to pve2 if you have multiple servers
-    ip_address        = "192.168.10.101"
-    mac_address       = ""
-    cpu_cores         = 4
-    memory_mb         = 8192
-    os_disk_size_gb   = 50
-    data_disk_size_gb = 100
+    name                  = "talos-cp-2"
+    proxmox_server        = "pve1"  # Change to pve2 if you have multiple servers
+    ip_address            = "192.168.10.101"
+    mac_address           = ""
+    cpu_cores             = 4
+    memory_mb             = 8192
+    os_disk_size_gb       = 50
+    data_disk_size_gb     = 100
+    storage_os_override   = ""
+    storage_data_override = ""
   },
   {
-    name              = "talos-cp-3"
-    proxmox_server    = "pve1"  # Change to pve3 if you have multiple servers
-    ip_address        = "192.168.10.102"
-    mac_address       = ""
-    cpu_cores         = 4
-    memory_mb         = 8192
-    os_disk_size_gb   = 50
-    data_disk_size_gb = 100
+    name                  = "talos-cp-3"
+    proxmox_server        = "pve1"  # Change to pve3 if you have multiple servers
+    ip_address            = "192.168.10.102"
+    mac_address           = ""
+    cpu_cores             = 4
+    memory_mb             = 8192
+    os_disk_size_gb       = 50
+    data_disk_size_gb     = 100
+    storage_os_override   = ""
+    storage_data_override = ""
   },
 ]
 
@@ -132,34 +151,40 @@ control_planes = [
 
 workers = [
   {
-    name              = "talos-worker-1"
-    proxmox_server    = "pve1"
-    ip_address        = "192.168.10.110"
-    mac_address       = ""
-    cpu_cores         = 8
-    memory_mb         = 16384
-    os_disk_size_gb   = 100
-    data_disk_size_gb = 0  # No data disk for this worker
+    name                  = "talos-worker-1"
+    proxmox_server        = "pve1"
+    ip_address            = "192.168.10.110"
+    mac_address           = ""
+    cpu_cores             = 8
+    memory_mb             = 16384
+    os_disk_size_gb       = 100
+    data_disk_size_gb     = 0     # No data disk for this worker
+    storage_os_override   = ""    # Optional: Override storage pool for OS disk
+    storage_data_override = ""    # Optional: Override storage pool for data disk
   },
   {
-    name              = "talos-worker-2"
-    proxmox_server    = "pve1"
-    ip_address        = "192.168.10.111"
-    mac_address       = ""
-    cpu_cores         = 8
-    memory_mb         = 16384
-    os_disk_size_gb   = 100
-    data_disk_size_gb = 200  # 200GB data disk for Longhorn
+    name                  = "talos-worker-2"
+    proxmox_server        = "pve1"
+    ip_address            = "192.168.10.111"
+    mac_address           = ""
+    cpu_cores             = 8
+    memory_mb             = 16384
+    os_disk_size_gb       = 100
+    data_disk_size_gb     = 200   # 200GB data disk for Longhorn
+    storage_os_override   = ""
+    storage_data_override = ""
   },
   {
-    name              = "talos-worker-3"
-    proxmox_server    = "pve1"
-    ip_address        = "192.168.10.112"
-    mac_address       = ""
-    cpu_cores         = 8
-    memory_mb         = 16384
-    os_disk_size_gb   = 100
-    data_disk_size_gb = 200
+    name                  = "talos-worker-3"
+    proxmox_server        = "pve1"
+    ip_address            = "192.168.10.112"
+    mac_address           = ""
+    cpu_cores             = 8
+    memory_mb             = 16384
+    os_disk_size_gb       = 100
+    data_disk_size_gb     = 200
+    storage_os_override   = ""
+    storage_data_override = ""
   },
 ]
 
@@ -170,15 +195,17 @@ workers = [
 gpu_workers = [
   # Example GPU worker - uncomment and configure as needed
   # {
-  #   name              = "talos-gpu-1"
-  #   proxmox_server    = "pve2"  # Server with GPU
-  #   ip_address        = "192.168.10.120"
-  #   mac_address       = ""
-  #   cpu_cores         = 16
-  #   memory_mb         = 32768
-  #   os_disk_size_gb   = 100
-  #   data_disk_size_gb = 500  # Large disk for AI/ML workloads
-  #   gpu_pci_id        = "01:00"  # Find with: lspci | grep -i nvidia
+  #   name                  = "talos-gpu-1"
+  #   proxmox_server        = "pve2"  # Server with GPU
+  #   ip_address            = "192.168.10.120"
+  #   mac_address           = ""
+  #   cpu_cores             = 16
+  #   memory_mb             = 32768
+  #   os_disk_size_gb       = 100
+  #   data_disk_size_gb     = 500     # Large disk for AI/ML workloads
+  #   gpu_pci_id            = "01:00" # Find with: lspci | grep -i nvidia
+  #   storage_os_override   = ""      # Optional: Override storage pool for OS disk
+  #   storage_data_override = ""      # Optional: Override storage pool for data disk
   # },
 ]
 

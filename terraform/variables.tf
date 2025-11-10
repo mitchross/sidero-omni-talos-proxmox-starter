@@ -11,23 +11,31 @@ variable "proxmox_servers" {
     node_name        = string
     tls_insecure     = bool
 
-    # Storage configuration per server
-    storage_os     = string # Storage pool for OS disks
-    storage_data   = string # Storage pool for data disks (optional)
-    network_bridge = string # Network bridge (e.g., vmbr0)
+    # Storage configuration per server - defaults for each VM type
+    storage_control_plane_os   = string                # Default OS storage for control planes
+    storage_control_plane_data = optional(string, "")  # Default data storage for control planes
+    storage_worker_os          = string                # Default OS storage for workers
+    storage_worker_data        = optional(string, "")  # Default data storage for workers
+    storage_gpu_worker_os      = optional(string, "")  # Default OS storage for GPU workers (falls back to worker_os)
+    storage_gpu_worker_data    = optional(string, "")  # Default data storage for GPU workers (falls back to worker_data)
+    network_bridge             = string                # Network bridge (e.g., vmbr0)
   }))
 
   # Example:
   # proxmox_servers = {
   #   "pve1" = {
-  #     api_url          = "https://192.168.10.160:8006/api2/json"
-  #     api_token_id     = "terraform@pve!terraform"
-  #     api_token_secret = "your-secret-here"
-  #     node_name        = "pve1"
-  #     tls_insecure     = true
-  #     storage_os       = "local-lvm"
-  #     storage_data     = "local-lvm"  # Can be same or different
-  #     network_bridge   = "vmbr0"
+  #     api_url                    = "https://192.168.10.160:8006/api2/json"
+  #     api_token_id               = "terraform@pve!terraform"
+  #     api_token_secret           = "your-secret-here"
+  #     node_name                  = "pve1"
+  #     tls_insecure               = true
+  #     storage_control_plane_os   = "local-lvm"     # Control planes on local-lvm
+  #     storage_control_plane_data = ""              # No data disk for control planes
+  #     storage_worker_os          = "local-lvm"     # Workers on local-lvm
+  #     storage_worker_data        = "local-lvm"     # Worker data on local-lvm
+  #     storage_gpu_worker_os      = "nvme-storage"  # GPU workers on fast storage
+  #     storage_gpu_worker_data    = "nvme-storage"  # GPU data on fast storage
+  #     network_bridge             = "vmbr0"
   #   }
   #   "pve2" = { ... }
   # }
@@ -112,14 +120,16 @@ variable "cluster_name" {
 variable "control_planes" {
   description = "List of control plane nodes with their configurations"
   type = list(object({
-    name              = string # e.g., "talos-cp-1"
-    proxmox_server    = string # Key from proxmox_servers map
-    ip_address        = string # e.g., "192.168.10.100"
-    mac_address       = string # e.g., "BC:24:11:01:00:01" or leave empty for auto-generation
-    cpu_cores         = number
-    memory_mb         = number
-    os_disk_size_gb   = number
-    data_disk_size_gb = number # Set to 0 for no data disk
+    name                  = string # e.g., "talos-cp-1"
+    proxmox_server        = string # Key from proxmox_servers map
+    ip_address            = string # e.g., "192.168.10.100"
+    mac_address           = string # e.g., "BC:24:11:01:00:01" or leave empty for auto-generation
+    cpu_cores             = number
+    memory_mb             = number
+    os_disk_size_gb       = number
+    data_disk_size_gb     = number               # Set to 0 for no data disk
+    storage_os_override   = optional(string, "") # Optional: Override storage_os for this specific node
+    storage_data_override = optional(string, "") # Optional: Override storage_data for this specific node
   }))
 
   # Example:
@@ -164,14 +174,16 @@ variable "control_planes" {
 variable "workers" {
   description = "List of worker nodes with their configurations"
   type = list(object({
-    name              = string
-    proxmox_server    = string
-    ip_address        = string
-    mac_address       = string
-    cpu_cores         = number
-    memory_mb         = number
-    os_disk_size_gb   = number
-    data_disk_size_gb = number # Set to 0 for no data disk
+    name                  = string
+    proxmox_server        = string
+    ip_address            = string
+    mac_address           = string
+    cpu_cores             = number
+    memory_mb             = number
+    os_disk_size_gb       = number
+    data_disk_size_gb     = number               # Set to 0 for no data disk
+    storage_os_override   = optional(string, "") # Optional: Override storage_os for this specific node
+    storage_data_override = optional(string, "") # Optional: Override storage_data for this specific node
   }))
 
   default = []
@@ -198,15 +210,17 @@ variable "workers" {
 variable "gpu_workers" {
   description = "List of GPU worker nodes with their configurations"
   type = list(object({
-    name              = string
-    proxmox_server    = string
-    ip_address        = string
-    mac_address       = string
-    cpu_cores         = number
-    memory_mb         = number
-    os_disk_size_gb   = number
-    data_disk_size_gb = number
-    gpu_pci_id        = string # e.g., "01:00" - Configure manually in Proxmox after creation
+    name                  = string
+    proxmox_server        = string
+    ip_address            = string
+    mac_address           = string
+    cpu_cores             = number
+    memory_mb             = number
+    os_disk_size_gb       = number
+    data_disk_size_gb     = number
+    gpu_pci_id            = string               # e.g., "01:00" - Configure manually in Proxmox after creation
+    storage_os_override   = optional(string, "") # Optional: Override storage_os for this specific node
+    storage_data_override = optional(string, "") # Optional: Override storage_data for this specific node
   }))
 
   default = []

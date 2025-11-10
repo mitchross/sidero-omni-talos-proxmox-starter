@@ -200,6 +200,7 @@ cd scripts
 # Get download link from Omni UI → Settings → CLI
 
 # Configure omnictl
+# Optional if already have configured
 omnictl config new
 # Enter your Omni URL and authenticate
 
