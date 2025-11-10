@@ -186,11 +186,7 @@ resource "proxmox_vm_qemu" "control_plane" {
 
   # VM Options
   onboot = var.vm_start_on_boot
-
-  # QEMU Guest Agent (block format for provider v3)
-  agent {
-    enabled = var.vm_qemu_agent
-  }
+  agent  = 1  # QEMU Guest Agent enabled (requires qemu-guest-agent system extension in Talos)
 
   # Tags for organization
   tags = join(";", [
@@ -273,11 +269,7 @@ resource "proxmox_vm_qemu" "worker" {
   }
 
   onboot = var.vm_start_on_boot
-
-  # QEMU Guest Agent (block format for provider v3)
-  agent {
-    enabled = var.vm_qemu_agent
-  }
+  agent  = 1  # QEMU Guest Agent enabled (requires qemu-guest-agent system extension in Talos)
 
   tags = join(";", [
     "talos",
@@ -363,11 +355,7 @@ resource "proxmox_vm_qemu" "gpu_worker" {
   # hostpci0 = "${each.value.gpu_pci_id},pcie=1"
 
   onboot = var.vm_start_on_boot
-
-  # QEMU Guest Agent (block format for provider v3)
-  agent {
-    enabled = var.vm_qemu_agent
-  }
+  agent  = 1  # QEMU Guest Agent enabled (requires qemu-guest-agent system extension in Talos)
 
   tags = join(";", [
     "talos",
