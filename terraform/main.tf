@@ -134,8 +134,10 @@ resource "proxmox_vm_qemu" "control_plane" {
 
   # Boot order depends on boot method
   # ISO: Boot from CD-ROM first, then disk
-  # PXE: Boot from network first, then disk
-  boot = var.boot_method == "iso" ? "order=ide2;scsi0" : "order=net0;scsi0"
+  # PXE: Boot from disk first (empty disk falls through to network)
+  #      This ensures machines boot from disk after Talos is installed,
+  #      preventing UUID/identity changes on every reboot
+  boot = var.boot_method == "iso" ? "order=ide2;scsi0" : "order=scsi0;net0"
 
   # CD-ROM with Talos ISO (only for ISO boot method)
   dynamic "disk" {
@@ -215,7 +217,7 @@ resource "proxmox_vm_qemu" "worker" {
 
   memory  = each.value.memory_mb
   scsihw = "virtio-scsi-single"
-  boot   = var.boot_method == "iso" ? "order=ide2;scsi0" : "order=net0;scsi0"
+  boot   = var.boot_method == "iso" ? "order=ide2;scsi0" : "order=scsi0;net0"
   cpu {
     cores   = each.value.cpu_cores
     sockets = 1
@@ -295,7 +297,7 @@ resource "proxmox_vm_qemu" "gpu_worker" {
 
   memory  = each.value.memory_mb
   scsihw = "virtio-scsi-single"
-  boot   = var.boot_method == "iso" ? "order=ide2;scsi0" : "order=net0;scsi0"
+  boot   = var.boot_method == "iso" ? "order=ide2;scsi0" : "order=scsi0;net0"
   cpu {
     cores   = each.value.cpu_cores
     sockets = 1

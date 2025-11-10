@@ -467,18 +467,22 @@ When using PXE boot (`boot_method = "pxe"`), VMs are created with:
 - Optional empty data disk (scsi1, if configured)
 - No CD-ROM
 - Static MAC address (auto-generated or specified)
-- Boot order: Network interface first, then disk (`order=net0;scsi0`)
+- Boot order: **Disk first, then network** (`order=scsi0;net0`)
+  - **Why disk first?** Prevents UUID/identity changes on reboot
+  - Empty disk falls through to PXE boot (first boot only)
+  - After Talos installs to disk, all subsequent boots use disk
+  - This maintains machine identity in Omni across reboots
 
 **Boot Process**:
-1. **VM starts** → Network boot initiated
+1. **VM starts** → Tries disk first (empty, falls through to network)
 2. **DHCP request** → Router provides IP and network info
 3. **PXE request** → Booter intercepts as DHCP proxy
 4. **Booter serves Talos** → iPXE downloads and boots Talos kernel
 5. **Talos boots** → Machine registers with Omni via SideroLink
-6. **Omni discovers machine** → Appears in Omni UI (with UUID)
-7. **Scripts match UUID** → Map to hostname/IP/role from Terraform
-8. **Omni installs to disk** → After cluster creation
-9. **VM reboots to disk** → Permanent installation complete
+6. **Omni installs Talos to disk** → Subsequent boots use disk, not PXE
+7. **Omni discovers machine** → Appears in Omni UI (with UUID)
+8. **Scripts match UUID** → Map to hostname/IP/role from Terraform
+9. **VM reboots to disk** → Permanent installation, maintains identity
 
 ## VM Configuration Details
 
