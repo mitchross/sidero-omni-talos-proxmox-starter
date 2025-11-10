@@ -1,8 +1,8 @@
 ---
 kind: Machine
-name: 74c801b7-6b6b-49fd-ab5c-4fc7ed2ee3fc
+name: a489f18f-817f-4ee7-9e0d-e9bfe798604f
 patches:
-  - idOverride: 400-cm-74c801b7-6b6b-49fd-ab5c-4fc7ed2ee3fc-set-hostname-talos-worker-gpu-1
+  - idOverride: 400-cm-a489f18f-817f-4ee7-9e0d-e9bfe798604f-set-hostname-talos-worker-gpu-1
     annotations:
       name: set-hostname-talos-worker-gpu-1
     inline:
@@ -15,7 +15,7 @@ patches:
           topology.kubernetes.io/zone: proxmox
           topology.proxmox.io/node: hp-server-1
           nvidia.com/gpu: "true"
-  - idOverride: 401-cm-74c801b7-6b6b-49fd-ab5c-4fc7ed2ee3fc-gpu-worker-config
+  - idOverride: 401-cm-a489f18f-817f-4ee7-9e0d-e9bfe798604f-gpu-worker-config
     annotations:
       name: gpu-worker-config
     inline:

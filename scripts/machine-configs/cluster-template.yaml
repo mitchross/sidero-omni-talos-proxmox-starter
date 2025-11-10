@@ -35,18 +35,17 @@ features:
   diskEncryption: false
   enableWorkloadProxy: true
 systemExtensions:
-  officialExtensions:
-    - siderolabs/iscsi-tools
-    - siderolabs/nfsd
-    - siderolabs/qemu-guest-agent
-    - siderolabs/util-linux-tools
+  - siderolabs/iscsi-tools
+  - siderolabs/nfsd
+  - siderolabs/qemu-guest-agent
+  - siderolabs/util-linux-tools
 
 ---
 kind: ControlPlane
 machines:
-  - c9eaebc0-7802-4038-80bd-0fe9a23be025
-  - 617989ff-3f8d-444b-8fae-395c8048bfe4
-  - 5693a444-a810-45c7-8062-81569b2d16fb
+  - e7058055-bb11-4a3e-841e-c300d8b102d5
+  - 09ee5b54-7130-4bc6-ba2e-0031f0242ac1
+  - 7047251a-9495-4d21-9aeb-23c0a0307b69
 patches:
   - idOverride: 400-control-planes-untaint
     annotations:
@@ -61,21 +60,20 @@ patches:
 kind: Workers
 name: workers
 machines:
-  - 49ce51a6-62ce-4849-bcac-4872023547ea
-  - 04fa3b27-2120-49de-bab2-4547703e0a62
-  - a2a593bd-bdaa-4d55-980a-78453a4d0598
-  - 86e086fa-8ed2-43c4-b829-0befff3af747
-  - 109fcdc3-1981-4869-835f-b99b5f79b3db
+  - 963c8dc8-eb0f-4021-b113-00741a598f55
+  - 3f067c07-d77d-46af-a6dc-77e049b34f6e
+  - a1b71493-c67f-40a5-a6cf-f836c4e3cae8
+  - b529ed83-2bdc-493d-b80b-06232d1b83f9
+  - ed98147b-e73c-4e82-aed2-2102627bf8c2
 
 ---
 kind: Workers
 name: gpu-workers
 systemExtensions:
-  officialExtensions:
-    - siderolabs/nonfree-kmod-nvidia-production
-    - siderolabs/nvidia-container-toolkit-production
+  - siderolabs/nonfree-kmod-nvidia-production
+  - siderolabs/nvidia-container-toolkit-production
 machines:
-  - 74c801b7-6b6b-49fd-ab5c-4fc7ed2ee3fc
+  - a489f18f-817f-4ee7-9e0d-e9bfe798604f
 
 # ==============================================================================
 # Machine Configurations
@@ -83,9 +81,9 @@ machines:
 
 ---
 kind: Machine
-name: c9eaebc0-7802-4038-80bd-0fe9a23be025
+name: e7058055-bb11-4a3e-841e-c300d8b102d5
 patches:
-  - idOverride: 400-cm-c9eaebc0-7802-4038-80bd-0fe9a23be025-set-hostname-talos-control-1
+  - idOverride: 400-cm-e7058055-bb11-4a3e-841e-c300d8b102d5-set-hostname-talos-control-1
     annotations:
       name: set-hostname-talos-control-1
     inline:
@@ -97,7 +95,7 @@ patches:
           node-role: control-plane
           topology.kubernetes.io/zone: proxmox
           topology.proxmox.io/node: hp-server-1
-  - idOverride: 401-cm-c9eaebc0-7802-4038-80bd-0fe9a23be025-control-plane-config
+  - idOverride: 401-cm-e7058055-bb11-4a3e-841e-c300d8b102d5-control-plane-config
     annotations:
       name: control-plane-config
     inline:
@@ -127,9 +125,9 @@ patches:
 
 ---
 kind: Machine
-name: 617989ff-3f8d-444b-8fae-395c8048bfe4
+name: 09ee5b54-7130-4bc6-ba2e-0031f0242ac1
 patches:
-  - idOverride: 400-cm-617989ff-3f8d-444b-8fae-395c8048bfe4-set-hostname-talos-control-2
+  - idOverride: 400-cm-09ee5b54-7130-4bc6-ba2e-0031f0242ac1-set-hostname-talos-control-2
     annotations:
       name: set-hostname-talos-control-2
     inline:
@@ -141,7 +139,7 @@ patches:
           node-role: control-plane
           topology.kubernetes.io/zone: proxmox
           topology.proxmox.io/node: hp-server-1
-  - idOverride: 401-cm-617989ff-3f8d-444b-8fae-395c8048bfe4-control-plane-config
+  - idOverride: 401-cm-09ee5b54-7130-4bc6-ba2e-0031f0242ac1-control-plane-config
     annotations:
       name: control-plane-config
     inline:
@@ -171,9 +169,9 @@ patches:
 
 ---
 kind: Machine
-name: 5693a444-a810-45c7-8062-81569b2d16fb
+name: 7047251a-9495-4d21-9aeb-23c0a0307b69
 patches:
-  - idOverride: 400-cm-5693a444-a810-45c7-8062-81569b2d16fb-set-hostname-talos-control-3
+  - idOverride: 400-cm-7047251a-9495-4d21-9aeb-23c0a0307b69-set-hostname-talos-control-3
     annotations:
       name: set-hostname-talos-control-3
     inline:
@@ -185,7 +183,7 @@ patches:
           node-role: control-plane
           topology.kubernetes.io/zone: proxmox
           topology.proxmox.io/node: hp-server-1
-  - idOverride: 401-cm-5693a444-a810-45c7-8062-81569b2d16fb-control-plane-config
+  - idOverride: 401-cm-7047251a-9495-4d21-9aeb-23c0a0307b69-control-plane-config
     annotations:
       name: control-plane-config
     inline:
@@ -215,9 +213,9 @@ patches:
 
 ---
 kind: Machine
-name: 49ce51a6-62ce-4849-bcac-4872023547ea
+name: 963c8dc8-eb0f-4021-b113-00741a598f55
 patches:
-  - idOverride: 400-cm-49ce51a6-62ce-4849-bcac-4872023547ea-set-hostname-talos-worker-1
+  - idOverride: 400-cm-963c8dc8-eb0f-4021-b113-00741a598f55-set-hostname-talos-worker-1
     annotations:
       name: set-hostname-talos-worker-1
     inline:
@@ -229,7 +227,7 @@ patches:
           node-role: worker
           topology.kubernetes.io/zone: proxmox
           topology.proxmox.io/node: hp-server-1
-  - idOverride: 401-cm-49ce51a6-62ce-4849-bcac-4872023547ea-regular-worker-config
+  - idOverride: 401-cm-963c8dc8-eb0f-4021-b113-00741a598f55-regular-worker-config
     annotations:
       name: regular-worker-config
     inline:
@@ -266,9 +264,9 @@ patches:
 
 ---
 kind: Machine
-name: 04fa3b27-2120-49de-bab2-4547703e0a62
+name: 3f067c07-d77d-46af-a6dc-77e049b34f6e
 patches:
-  - idOverride: 400-cm-04fa3b27-2120-49de-bab2-4547703e0a62-set-hostname-talos-worker-2
+  - idOverride: 400-cm-3f067c07-d77d-46af-a6dc-77e049b34f6e-set-hostname-talos-worker-2
     annotations:
       name: set-hostname-talos-worker-2
     inline:
@@ -280,7 +278,7 @@ patches:
           node-role: worker
           topology.kubernetes.io/zone: proxmox
           topology.proxmox.io/node: hp-server-1
-  - idOverride: 401-cm-04fa3b27-2120-49de-bab2-4547703e0a62-regular-worker-config
+  - idOverride: 401-cm-3f067c07-d77d-46af-a6dc-77e049b34f6e-regular-worker-config
     annotations:
       name: regular-worker-config
     inline:
@@ -326,9 +324,9 @@ patches:
 
 ---
 kind: Machine
-name: a2a593bd-bdaa-4d55-980a-78453a4d0598
+name: a1b71493-c67f-40a5-a6cf-f836c4e3cae8
 patches:
-  - idOverride: 400-cm-a2a593bd-bdaa-4d55-980a-78453a4d0598-set-hostname-talos-worker-3
+  - idOverride: 400-cm-a1b71493-c67f-40a5-a6cf-f836c4e3cae8-set-hostname-talos-worker-3
     annotations:
       name: set-hostname-talos-worker-3
     inline:
@@ -340,7 +338,7 @@ patches:
           node-role: worker
           topology.kubernetes.io/zone: proxmox
           topology.proxmox.io/node: hp-server-1
-  - idOverride: 401-cm-a2a593bd-bdaa-4d55-980a-78453a4d0598-regular-worker-config
+  - idOverride: 401-cm-a1b71493-c67f-40a5-a6cf-f836c4e3cae8-regular-worker-config
     annotations:
       name: regular-worker-config
     inline:
@@ -386,9 +384,9 @@ patches:
 
 ---
 kind: Machine
-name: 86e086fa-8ed2-43c4-b829-0befff3af747
+name: b529ed83-2bdc-493d-b80b-06232d1b83f9
 patches:
-  - idOverride: 400-cm-86e086fa-8ed2-43c4-b829-0befff3af747-set-hostname-talos-worker-4
+  - idOverride: 400-cm-b529ed83-2bdc-493d-b80b-06232d1b83f9-set-hostname-talos-worker-4
     annotations:
       name: set-hostname-talos-worker-4
     inline:
@@ -400,7 +398,7 @@ patches:
           node-role: worker
           topology.kubernetes.io/zone: proxmox
           topology.proxmox.io/node: hp-server-1
-  - idOverride: 401-cm-86e086fa-8ed2-43c4-b829-0befff3af747-regular-worker-config
+  - idOverride: 401-cm-b529ed83-2bdc-493d-b80b-06232d1b83f9-regular-worker-config
     annotations:
       name: regular-worker-config
     inline:
@@ -446,9 +444,9 @@ patches:
 
 ---
 kind: Machine
-name: 109fcdc3-1981-4869-835f-b99b5f79b3db
+name: ed98147b-e73c-4e82-aed2-2102627bf8c2
 patches:
-  - idOverride: 400-cm-109fcdc3-1981-4869-835f-b99b5f79b3db-set-hostname-talos-worker-5
+  - idOverride: 400-cm-ed98147b-e73c-4e82-aed2-2102627bf8c2-set-hostname-talos-worker-5
     annotations:
       name: set-hostname-talos-worker-5
     inline:
@@ -460,7 +458,7 @@ patches:
           node-role: worker
           topology.kubernetes.io/zone: proxmox
           topology.proxmox.io/node: hp-server-1
-  - idOverride: 401-cm-109fcdc3-1981-4869-835f-b99b5f79b3db-regular-worker-config
+  - idOverride: 401-cm-ed98147b-e73c-4e82-aed2-2102627bf8c2-regular-worker-config
     annotations:
       name: regular-worker-config
     inline:
@@ -506,9 +504,9 @@ patches:
 
 ---
 kind: Machine
-name: 74c801b7-6b6b-49fd-ab5c-4fc7ed2ee3fc
+name: a489f18f-817f-4ee7-9e0d-e9bfe798604f
 patches:
-  - idOverride: 400-cm-74c801b7-6b6b-49fd-ab5c-4fc7ed2ee3fc-set-hostname-talos-worker-gpu-1
+  - idOverride: 400-cm-a489f18f-817f-4ee7-9e0d-e9bfe798604f-set-hostname-talos-worker-gpu-1
     annotations:
       name: set-hostname-talos-worker-gpu-1
     inline:
@@ -521,7 +519,7 @@ patches:
           topology.kubernetes.io/zone: proxmox
           topology.proxmox.io/node: hp-server-1
           nvidia.com/gpu: "true"
-  - idOverride: 401-cm-74c801b7-6b6b-49fd-ab5c-4fc7ed2ee3fc-gpu-worker-config
+  - idOverride: 401-cm-a489f18f-817f-4ee7-9e0d-e9bfe798604f-gpu-worker-config
     annotations:
       name: gpu-worker-config
     inline:

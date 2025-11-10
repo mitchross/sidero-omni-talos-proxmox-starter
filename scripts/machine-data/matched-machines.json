@@ -5,8 +5,8 @@
     "mac_address": "BC:24:11:01:00:00",
     "ip_address": "192.168.10.100",
     "role": "control-plane",
-    "omni_uuid": "c9eaebc0-7802-4038-80bd-0fe9a23be025",
-    "omni_name": "c9eaebc0-7802-4038-80bd-0fe9a23be025",
+    "omni_uuid": "e7058055-bb11-4a3e-841e-c300d8b102d5",
+    "omni_name": "e7058055-bb11-4a3e-841e-c300d8b102d5",
     "terraform_data": {
       "cpu_cores": 4,
       "data_disk_gb": 0,
@@ -31,192 +31,24 @@
         "annotations": {
           "omni.sidero.dev/kernel-args-initialized": null
         },
-        "created": "2025-11-10T05:53:11Z",
+        "created": "2025-11-10T05:22:30Z",
         "finalizers": [
-          "MachineTeardownController",
           "MachineConfigGenOptionsController",
-          "MachineUpgradeStatusController",
+          "MachineTeardownController",
           "LabelsExtractor[MachineStatuses.omni.sidero.dev]",
+          "MachineUpgradeStatusController",
           "KernelArgsStatusController"
         ],
-        "id": "c9eaebc0-7802-4038-80bd-0fe9a23be025",
+        "id": "e7058055-bb11-4a3e-841e-c300d8b102d5",
         "labels": {
           "omni.sidero.dev/arch": "amd64",
-          "omni.sidero.dev/cluster": "talos-prod-cluster",
-          "omni.sidero.dev/connected": null,
-          "omni.sidero.dev/cores": 4,
-          "omni.sidero.dev/cpu": "qemu",
-          "omni.sidero.dev/installed": null,
-          "omni.sidero.dev/mem": "16GiB",
-          "omni.sidero.dev/platform": "metal",
-          "omni.sidero.dev/ready-to-use": null,
-          "omni.sidero.dev/reporting-events": null,
-          "omni.sidero.dev/role-controlplane": null,
-          "omni.sidero.dev/storage": "64GB",
-          "omni.sidero.dev/talos-version": "v1.11.5"
-        },
-        "namespace": "default",
-        "owner": "MachineStatusController",
-        "phase": "running",
-        "type": "MachineStatuses.omni.sidero.dev",
-        "updated": "2025-11-10T06:20:48Z",
-        "version": 10
-      },
-      "spec": {
-        "cluster": "talos-prod-cluster",
-        "connected": true,
-        "diagnostics": [],
-        "hardware": {
-          "arch": "amd64",
-          "blockdevices": [
-            {
-              "buspath": "/pci0000:00/0000:00:05.0/0000:01:01.0/virtio1/host2/target2:0:0/2:0:0:0",
-              "linuxname": "/dev/sda",
-              "model": "QEMU HARDDISK",
-              "name": "",
-              "readonly": false,
-              "serial": "",
-              "size": 64424509440,
-              "systemdisk": true,
-              "transport": "virtio",
-              "type": "SSD",
-              "uuid": "",
-              "wwid": ""
-            }
-          ],
-          "memorymodules": [
-            {
-              "description": "QEMU",
-              "sizemb": 17000
-            }
-          ],
-          "processors": [
-            {
-              "corecount": 4,
-              "description": "QEMU pc-i440fx-10.1",
-              "frequency": 2000,
-              "manufacturer": "QEMU",
-              "threadcount": 4
-            }
-          ]
-        },
-        "imagelabels": {},
-        "initialtalosversion": "v1.11.5",
-        "kernelcmdline": "talos.platform=metal talos.config=none console=tty0 console=ttyS0 init_on_alloc=1 slab_nomerge pti=on consoleblank=0 nvme_core.io_timeout=4294967295 printk.devkmsg=on selinux=1 siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN talos.events.sink=[fdae:41e4:649b:9303::1]:8091 talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092",
-        "lasterror": "",
-        "maintenance": false,
-        "managementaddress": "fdae:41e4:649b:9303:38c0:8f7b:9335:7737",
-        "network": {
-          "addresses": [
-            "192.168.10.20/24"
-          ],
-          "defaultgateways": [
-            "192.168.10.1"
-          ],
-          "domainname": "",
-          "hostname": "talos-control-1",
-          "networklinks": [
-            {
-              "description": "Red Hat, Inc. Virtio network device",
-              "hardwareaddress": "bc:24:11:01:00:00",
-              "linkup": true,
-              "linuxname": "ens18",
-              "speedmbps": 4294967295
-            }
-          ]
-        },
-        "platformmetadata": {
-          "hostname": "",
-          "instanceid": "c9eaebc0-7802-4038-80bd-0fe9a23be025",
-          "instancetype": "",
-          "platform": "metal",
-          "providerid": "",
-          "region": "",
-          "spot": false,
-          "zone": ""
-        },
-        "powerstate": 1,
-        "role": 1,
-        "schematic": {
-          "extensions": [],
-          "fullid": "d28240c0e68defc5568ceb772ec11d6b30a51d1733dbae340cafc104ec4710f5",
-          "id": "376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba",
-          "inagentmode": false,
-          "initialschematic": "d28240c0e68defc5568ceb772ec11d6b30a51d1733dbae340cafc104ec4710f5",
-          "initialstate": {
-            "extensions": []
-          },
-          "invalid": false,
-          "kernelargs": [
-            "siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN",
-            "talos.events.sink=[fdae:41e4:649b:9303::1]:8091",
-            "talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092",
-            "console=tty0",
-            "console=ttyS0"
-          ],
-          "metavalues": [],
-          "overlay": null,
-          "raw": "customization:\n    extraKernelArgs:\n        - siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN\n        - talos.events.sink=[fdae:41e4:649b:9303::1]:8091\n        - talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092\n        - console=tty0\n        - console=ttyS0\n"
-        },
-        "securitystate": {
-          "bootedwithuki": false,
-          "secureboot": false
-        },
-        "talosversion": "v1.11.5"
-      }
-    }
-  },
-  {
-    "terraform_name": "talos-control-2",
-    "hostname": "talos-control-2",
-    "mac_address": "BC:24:11:01:00:01",
-    "ip_address": "192.168.10.101",
-    "role": "control-plane",
-    "omni_uuid": "617989ff-3f8d-444b-8fae-395c8048bfe4",
-    "omni_name": "617989ff-3f8d-444b-8fae-395c8048bfe4",
-    "terraform_data": {
-      "cpu_cores": 4,
-      "data_disk_gb": 0,
-      "dns_servers": [
-        "1.1.1.1",
-        "8.8.8.8"
-      ],
-      "gateway": "192.168.10.1",
-      "gpu_pci_id": "",
-      "has_data_disk": false,
-      "hostname": "talos-control-2",
-      "ip_address": "192.168.10.101",
-      "mac_address": "BC:24:11:01:00:01",
-      "memory_mb": 17000,
-      "os_disk_gb": 60,
-      "proxmox_node": "hp-server-1",
-      "proxmox_server": "hp-server-1",
-      "role": "control-plane"
-    },
-    "omni_data": {
-      "metadata": {
-        "annotations": {
-          "omni.sidero.dev/kernel-args-initialized": null
-        },
-        "created": "2025-11-10T05:43:34Z",
-        "finalizers": [
-          "LabelsExtractor[MachineStatuses.omni.sidero.dev]",
-          "MachineTeardownController",
-          "KernelArgsStatusController",
-          "MachineUpgradeStatusController",
-          "MachineConfigGenOptionsController"
-        ],
-        "id": "617989ff-3f8d-444b-8fae-395c8048bfe4",
-        "labels": {
-          "omni.sidero.dev/arch": "amd64",
-          "omni.sidero.dev/cluster": "talos-prod-cluster",
+          "omni.sidero.dev/available": null,
           "omni.sidero.dev/cores": 4,
           "omni.sidero.dev/cpu": "qemu",
           "omni.sidero.dev/disconnected": null,
           "omni.sidero.dev/mem": "16GiB",
           "omni.sidero.dev/platform": "metal",
           "omni.sidero.dev/reporting-events": null,
-          "omni.sidero.dev/role-controlplane": null,
           "omni.sidero.dev/storage": "64GB",
           "omni.sidero.dev/talos-version": "v1.11.5"
         },
@@ -224,11 +56,11 @@
         "owner": "MachineStatusController",
         "phase": "running",
         "type": "MachineStatuses.omni.sidero.dev",
-        "updated": "2025-11-10T06:20:06Z",
-        "version": 10
+        "updated": "2025-11-10T05:43:14Z",
+        "version": 9
       },
       "spec": {
-        "cluster": "talos-prod-cluster",
+        "cluster": "",
         "connected": false,
         "diagnostics": [],
         "hardware": {
@@ -270,10 +102,10 @@
         "kernelcmdline": "talos.platform=metal console=tty0 console=ttyS0 init_on_alloc=1 slab_nomerge pti=on consoleblank=0 nvme_core.io_timeout=4294967295 printk.devkmsg=on selinux=1 siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN talos.events.sink=[fdae:41e4:649b:9303::1]:8091 talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092",
         "lasterror": "",
         "maintenance": true,
-        "managementaddress": "fdae:41e4:649b:9303:db8e:24ae:1506:b6d",
+        "managementaddress": "fdae:41e4:649b:9303:550f:8323:491:860e",
         "network": {
           "addresses": [
-            "192.168.10.30/24"
+            "192.168.10.20/24"
           ],
           "defaultgateways": [
             "192.168.10.1"
@@ -283,7 +115,7 @@
           "networklinks": [
             {
               "description": "Red Hat, Inc. Virtio network device",
-              "hardwareaddress": "bc:24:11:01:00:01",
+              "hardwareaddress": "bc:24:11:01:00:00",
               "linkup": true,
               "linuxname": "ens18",
               "speedmbps": 4294967295
@@ -292,7 +124,7 @@
         },
         "platformmetadata": {
           "hostname": "",
-          "instanceid": "617989ff-3f8d-444b-8fae-395c8048bfe4",
+          "instanceid": "e7058055-bb11-4a3e-841e-c300d8b102d5",
           "instancetype": "",
           "platform": "metal",
           "providerid": "",
@@ -301,7 +133,7 @@
           "zone": ""
         },
         "powerstate": 1,
-        "role": 1,
+        "role": 0,
         "schematic": {
           "extensions": [],
           "fullid": "d28240c0e68defc5568ceb772ec11d6b30a51d1733dbae340cafc104ec4710f5",
@@ -332,13 +164,13 @@
     }
   },
   {
-    "terraform_name": "talos-control-3",
-    "hostname": "talos-control-3",
-    "mac_address": "BC:24:11:01:00:02",
-    "ip_address": "192.168.10.102",
+    "terraform_name": "talos-control-2",
+    "hostname": "talos-control-2",
+    "mac_address": "BC:24:11:01:00:01",
+    "ip_address": "192.168.10.101",
     "role": "control-plane",
-    "omni_uuid": "5693a444-a810-45c7-8062-81569b2d16fb",
-    "omni_name": "5693a444-a810-45c7-8062-81569b2d16fb",
+    "omni_uuid": "09ee5b54-7130-4bc6-ba2e-0031f0242ac1",
+    "omni_name": "09ee5b54-7130-4bc6-ba2e-0031f0242ac1",
     "terraform_data": {
       "cpu_cores": 4,
       "data_disk_gb": 0,
@@ -349,9 +181,9 @@
       "gateway": "192.168.10.1",
       "gpu_pci_id": "",
       "has_data_disk": false,
-      "hostname": "talos-control-3",
-      "ip_address": "192.168.10.102",
-      "mac_address": "BC:24:11:01:00:02",
+      "hostname": "talos-control-2",
+      "ip_address": "192.168.10.101",
+      "mac_address": "BC:24:11:01:00:01",
       "memory_mb": 17000,
       "os_disk_gb": 60,
       "proxmox_node": "hp-server-1",
@@ -363,27 +195,25 @@
         "annotations": {
           "omni.sidero.dev/kernel-args-initialized": null
         },
-        "created": "2025-11-10T05:52:50Z",
+        "created": "2025-11-10T23:54:53Z",
         "finalizers": [
           "MachineConfigGenOptionsController",
           "KernelArgsStatusController",
-          "MachineTeardownController",
+          "LabelsExtractor[MachineStatuses.omni.sidero.dev]",
           "MachineUpgradeStatusController",
-          "LabelsExtractor[MachineStatuses.omni.sidero.dev]"
+          "MachineTeardownController"
         ],
-        "id": "5693a444-a810-45c7-8062-81569b2d16fb",
+        "id": "09ee5b54-7130-4bc6-ba2e-0031f0242ac1",
         "labels": {
           "omni.sidero.dev/arch": "amd64",
-          "omni.sidero.dev/cluster": "talos-prod-cluster",
+          "omni.sidero.dev/available": null,
           "omni.sidero.dev/connected": null,
           "omni.sidero.dev/cores": 4,
           "omni.sidero.dev/cpu": "qemu",
-          "omni.sidero.dev/installed": null,
           "omni.sidero.dev/mem": "16GiB",
           "omni.sidero.dev/platform": "metal",
           "omni.sidero.dev/ready-to-use": null,
           "omni.sidero.dev/reporting-events": null,
-          "omni.sidero.dev/role-controlplane": null,
           "omni.sidero.dev/storage": "64GB",
           "omni.sidero.dev/talos-version": "v1.11.5"
         },
@@ -391,25 +221,25 @@
         "owner": "MachineStatusController",
         "phase": "running",
         "type": "MachineStatuses.omni.sidero.dev",
-        "updated": "2025-11-10T06:20:51Z",
-        "version": 10
+        "updated": "2025-11-10T23:54:55Z",
+        "version": 8
       },
       "spec": {
-        "cluster": "talos-prod-cluster",
+        "cluster": "",
         "connected": true,
         "diagnostics": [],
         "hardware": {
           "arch": "amd64",
           "blockdevices": [
             {
-              "buspath": "/pci0000:00/0000:00:05.0/0000:01:01.0/virtio1/host2/target2:0:0/2:0:0:0",
+              "buspath": "/pci0000:00/0000:00:05.0/0000:01:01.0/virtio2/host2/target2:0:0/2:0:0:0",
               "linuxname": "/dev/sda",
               "model": "QEMU HARDDISK",
               "name": "",
               "readonly": false,
               "serial": "",
               "size": 64424509440,
-              "systemdisk": true,
+              "systemdisk": false,
               "transport": "virtio",
               "type": "SSD",
               "uuid": "",
@@ -434,10 +264,185 @@
         },
         "imagelabels": {},
         "initialtalosversion": "v1.11.5",
-        "kernelcmdline": "talos.platform=metal talos.config=none console=tty0 console=ttyS0 init_on_alloc=1 slab_nomerge pti=on consoleblank=0 nvme_core.io_timeout=4294967295 printk.devkmsg=on selinux=1 siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN talos.events.sink=[fdae:41e4:649b:9303::1]:8091 talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092",
+        "kernelcmdline": "talos.platform=metal console=tty0 console=ttyS0 init_on_alloc=1 slab_nomerge pti=on consoleblank=0 nvme_core.io_timeout=4294967295 printk.devkmsg=on selinux=1 siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN talos.events.sink=[fdae:41e4:649b:9303::1]:8091 talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092",
         "lasterror": "",
-        "maintenance": false,
-        "managementaddress": "fdae:41e4:649b:9303:bd63:fd4b:8af8:1d48",
+        "maintenance": true,
+        "managementaddress": "fdae:41e4:649b:9303:6e91:4227:9696:4f71",
+        "network": {
+          "addresses": [
+            "192.168.10.30/24"
+          ],
+          "defaultgateways": [
+            "192.168.10.1"
+          ],
+          "domainname": "",
+          "hostname": "",
+          "networklinks": [
+            {
+              "description": "Red Hat, Inc. Virtio network device",
+              "hardwareaddress": "bc:24:11:01:00:01",
+              "linkup": true,
+              "linuxname": "ens18",
+              "speedmbps": 4294967295
+            }
+          ]
+        },
+        "platformmetadata": {
+          "hostname": "",
+          "instanceid": "09ee5b54-7130-4bc6-ba2e-0031f0242ac1",
+          "instancetype": "",
+          "platform": "metal",
+          "providerid": "",
+          "region": "",
+          "spot": false,
+          "zone": ""
+        },
+        "powerstate": 1,
+        "role": 0,
+        "schematic": {
+          "extensions": [
+            "siderolabs/iscsi-tools",
+            "siderolabs/nfsd",
+            "siderolabs/qemu-guest-agent",
+            "siderolabs/util-linux-tools"
+          ],
+          "fullid": "d1256fc1af32e5e43697fa49faa4ad23e90a989cb7005af07ee7e3666265640d",
+          "id": "ddf38e55e30aa9b2bb0b765054ed63444dc00244ab8bb4ad4ad92486602285f8",
+          "inagentmode": false,
+          "initialschematic": "d1256fc1af32e5e43697fa49faa4ad23e90a989cb7005af07ee7e3666265640d",
+          "initialstate": {
+            "extensions": [
+              "siderolabs/iscsi-tools",
+              "siderolabs/nfsd",
+              "siderolabs/qemu-guest-agent",
+              "siderolabs/util-linux-tools"
+            ]
+          },
+          "invalid": false,
+          "kernelargs": [
+            "siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN",
+            "talos.events.sink=[fdae:41e4:649b:9303::1]:8091",
+            "talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092",
+            "console=tty0",
+            "console=ttyS0"
+          ],
+          "metavalues": [],
+          "overlay": null,
+          "raw": "customization:\n    extraKernelArgs:\n        - siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN\n        - talos.events.sink=[fdae:41e4:649b:9303::1]:8091\n        - talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092\n        - console=tty0\n        - console=ttyS0\n    systemExtensions:\n        officialExtensions:\n            - siderolabs/iscsi-tools\n            - siderolabs/nfsd\n            - siderolabs/qemu-guest-agent\n            - siderolabs/util-linux-tools\n"
+        },
+        "securitystate": {
+          "bootedwithuki": false,
+          "secureboot": false
+        },
+        "talosversion": "v1.11.5"
+      }
+    }
+  },
+  {
+    "terraform_name": "talos-control-3",
+    "hostname": "talos-control-3",
+    "mac_address": "BC:24:11:01:00:02",
+    "ip_address": "192.168.10.102",
+    "role": "control-plane",
+    "omni_uuid": "7047251a-9495-4d21-9aeb-23c0a0307b69",
+    "omni_name": "7047251a-9495-4d21-9aeb-23c0a0307b69",
+    "terraform_data": {
+      "cpu_cores": 4,
+      "data_disk_gb": 0,
+      "dns_servers": [
+        "1.1.1.1",
+        "8.8.8.8"
+      ],
+      "gateway": "192.168.10.1",
+      "gpu_pci_id": "",
+      "has_data_disk": false,
+      "hostname": "talos-control-3",
+      "ip_address": "192.168.10.102",
+      "mac_address": "BC:24:11:01:00:02",
+      "memory_mb": 17000,
+      "os_disk_gb": 60,
+      "proxmox_node": "hp-server-1",
+      "proxmox_server": "hp-server-1",
+      "role": "control-plane"
+    },
+    "omni_data": {
+      "metadata": {
+        "annotations": {
+          "omni.sidero.dev/kernel-args-initialized": null
+        },
+        "created": "2025-11-10T23:54:46Z",
+        "finalizers": [
+          "KernelArgsStatusController",
+          "MachineUpgradeStatusController",
+          "LabelsExtractor[MachineStatuses.omni.sidero.dev]",
+          "MachineConfigGenOptionsController",
+          "MachineTeardownController"
+        ],
+        "id": "7047251a-9495-4d21-9aeb-23c0a0307b69",
+        "labels": {
+          "omni.sidero.dev/arch": "amd64",
+          "omni.sidero.dev/available": null,
+          "omni.sidero.dev/connected": null,
+          "omni.sidero.dev/cores": 4,
+          "omni.sidero.dev/cpu": "qemu",
+          "omni.sidero.dev/mem": "16GiB",
+          "omni.sidero.dev/platform": "metal",
+          "omni.sidero.dev/ready-to-use": null,
+          "omni.sidero.dev/reporting-events": null,
+          "omni.sidero.dev/storage": "64GB",
+          "omni.sidero.dev/talos-version": "v1.11.5"
+        },
+        "namespace": "default",
+        "owner": "MachineStatusController",
+        "phase": "running",
+        "type": "MachineStatuses.omni.sidero.dev",
+        "updated": "2025-11-10T23:54:48Z",
+        "version": 8
+      },
+      "spec": {
+        "cluster": "",
+        "connected": true,
+        "diagnostics": [],
+        "hardware": {
+          "arch": "amd64",
+          "blockdevices": [
+            {
+              "buspath": "/pci0000:00/0000:00:05.0/0000:01:01.0/virtio2/host2/target2:0:0/2:0:0:0",
+              "linuxname": "/dev/sda",
+              "model": "QEMU HARDDISK",
+              "name": "",
+              "readonly": false,
+              "serial": "",
+              "size": 64424509440,
+              "systemdisk": false,
+              "transport": "virtio",
+              "type": "SSD",
+              "uuid": "",
+              "wwid": ""
+            }
+          ],
+          "memorymodules": [
+            {
+              "description": "QEMU",
+              "sizemb": 17000
+            }
+          ],
+          "processors": [
+            {
+              "corecount": 4,
+              "description": "QEMU pc-i440fx-10.1",
+              "frequency": 2000,
+              "manufacturer": "QEMU",
+              "threadcount": 4
+            }
+          ]
+        },
+        "imagelabels": {},
+        "initialtalosversion": "v1.11.5",
+        "kernelcmdline": "talos.platform=metal console=tty0 console=ttyS0 init_on_alloc=1 slab_nomerge pti=on consoleblank=0 nvme_core.io_timeout=4294967295 printk.devkmsg=on selinux=1 siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN talos.events.sink=[fdae:41e4:649b:9303::1]:8091 talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092",
+        "lasterror": "",
+        "maintenance": true,
+        "managementaddress": "fdae:41e4:649b:9303:88a4:a6a2:39ac:cf98",
         "network": {
           "addresses": [
             "192.168.10.215/24"
@@ -446,7 +451,7 @@
             "192.168.10.1"
           ],
           "domainname": "",
-          "hostname": "talos-control-3",
+          "hostname": "",
           "networklinks": [
             {
               "description": "Red Hat, Inc. Virtio network device",
@@ -459,7 +464,7 @@
         },
         "platformmetadata": {
           "hostname": "",
-          "instanceid": "5693a444-a810-45c7-8062-81569b2d16fb",
+          "instanceid": "7047251a-9495-4d21-9aeb-23c0a0307b69",
           "instancetype": "",
           "platform": "metal",
           "providerid": "",
@@ -468,15 +473,25 @@
           "zone": ""
         },
         "powerstate": 1,
-        "role": 1,
+        "role": 0,
         "schematic": {
-          "extensions": [],
-          "fullid": "d28240c0e68defc5568ceb772ec11d6b30a51d1733dbae340cafc104ec4710f5",
-          "id": "376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba",
+          "extensions": [
+            "siderolabs/iscsi-tools",
+            "siderolabs/nfsd",
+            "siderolabs/qemu-guest-agent",
+            "siderolabs/util-linux-tools"
+          ],
+          "fullid": "d1256fc1af32e5e43697fa49faa4ad23e90a989cb7005af07ee7e3666265640d",
+          "id": "ddf38e55e30aa9b2bb0b765054ed63444dc00244ab8bb4ad4ad92486602285f8",
           "inagentmode": false,
-          "initialschematic": "d28240c0e68defc5568ceb772ec11d6b30a51d1733dbae340cafc104ec4710f5",
+          "initialschematic": "d1256fc1af32e5e43697fa49faa4ad23e90a989cb7005af07ee7e3666265640d",
           "initialstate": {
-            "extensions": []
+            "extensions": [
+              "siderolabs/iscsi-tools",
+              "siderolabs/nfsd",
+              "siderolabs/qemu-guest-agent",
+              "siderolabs/util-linux-tools"
+            ]
           },
           "invalid": false,
           "kernelargs": [
@@ -488,7 +503,7 @@
           ],
           "metavalues": [],
           "overlay": null,
-          "raw": "customization:\n    extraKernelArgs:\n        - siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN\n        - talos.events.sink=[fdae:41e4:649b:9303::1]:8091\n        - talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092\n        - console=tty0\n        - console=ttyS0\n"
+          "raw": "customization:\n    extraKernelArgs:\n        - siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN\n        - talos.events.sink=[fdae:41e4:649b:9303::1]:8091\n        - talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092\n        - console=tty0\n        - console=ttyS0\n    systemExtensions:\n        officialExtensions:\n            - siderolabs/iscsi-tools\n            - siderolabs/nfsd\n            - siderolabs/qemu-guest-agent\n            - siderolabs/util-linux-tools\n"
         },
         "securitystate": {
           "bootedwithuki": false,
@@ -504,8 +519,8 @@
     "mac_address": "BC:24:11:02:00:00",
     "ip_address": "192.168.10.110",
     "role": "worker",
-    "omni_uuid": "49ce51a6-62ce-4849-bcac-4872023547ea",
-    "omni_name": "49ce51a6-62ce-4849-bcac-4872023547ea",
+    "omni_uuid": "963c8dc8-eb0f-4021-b113-00741a598f55",
+    "omni_name": "963c8dc8-eb0f-4021-b113-00741a598f55",
     "terraform_data": {
       "cpu_cores": 8,
       "data_disk_gb": 0,
@@ -530,27 +545,24 @@
         "annotations": {
           "omni.sidero.dev/kernel-args-initialized": null
         },
-        "created": "2025-11-10T05:53:54Z",
+        "created": "2025-11-10T04:49:35Z",
         "finalizers": [
-          "KernelArgsStatusController",
-          "MachineUpgradeStatusController",
-          "MachineConfigGenOptionsController",
           "MachineTeardownController",
-          "LabelsExtractor[MachineStatuses.omni.sidero.dev]"
+          "MachineUpgradeStatusController",
+          "LabelsExtractor[MachineStatuses.omni.sidero.dev]",
+          "MachineConfigGenOptionsController",
+          "KernelArgsStatusController"
         ],
-        "id": "49ce51a6-62ce-4849-bcac-4872023547ea",
+        "id": "963c8dc8-eb0f-4021-b113-00741a598f55",
         "labels": {
           "omni.sidero.dev/arch": "amd64",
-          "omni.sidero.dev/cluster": "talos-prod-cluster",
-          "omni.sidero.dev/connected": null,
+          "omni.sidero.dev/available": null,
           "omni.sidero.dev/cores": 8,
           "omni.sidero.dev/cpu": "qemu",
-          "omni.sidero.dev/installed": null,
+          "omni.sidero.dev/disconnected": null,
           "omni.sidero.dev/mem": "31GiB",
           "omni.sidero.dev/platform": "metal",
-          "omni.sidero.dev/ready-to-use": null,
           "omni.sidero.dev/reporting-events": null,
-          "omni.sidero.dev/role-worker": null,
           "omni.sidero.dev/storage": "69GB",
           "omni.sidero.dev/talos-version": "v1.11.5"
         },
@@ -558,12 +570,12 @@
         "owner": "MachineStatusController",
         "phase": "running",
         "type": "MachineStatuses.omni.sidero.dev",
-        "updated": "2025-11-10T06:20:14Z",
-        "version": 14
+        "updated": "2025-11-10T04:56:25Z",
+        "version": 9
       },
       "spec": {
-        "cluster": "talos-prod-cluster",
-        "connected": true,
+        "cluster": "",
+        "connected": false,
         "diagnostics": [],
         "hardware": {
           "arch": "amd64",
@@ -576,7 +588,7 @@
               "readonly": false,
               "serial": "",
               "size": 69793218560,
-              "systemdisk": true,
+              "systemdisk": false,
               "transport": "virtio",
               "type": "SSD",
               "uuid": "",
@@ -601,10 +613,10 @@
         },
         "imagelabels": {},
         "initialtalosversion": "v1.11.5",
-        "kernelcmdline": "talos.platform=metal talos.config=none console=tty0 console=ttyS0 init_on_alloc=1 slab_nomerge pti=on consoleblank=0 nvme_core.io_timeout=4294967295 printk.devkmsg=on selinux=1 siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN talos.events.sink=[fdae:41e4:649b:9303::1]:8091 talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092",
+        "kernelcmdline": "talos.platform=metal console=tty0 console=ttyS0 init_on_alloc=1 slab_nomerge pti=on consoleblank=0 nvme_core.io_timeout=4294967295 printk.devkmsg=on selinux=1 siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN talos.events.sink=[fdae:41e4:649b:9303::1]:8091 talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092",
         "lasterror": "",
-        "maintenance": false,
-        "managementaddress": "fdae:41e4:649b:9303:f1aa:9061:6884:c71f",
+        "maintenance": true,
+        "managementaddress": "fdae:41e4:649b:9303:39fc:d6ca:22cc:bb25",
         "network": {
           "addresses": [
             "192.168.10.23/24"
@@ -613,7 +625,7 @@
             "192.168.10.1"
           ],
           "domainname": "",
-          "hostname": "talos-worker-1",
+          "hostname": "",
           "networklinks": [
             {
               "description": "Red Hat, Inc. Virtio network device",
@@ -626,7 +638,7 @@
         },
         "platformmetadata": {
           "hostname": "",
-          "instanceid": "49ce51a6-62ce-4849-bcac-4872023547ea",
+          "instanceid": "963c8dc8-eb0f-4021-b113-00741a598f55",
           "instancetype": "",
           "platform": "metal",
           "providerid": "",
@@ -635,7 +647,7 @@
           "zone": ""
         },
         "powerstate": 1,
-        "role": 2,
+        "role": 0,
         "schematic": {
           "extensions": [],
           "fullid": "d28240c0e68defc5568ceb772ec11d6b30a51d1733dbae340cafc104ec4710f5",
@@ -671,8 +683,8 @@
     "mac_address": "BC:24:11:02:00:01",
     "ip_address": "192.168.10.111",
     "role": "worker",
-    "omni_uuid": "04fa3b27-2120-49de-bab2-4547703e0a62",
-    "omni_name": "04fa3b27-2120-49de-bab2-4547703e0a62",
+    "omni_uuid": "3f067c07-d77d-46af-a6dc-77e049b34f6e",
+    "omni_name": "3f067c07-d77d-46af-a6dc-77e049b34f6e",
     "terraform_data": {
       "cpu_cores": 8,
       "data_disk_gb": 200,
@@ -697,27 +709,25 @@
         "annotations": {
           "omni.sidero.dev/kernel-args-initialized": null
         },
-        "created": "2025-11-10T05:54:25Z",
+        "created": "2025-11-10T23:54:44Z",
         "finalizers": [
           "KernelArgsStatusController",
-          "MachineConfigGenOptionsController",
           "MachineUpgradeStatusController",
+          "LabelsExtractor[MachineStatuses.omni.sidero.dev]",
           "MachineTeardownController",
-          "LabelsExtractor[MachineStatuses.omni.sidero.dev]"
+          "MachineConfigGenOptionsController"
         ],
-        "id": "04fa3b27-2120-49de-bab2-4547703e0a62",
+        "id": "3f067c07-d77d-46af-a6dc-77e049b34f6e",
         "labels": {
           "omni.sidero.dev/arch": "amd64",
-          "omni.sidero.dev/cluster": "talos-prod-cluster",
+          "omni.sidero.dev/available": null,
           "omni.sidero.dev/connected": null,
           "omni.sidero.dev/cores": 8,
           "omni.sidero.dev/cpu": "qemu",
-          "omni.sidero.dev/installed": null,
           "omni.sidero.dev/mem": "31GiB",
           "omni.sidero.dev/platform": "metal",
           "omni.sidero.dev/ready-to-use": null,
           "omni.sidero.dev/reporting-events": null,
-          "omni.sidero.dev/role-worker": null,
           "omni.sidero.dev/storage": "284GB",
           "omni.sidero.dev/talos-version": "v1.11.5"
         },
@@ -725,32 +735,32 @@
         "owner": "MachineStatusController",
         "phase": "running",
         "type": "MachineStatuses.omni.sidero.dev",
-        "updated": "2025-11-10T06:20:13Z",
-        "version": 14
+        "updated": "2025-11-10T23:54:45Z",
+        "version": 8
       },
       "spec": {
-        "cluster": "talos-prod-cluster",
+        "cluster": "",
         "connected": true,
         "diagnostics": [],
         "hardware": {
           "arch": "amd64",
           "blockdevices": [
             {
-              "buspath": "/pci0000:00/0000:00:05.0/0000:01:01.0/virtio1/host2/target2:0:0/2:0:0:0",
+              "buspath": "/pci0000:00/0000:00:05.0/0000:01:01.0/virtio2/host2/target2:0:0/2:0:0:0",
               "linuxname": "/dev/sda",
               "model": "QEMU HARDDISK",
               "name": "",
               "readonly": false,
               "serial": "",
               "size": 69793218560,
-              "systemdisk": true,
+              "systemdisk": false,
               "transport": "virtio",
               "type": "SSD",
               "uuid": "",
               "wwid": ""
             },
             {
-              "buspath": "/pci0000:00/0000:00:05.0/0000:01:02.0/virtio2/host3/target3:0:0/3:0:0:1",
+              "buspath": "/pci0000:00/0000:00:05.0/0000:01:02.0/virtio3/host3/target3:0:0/3:0:0:1",
               "linuxname": "/dev/sdb",
               "model": "QEMU HARDDISK",
               "name": "",
@@ -782,10 +792,10 @@
         },
         "imagelabels": {},
         "initialtalosversion": "v1.11.5",
-        "kernelcmdline": "talos.platform=metal talos.config=none console=tty0 console=ttyS0 init_on_alloc=1 slab_nomerge pti=on consoleblank=0 nvme_core.io_timeout=4294967295 printk.devkmsg=on selinux=1 siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN talos.events.sink=[fdae:41e4:649b:9303::1]:8091 talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092",
+        "kernelcmdline": "talos.platform=metal console=tty0 console=ttyS0 init_on_alloc=1 slab_nomerge pti=on consoleblank=0 nvme_core.io_timeout=4294967295 printk.devkmsg=on selinux=1 siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN talos.events.sink=[fdae:41e4:649b:9303::1]:8091 talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092",
         "lasterror": "",
-        "maintenance": false,
-        "managementaddress": "fdae:41e4:649b:9303:197b:de36:d9c:a1b2",
+        "maintenance": true,
+        "managementaddress": "fdae:41e4:649b:9303:94f7:5904:d80d:3f03",
         "network": {
           "addresses": [
             "192.168.10.142/24"
@@ -794,7 +804,7 @@
             "192.168.10.1"
           ],
           "domainname": "",
-          "hostname": "talos-worker-2",
+          "hostname": "",
           "networklinks": [
             {
               "description": "Red Hat, Inc. Virtio network device",
@@ -807,7 +817,7 @@
         },
         "platformmetadata": {
           "hostname": "",
-          "instanceid": "04fa3b27-2120-49de-bab2-4547703e0a62",
+          "instanceid": "3f067c07-d77d-46af-a6dc-77e049b34f6e",
           "instancetype": "",
           "platform": "metal",
           "providerid": "",
@@ -816,15 +826,25 @@
           "zone": ""
         },
         "powerstate": 1,
-        "role": 2,
+        "role": 0,
         "schematic": {
-          "extensions": [],
-          "fullid": "d28240c0e68defc5568ceb772ec11d6b30a51d1733dbae340cafc104ec4710f5",
-          "id": "376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba",
+          "extensions": [
+            "siderolabs/iscsi-tools",
+            "siderolabs/nfsd",
+            "siderolabs/qemu-guest-agent",
+            "siderolabs/util-linux-tools"
+          ],
+          "fullid": "d1256fc1af32e5e43697fa49faa4ad23e90a989cb7005af07ee7e3666265640d",
+          "id": "ddf38e55e30aa9b2bb0b765054ed63444dc00244ab8bb4ad4ad92486602285f8",
           "inagentmode": false,
-          "initialschematic": "d28240c0e68defc5568ceb772ec11d6b30a51d1733dbae340cafc104ec4710f5",
+          "initialschematic": "d1256fc1af32e5e43697fa49faa4ad23e90a989cb7005af07ee7e3666265640d",
           "initialstate": {
-            "extensions": []
+            "extensions": [
+              "siderolabs/iscsi-tools",
+              "siderolabs/nfsd",
+              "siderolabs/qemu-guest-agent",
+              "siderolabs/util-linux-tools"
+            ]
           },
           "invalid": false,
           "kernelargs": [
@@ -836,7 +856,7 @@
           ],
           "metavalues": [],
           "overlay": null,
-          "raw": "customization:\n    extraKernelArgs:\n        - siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN\n        - talos.events.sink=[fdae:41e4:649b:9303::1]:8091\n        - talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092\n        - console=tty0\n        - console=ttyS0\n"
+          "raw": "customization:\n    extraKernelArgs:\n        - siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN\n        - talos.events.sink=[fdae:41e4:649b:9303::1]:8091\n        - talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092\n        - console=tty0\n        - console=ttyS0\n    systemExtensions:\n        officialExtensions:\n            - siderolabs/iscsi-tools\n            - siderolabs/nfsd\n            - siderolabs/qemu-guest-agent\n            - siderolabs/util-linux-tools\n"
         },
         "securitystate": {
           "bootedwithuki": false,
@@ -852,8 +872,8 @@
     "mac_address": "BC:24:11:02:00:02",
     "ip_address": "192.168.10.112",
     "role": "worker",
-    "omni_uuid": "a2a593bd-bdaa-4d55-980a-78453a4d0598",
-    "omni_name": "a2a593bd-bdaa-4d55-980a-78453a4d0598",
+    "omni_uuid": "a1b71493-c67f-40a5-a6cf-f836c4e3cae8",
+    "omni_name": "a1b71493-c67f-40a5-a6cf-f836c4e3cae8",
     "terraform_data": {
       "cpu_cores": 8,
       "data_disk_gb": 200,
@@ -878,27 +898,25 @@
         "annotations": {
           "omni.sidero.dev/kernel-args-initialized": null
         },
-        "created": "2025-11-10T05:54:10Z",
+        "created": "2025-11-10T23:54:42Z",
         "finalizers": [
-          "LabelsExtractor[MachineStatuses.omni.sidero.dev]",
-          "MachineTeardownController",
-          "MachineUpgradeStatusController",
           "KernelArgsStatusController",
-          "MachineConfigGenOptionsController"
+          "MachineConfigGenOptionsController",
+          "LabelsExtractor[MachineStatuses.omni.sidero.dev]",
+          "MachineUpgradeStatusController",
+          "MachineTeardownController"
         ],
-        "id": "a2a593bd-bdaa-4d55-980a-78453a4d0598",
+        "id": "a1b71493-c67f-40a5-a6cf-f836c4e3cae8",
         "labels": {
           "omni.sidero.dev/arch": "amd64",
-          "omni.sidero.dev/cluster": "talos-prod-cluster",
+          "omni.sidero.dev/available": null,
           "omni.sidero.dev/connected": null,
           "omni.sidero.dev/cores": 8,
           "omni.sidero.dev/cpu": "qemu",
-          "omni.sidero.dev/installed": null,
           "omni.sidero.dev/mem": "31GiB",
           "omni.sidero.dev/platform": "metal",
           "omni.sidero.dev/ready-to-use": null,
           "omni.sidero.dev/reporting-events": null,
-          "omni.sidero.dev/role-worker": null,
           "omni.sidero.dev/storage": "284GB",
           "omni.sidero.dev/talos-version": "v1.11.5"
         },
@@ -906,32 +924,32 @@
         "owner": "MachineStatusController",
         "phase": "running",
         "type": "MachineStatuses.omni.sidero.dev",
-        "updated": "2025-11-10T06:21:07Z",
-        "version": 11
+        "updated": "2025-11-10T23:54:44Z",
+        "version": 8
       },
       "spec": {
-        "cluster": "talos-prod-cluster",
+        "cluster": "",
         "connected": true,
         "diagnostics": [],
         "hardware": {
           "arch": "amd64",
           "blockdevices": [
             {
-              "buspath": "/pci0000:00/0000:00:05.0/0000:01:01.0/virtio1/host2/target2:0:0/2:0:0:0",
+              "buspath": "/pci0000:00/0000:00:05.0/0000:01:01.0/virtio2/host2/target2:0:0/2:0:0:0",
               "linuxname": "/dev/sda",
               "model": "QEMU HARDDISK",
               "name": "",
               "readonly": false,
               "serial": "",
               "size": 69793218560,
-              "systemdisk": true,
+              "systemdisk": false,
               "transport": "virtio",
               "type": "SSD",
               "uuid": "",
               "wwid": ""
             },
             {
-              "buspath": "/pci0000:00/0000:00:05.0/0000:01:02.0/virtio2/host3/target3:0:0/3:0:0:1",
+              "buspath": "/pci0000:00/0000:00:05.0/0000:01:02.0/virtio3/host3/target3:0:0/3:0:0:1",
               "linuxname": "/dev/sdb",
               "model": "QEMU HARDDISK",
               "name": "",
@@ -963,10 +981,10 @@
         },
         "imagelabels": {},
         "initialtalosversion": "v1.11.5",
-        "kernelcmdline": "talos.platform=metal talos.config=none console=tty0 console=ttyS0 init_on_alloc=1 slab_nomerge pti=on consoleblank=0 nvme_core.io_timeout=4294967295 printk.devkmsg=on selinux=1 siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN talos.events.sink=[fdae:41e4:649b:9303::1]:8091 talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092",
+        "kernelcmdline": "talos.platform=metal console=tty0 console=ttyS0 init_on_alloc=1 slab_nomerge pti=on consoleblank=0 nvme_core.io_timeout=4294967295 printk.devkmsg=on selinux=1 siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN talos.events.sink=[fdae:41e4:649b:9303::1]:8091 talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092",
         "lasterror": "",
-        "maintenance": false,
-        "managementaddress": "fdae:41e4:649b:9303:977:5cb9:8779:3cbf",
+        "maintenance": true,
+        "managementaddress": "fdae:41e4:649b:9303:63ed:ebbc:bba6:a257",
         "network": {
           "addresses": [
             "192.168.10.22/24"
@@ -975,7 +993,7 @@
             "192.168.10.1"
           ],
           "domainname": "",
-          "hostname": "talos-worker-3",
+          "hostname": "",
           "networklinks": [
             {
               "description": "Red Hat, Inc. Virtio network device",
@@ -988,7 +1006,7 @@
         },
         "platformmetadata": {
           "hostname": "",
-          "instanceid": "a2a593bd-bdaa-4d55-980a-78453a4d0598",
+          "instanceid": "a1b71493-c67f-40a5-a6cf-f836c4e3cae8",
           "instancetype": "",
           "platform": "metal",
           "providerid": "",
@@ -997,15 +1015,25 @@
           "zone": ""
         },
         "powerstate": 1,
-        "role": 2,
+        "role": 0,
         "schematic": {
-          "extensions": [],
-          "fullid": "d28240c0e68defc5568ceb772ec11d6b30a51d1733dbae340cafc104ec4710f5",
-          "id": "376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba",
+          "extensions": [
+            "siderolabs/iscsi-tools",
+            "siderolabs/nfsd",
+            "siderolabs/qemu-guest-agent",
+            "siderolabs/util-linux-tools"
+          ],
+          "fullid": "d1256fc1af32e5e43697fa49faa4ad23e90a989cb7005af07ee7e3666265640d",
+          "id": "ddf38e55e30aa9b2bb0b765054ed63444dc00244ab8bb4ad4ad92486602285f8",
           "inagentmode": false,
-          "initialschematic": "d28240c0e68defc5568ceb772ec11d6b30a51d1733dbae340cafc104ec4710f5",
+          "initialschematic": "d1256fc1af32e5e43697fa49faa4ad23e90a989cb7005af07ee7e3666265640d",
           "initialstate": {
-            "extensions": []
+            "extensions": [
+              "siderolabs/iscsi-tools",
+              "siderolabs/nfsd",
+              "siderolabs/qemu-guest-agent",
+              "siderolabs/util-linux-tools"
+            ]
           },
           "invalid": false,
           "kernelargs": [
@@ -1017,7 +1045,7 @@
           ],
           "metavalues": [],
           "overlay": null,
-          "raw": "customization:\n    extraKernelArgs:\n        - siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN\n        - talos.events.sink=[fdae:41e4:649b:9303::1]:8091\n        - talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092\n        - console=tty0\n        - console=ttyS0\n"
+          "raw": "customization:\n    extraKernelArgs:\n        - siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN\n        - talos.events.sink=[fdae:41e4:649b:9303::1]:8091\n        - talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092\n        - console=tty0\n        - console=ttyS0\n    systemExtensions:\n        officialExtensions:\n            - siderolabs/iscsi-tools\n            - siderolabs/nfsd\n            - siderolabs/qemu-guest-agent\n            - siderolabs/util-linux-tools\n"
         },
         "securitystate": {
           "bootedwithuki": false,
@@ -1033,8 +1061,8 @@
     "mac_address": "BC:24:11:02:00:03",
     "ip_address": "192.168.10.113",
     "role": "worker",
-    "omni_uuid": "86e086fa-8ed2-43c4-b829-0befff3af747",
-    "omni_name": "86e086fa-8ed2-43c4-b829-0befff3af747",
+    "omni_uuid": "b529ed83-2bdc-493d-b80b-06232d1b83f9",
+    "omni_name": "b529ed83-2bdc-493d-b80b-06232d1b83f9",
     "terraform_data": {
       "cpu_cores": 8,
       "data_disk_gb": 200,
@@ -1059,7 +1087,7 @@
         "annotations": {
           "omni.sidero.dev/kernel-args-initialized": null
         },
-        "created": "2025-11-10T05:53:35Z",
+        "created": "2025-11-10T23:55:01Z",
         "finalizers": [
           "KernelArgsStatusController",
           "MachineConfigGenOptionsController",
@@ -1067,19 +1095,17 @@
           "MachineUpgradeStatusController",
           "LabelsExtractor[MachineStatuses.omni.sidero.dev]"
         ],
-        "id": "86e086fa-8ed2-43c4-b829-0befff3af747",
+        "id": "b529ed83-2bdc-493d-b80b-06232d1b83f9",
         "labels": {
           "omni.sidero.dev/arch": "amd64",
-          "omni.sidero.dev/cluster": "talos-prod-cluster",
+          "omni.sidero.dev/available": null,
           "omni.sidero.dev/connected": null,
           "omni.sidero.dev/cores": 8,
           "omni.sidero.dev/cpu": "qemu",
-          "omni.sidero.dev/installed": null,
           "omni.sidero.dev/mem": "31GiB",
           "omni.sidero.dev/platform": "metal",
           "omni.sidero.dev/ready-to-use": null,
           "omni.sidero.dev/reporting-events": null,
-          "omni.sidero.dev/role-worker": null,
           "omni.sidero.dev/storage": "284GB",
           "omni.sidero.dev/talos-version": "v1.11.5"
         },
@@ -1087,32 +1113,32 @@
         "owner": "MachineStatusController",
         "phase": "running",
         "type": "MachineStatuses.omni.sidero.dev",
-        "updated": "2025-11-10T06:20:16Z",
-        "version": 14
+        "updated": "2025-11-10T23:55:02Z",
+        "version": 8
       },
       "spec": {
-        "cluster": "talos-prod-cluster",
+        "cluster": "",
         "connected": true,
         "diagnostics": [],
         "hardware": {
           "arch": "amd64",
           "blockdevices": [
             {
-              "buspath": "/pci0000:00/0000:00:05.0/0000:01:01.0/virtio1/host2/target2:0:0/2:0:0:0",
+              "buspath": "/pci0000:00/0000:00:05.0/0000:01:01.0/virtio2/host2/target2:0:0/2:0:0:0",
               "linuxname": "/dev/sda",
               "model": "QEMU HARDDISK",
               "name": "",
               "readonly": false,
               "serial": "",
               "size": 69793218560,
-              "systemdisk": true,
+              "systemdisk": false,
               "transport": "virtio",
               "type": "SSD",
               "uuid": "",
               "wwid": ""
             },
             {
-              "buspath": "/pci0000:00/0000:00:05.0/0000:01:02.0/virtio2/host3/target3:0:0/3:0:0:1",
+              "buspath": "/pci0000:00/0000:00:05.0/0000:01:02.0/virtio3/host3/target3:0:0/3:0:0:1",
               "linuxname": "/dev/sdb",
               "model": "QEMU HARDDISK",
               "name": "",
@@ -1144,10 +1170,10 @@
         },
         "imagelabels": {},
         "initialtalosversion": "v1.11.5",
-        "kernelcmdline": "talos.platform=metal talos.config=none console=tty0 console=ttyS0 init_on_alloc=1 slab_nomerge pti=on consoleblank=0 nvme_core.io_timeout=4294967295 printk.devkmsg=on selinux=1 siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN talos.events.sink=[fdae:41e4:649b:9303::1]:8091 talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092",
+        "kernelcmdline": "talos.platform=metal console=tty0 console=ttyS0 init_on_alloc=1 slab_nomerge pti=on consoleblank=0 nvme_core.io_timeout=4294967295 printk.devkmsg=on selinux=1 siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN talos.events.sink=[fdae:41e4:649b:9303::1]:8091 talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092",
         "lasterror": "",
-        "maintenance": false,
-        "managementaddress": "fdae:41e4:649b:9303:8879:a6ba:ab3e:acd1",
+        "maintenance": true,
+        "managementaddress": "fdae:41e4:649b:9303:badc:8381:5f89:ce77",
         "network": {
           "addresses": [
             "192.168.10.40/24"
@@ -1156,7 +1182,7 @@
             "192.168.10.1"
           ],
           "domainname": "",
-          "hostname": "talos-worker-4",
+          "hostname": "",
           "networklinks": [
             {
               "description": "Red Hat, Inc. Virtio network device",
@@ -1169,7 +1195,7 @@
         },
         "platformmetadata": {
           "hostname": "",
-          "instanceid": "86e086fa-8ed2-43c4-b829-0befff3af747",
+          "instanceid": "b529ed83-2bdc-493d-b80b-06232d1b83f9",
           "instancetype": "",
           "platform": "metal",
           "providerid": "",
@@ -1178,15 +1204,25 @@
           "zone": ""
         },
         "powerstate": 1,
-        "role": 2,
+        "role": 0,
         "schematic": {
-          "extensions": [],
-          "fullid": "d28240c0e68defc5568ceb772ec11d6b30a51d1733dbae340cafc104ec4710f5",
-          "id": "376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba",
+          "extensions": [
+            "siderolabs/iscsi-tools",
+            "siderolabs/nfsd",
+            "siderolabs/qemu-guest-agent",
+            "siderolabs/util-linux-tools"
+          ],
+          "fullid": "d1256fc1af32e5e43697fa49faa4ad23e90a989cb7005af07ee7e3666265640d",
+          "id": "ddf38e55e30aa9b2bb0b765054ed63444dc00244ab8bb4ad4ad92486602285f8",
           "inagentmode": false,
-          "initialschematic": "d28240c0e68defc5568ceb772ec11d6b30a51d1733dbae340cafc104ec4710f5",
+          "initialschematic": "d1256fc1af32e5e43697fa49faa4ad23e90a989cb7005af07ee7e3666265640d",
           "initialstate": {
-            "extensions": []
+            "extensions": [
+              "siderolabs/iscsi-tools",
+              "siderolabs/nfsd",
+              "siderolabs/qemu-guest-agent",
+              "siderolabs/util-linux-tools"
+            ]
           },
           "invalid": false,
           "kernelargs": [
@@ -1198,7 +1234,7 @@
           ],
           "metavalues": [],
           "overlay": null,
-          "raw": "customization:\n    extraKernelArgs:\n        - siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN\n        - talos.events.sink=[fdae:41e4:649b:9303::1]:8091\n        - talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092\n        - console=tty0\n        - console=ttyS0\n"
+          "raw": "customization:\n    extraKernelArgs:\n        - siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN\n        - talos.events.sink=[fdae:41e4:649b:9303::1]:8091\n        - talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092\n        - console=tty0\n        - console=ttyS0\n    systemExtensions:\n        officialExtensions:\n            - siderolabs/iscsi-tools\n            - siderolabs/nfsd\n            - siderolabs/qemu-guest-agent\n            - siderolabs/util-linux-tools\n"
         },
         "securitystate": {
           "bootedwithuki": false,
@@ -1214,8 +1250,8 @@
     "mac_address": "BC:24:11:02:00:04",
     "ip_address": "192.168.10.114",
     "role": "worker",
-    "omni_uuid": "109fcdc3-1981-4869-835f-b99b5f79b3db",
-    "omni_name": "109fcdc3-1981-4869-835f-b99b5f79b3db",
+    "omni_uuid": "ed98147b-e73c-4e82-aed2-2102627bf8c2",
+    "omni_name": "ed98147b-e73c-4e82-aed2-2102627bf8c2",
     "terraform_data": {
       "cpu_cores": 8,
       "data_disk_gb": 200,
@@ -1240,27 +1276,25 @@
         "annotations": {
           "omni.sidero.dev/kernel-args-initialized": null
         },
-        "created": "2025-11-10T05:53:30Z",
+        "created": "2025-11-10T23:54:40Z",
         "finalizers": [
-          "KernelArgsStatusController",
-          "MachineTeardownController",
-          "MachineUpgradeStatusController",
           "MachineConfigGenOptionsController",
-          "LabelsExtractor[MachineStatuses.omni.sidero.dev]"
+          "MachineTeardownController",
+          "LabelsExtractor[MachineStatuses.omni.sidero.dev]",
+          "MachineUpgradeStatusController",
+          "KernelArgsStatusController"
         ],
-        "id": "109fcdc3-1981-4869-835f-b99b5f79b3db",
+        "id": "ed98147b-e73c-4e82-aed2-2102627bf8c2",
         "labels": {
           "omni.sidero.dev/arch": "amd64",
-          "omni.sidero.dev/cluster": "talos-prod-cluster",
+          "omni.sidero.dev/available": null,
           "omni.sidero.dev/connected": null,
           "omni.sidero.dev/cores": 8,
           "omni.sidero.dev/cpu": "qemu",
-          "omni.sidero.dev/installed": null,
           "omni.sidero.dev/mem": "31GiB",
           "omni.sidero.dev/platform": "metal",
           "omni.sidero.dev/ready-to-use": null,
           "omni.sidero.dev/reporting-events": null,
-          "omni.sidero.dev/role-worker": null,
           "omni.sidero.dev/storage": "284GB",
           "omni.sidero.dev/talos-version": "v1.11.5"
         },
@@ -1268,32 +1302,32 @@
         "owner": "MachineStatusController",
         "phase": "running",
         "type": "MachineStatuses.omni.sidero.dev",
-        "updated": "2025-11-10T06:20:11Z",
-        "version": 14
+        "updated": "2025-11-10T23:54:41Z",
+        "version": 8
       },
       "spec": {
-        "cluster": "talos-prod-cluster",
+        "cluster": "",
         "connected": true,
         "diagnostics": [],
         "hardware": {
           "arch": "amd64",
           "blockdevices": [
             {
-              "buspath": "/pci0000:00/0000:00:05.0/0000:01:01.0/virtio1/host2/target2:0:0/2:0:0:0",
+              "buspath": "/pci0000:00/0000:00:05.0/0000:01:01.0/virtio2/host2/target2:0:0/2:0:0:0",
               "linuxname": "/dev/sda",
               "model": "QEMU HARDDISK",
               "name": "",
               "readonly": false,
               "serial": "",
               "size": 69793218560,
-              "systemdisk": true,
+              "systemdisk": false,
               "transport": "virtio",
               "type": "SSD",
               "uuid": "",
               "wwid": ""
             },
             {
-              "buspath": "/pci0000:00/0000:00:05.0/0000:01:02.0/virtio2/host3/target3:0:0/3:0:0:1",
+              "buspath": "/pci0000:00/0000:00:05.0/0000:01:02.0/virtio3/host3/target3:0:0/3:0:0:1",
               "linuxname": "/dev/sdb",
               "model": "QEMU HARDDISK",
               "name": "",
@@ -1325,10 +1359,10 @@
         },
         "imagelabels": {},
         "initialtalosversion": "v1.11.5",
-        "kernelcmdline": "talos.platform=metal talos.config=none console=tty0 console=ttyS0 init_on_alloc=1 slab_nomerge pti=on consoleblank=0 nvme_core.io_timeout=4294967295 printk.devkmsg=on selinux=1 siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN talos.events.sink=[fdae:41e4:649b:9303::1]:8091 talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092",
+        "kernelcmdline": "talos.platform=metal console=tty0 console=ttyS0 init_on_alloc=1 slab_nomerge pti=on consoleblank=0 nvme_core.io_timeout=4294967295 printk.devkmsg=on selinux=1 siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN talos.events.sink=[fdae:41e4:649b:9303::1]:8091 talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092",
         "lasterror": "",
-        "maintenance": false,
-        "managementaddress": "fdae:41e4:649b:9303:d50f:a4fb:4638:bea5",
+        "maintenance": true,
+        "managementaddress": "fdae:41e4:649b:9303:d039:f0fc:ecb4:e85a",
         "network": {
           "addresses": [
             "192.168.10.41/24"
@@ -1337,7 +1371,7 @@
             "192.168.10.1"
           ],
           "domainname": "",
-          "hostname": "talos-worker-5",
+          "hostname": "",
           "networklinks": [
             {
               "description": "Red Hat, Inc. Virtio network device",
@@ -1350,7 +1384,7 @@
         },
         "platformmetadata": {
           "hostname": "",
-          "instanceid": "109fcdc3-1981-4869-835f-b99b5f79b3db",
+          "instanceid": "ed98147b-e73c-4e82-aed2-2102627bf8c2",
           "instancetype": "",
           "platform": "metal",
           "providerid": "",
@@ -1359,15 +1393,25 @@
           "zone": ""
         },
         "powerstate": 1,
-        "role": 2,
+        "role": 0,
         "schematic": {
-          "extensions": [],
-          "fullid": "d28240c0e68defc5568ceb772ec11d6b30a51d1733dbae340cafc104ec4710f5",
-          "id": "376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba",
+          "extensions": [
+            "siderolabs/iscsi-tools",
+            "siderolabs/nfsd",
+            "siderolabs/qemu-guest-agent",
+            "siderolabs/util-linux-tools"
+          ],
+          "fullid": "d1256fc1af32e5e43697fa49faa4ad23e90a989cb7005af07ee7e3666265640d",
+          "id": "ddf38e55e30aa9b2bb0b765054ed63444dc00244ab8bb4ad4ad92486602285f8",
           "inagentmode": false,
-          "initialschematic": "d28240c0e68defc5568ceb772ec11d6b30a51d1733dbae340cafc104ec4710f5",
+          "initialschematic": "d1256fc1af32e5e43697fa49faa4ad23e90a989cb7005af07ee7e3666265640d",
           "initialstate": {
-            "extensions": []
+            "extensions": [
+              "siderolabs/iscsi-tools",
+              "siderolabs/nfsd",
+              "siderolabs/qemu-guest-agent",
+              "siderolabs/util-linux-tools"
+            ]
           },
           "invalid": false,
           "kernelargs": [
@@ -1379,7 +1423,7 @@
           ],
           "metavalues": [],
           "overlay": null,
-          "raw": "customization:\n    extraKernelArgs:\n        - siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN\n        - talos.events.sink=[fdae:41e4:649b:9303::1]:8091\n        - talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092\n        - console=tty0\n        - console=ttyS0\n"
+          "raw": "customization:\n    extraKernelArgs:\n        - siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN\n        - talos.events.sink=[fdae:41e4:649b:9303::1]:8091\n        - talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092\n        - console=tty0\n        - console=ttyS0\n    systemExtensions:\n        officialExtensions:\n            - siderolabs/iscsi-tools\n            - siderolabs/nfsd\n            - siderolabs/qemu-guest-agent\n            - siderolabs/util-linux-tools\n"
         },
         "securitystate": {
           "bootedwithuki": false,
@@ -1395,8 +1439,8 @@
     "mac_address": "BC:24:11:03:00:00",
     "ip_address": "192.168.10.115",
     "role": "gpu-worker",
-    "omni_uuid": "74c801b7-6b6b-49fd-ab5c-4fc7ed2ee3fc",
-    "omni_name": "74c801b7-6b6b-49fd-ab5c-4fc7ed2ee3fc",
+    "omni_uuid": "a489f18f-817f-4ee7-9e0d-e9bfe798604f",
+    "omni_name": "a489f18f-817f-4ee7-9e0d-e9bfe798604f",
     "terraform_data": {
       "cpu_cores": 16,
       "data_disk_gb": 500,
@@ -1421,27 +1465,23 @@
         "annotations": {
           "omni.sidero.dev/kernel-args-initialized": null
         },
-        "created": "2025-11-10T05:54:45Z",
+        "created": "2025-11-10T05:43:03Z",
         "finalizers": [
           "KernelArgsStatusController",
-          "MachineTeardownController",
           "LabelsExtractor[MachineStatuses.omni.sidero.dev]",
-          "MachineConfigGenOptionsController",
-          "MachineUpgradeStatusController"
+          "MachineUpgradeStatusController",
+          "MachineTeardownController",
+          "MachineConfigGenOptionsController"
         ],
-        "id": "74c801b7-6b6b-49fd-ab5c-4fc7ed2ee3fc",
+        "id": "a489f18f-817f-4ee7-9e0d-e9bfe798604f",
         "labels": {
           "omni.sidero.dev/arch": "amd64",
-          "omni.sidero.dev/cluster": "talos-prod-cluster",
-          "omni.sidero.dev/connected": null,
+          "omni.sidero.dev/available": null,
           "omni.sidero.dev/cores": 16,
           "omni.sidero.dev/cpu": "qemu",
-          "omni.sidero.dev/installed": null,
-          "omni.sidero.dev/mem": "58GiB",
+          "omni.sidero.dev/disconnected": null,
           "omni.sidero.dev/platform": "metal",
-          "omni.sidero.dev/ready-to-use": null,
           "omni.sidero.dev/reporting-events": null,
-          "omni.sidero.dev/role-worker": null,
           "omni.sidero.dev/storage": "644GB",
           "omni.sidero.dev/talos-version": "v1.11.5"
         },
@@ -1449,12 +1489,12 @@
         "owner": "MachineStatusController",
         "phase": "running",
         "type": "MachineStatuses.omni.sidero.dev",
-        "updated": "2025-11-10T06:21:03Z",
-        "version": 13
+        "updated": "2025-11-10T05:53:44Z",
+        "version": 9
       },
       "spec": {
-        "cluster": "talos-prod-cluster",
-        "connected": true,
+        "cluster": "",
+        "connected": false,
         "diagnostics": [],
         "hardware": {
           "arch": "amd64",
@@ -1467,7 +1507,7 @@
               "readonly": false,
               "serial": "",
               "size": 107374182400,
-              "systemdisk": true,
+              "systemdisk": false,
               "transport": "virtio",
               "type": "SSD",
               "uuid": "",
@@ -1488,12 +1528,7 @@
               "wwid": ""
             }
           ],
-          "memorymodules": [
-            {
-              "description": "QEMU",
-              "sizemb": 59392
-            }
-          ],
+          "memorymodules": [],
           "processors": [
             {
               "corecount": 16,
@@ -1506,10 +1541,10 @@
         },
         "imagelabels": {},
         "initialtalosversion": "v1.11.5",
-        "kernelcmdline": "talos.platform=metal talos.config=none console=tty0 console=ttyS0 init_on_alloc=1 slab_nomerge pti=on consoleblank=0 nvme_core.io_timeout=4294967295 printk.devkmsg=on selinux=1 siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN talos.events.sink=[fdae:41e4:649b:9303::1]:8091 talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092",
+        "kernelcmdline": "talos.platform=metal console=tty0 console=ttyS0 init_on_alloc=1 slab_nomerge pti=on consoleblank=0 nvme_core.io_timeout=4294967295 printk.devkmsg=on selinux=1 siderolink.api=https://omni.vanillax.me:8090/?jointoken=rxBIfTLQ9cwTRuG9qhIEGorMrohXS6HZn1sde4Rv8lN talos.events.sink=[fdae:41e4:649b:9303::1]:8091 talos.logging.kernel=tcp://[fdae:41e4:649b:9303::1]:8092",
         "lasterror": "",
-        "maintenance": false,
-        "managementaddress": "fdae:41e4:649b:9303:543:55b6:60d5:e771",
+        "maintenance": true,
+        "managementaddress": "fdae:41e4:649b:9303:d7d:9e07:8726:d33f",
         "network": {
           "addresses": [
             "192.168.10.117/24"
@@ -1518,7 +1553,7 @@
             "192.168.10.1"
           ],
           "domainname": "",
-          "hostname": "talos-worker-gpu-1",
+          "hostname": "",
           "networklinks": [
             {
               "description": "Red Hat, Inc. Virtio network device",
@@ -1531,7 +1566,7 @@
         },
         "platformmetadata": {
           "hostname": "",
-          "instanceid": "74c801b7-6b6b-49fd-ab5c-4fc7ed2ee3fc",
+          "instanceid": "a489f18f-817f-4ee7-9e0d-e9bfe798604f",
           "instancetype": "",
           "platform": "metal",
           "providerid": "",
@@ -1540,7 +1575,7 @@
           "zone": ""
         },
         "powerstate": 1,
-        "role": 2,
+        "role": 0,
         "schematic": {
           "extensions": [],
           "fullid": "d28240c0e68defc5568ceb772ec11d6b30a51d1733dbae340cafc104ec4710f5",
