@@ -194,12 +194,6 @@ GPULABEL
           kubePrism:
             enabled: true
             port: 7445
-        install:
-          extensions:
-            - image: ghcr.io/siderolabs/iscsi-tools:v0.1.6
-            - image: ghcr.io/siderolabs/nfsd:v1.11.0
-            - image: ghcr.io/siderolabs/qemu-guest-agent:9.1.2
-            - image: ghcr.io/siderolabs/util-linux-tools:2.40.2
         kernel:
           modules:
             - name: br_netfilter
@@ -244,14 +238,6 @@ EOF
                   BinaryName = "/usr/bin/nvidia-container-runtime"
             op: create
             path: /etc/cri/conf.d/20-customization.part
-        install:
-          extensions:
-            - image: ghcr.io/siderolabs/iscsi-tools:v0.1.6
-            - image: ghcr.io/siderolabs/nfsd:v1.11.0
-            - image: ghcr.io/siderolabs/nonfree-kmod-nvidia-production:550.127.05-v1.11.0
-            - image: ghcr.io/siderolabs/nvidia-container-toolkit-production:550.127.05-v1.11.0
-            - image: ghcr.io/siderolabs/qemu-guest-agent:9.1.2
-            - image: ghcr.io/siderolabs/util-linux-tools:2.40.2
         kernel:
           modules:
             - name: nvidia
@@ -311,12 +297,6 @@ EOF
                 enable_unprivileged_icmp = true
             op: create
             path: /etc/cri/conf.d/20-customization.part
-        install:
-          extensions:
-            - image: ghcr.io/siderolabs/iscsi-tools:v0.1.6
-            - image: ghcr.io/siderolabs/nfsd:v1.11.0
-            - image: ghcr.io/siderolabs/qemu-guest-agent:9.1.2
-            - image: ghcr.io/siderolabs/util-linux-tools:2.40.2
         kernel:
           modules:
             - name: br_netfilter
@@ -400,6 +380,16 @@ talos:
 features:
   diskEncryption: false
   enableWorkloadProxy: true
+patches:
+  - name: system-extensions
+    inline:
+      machine:
+        install:
+          extensions:
+            - image: ghcr.io/siderolabs/iscsi-tools:v0.1.6
+            - image: ghcr.io/siderolabs/nfsd:v1.11.0
+            - image: ghcr.io/siderolabs/qemu-guest-agent:9.1.2
+            - image: ghcr.io/siderolabs/util-linux-tools:2.40.2
 EOF
 
 # Add control plane section
@@ -453,6 +443,17 @@ EOF
     for uuid in "${GPU_WORKER_MACHINES[@]}"; do
         echo "  - ${uuid}" >> "${CLUSTER_TEMPLATE}"
     done
+    # Add GPU-specific extensions
+    cat >> "${CLUSTER_TEMPLATE}" <<'EOF'
+patches:
+  - name: nvidia-extensions
+    inline:
+      machine:
+        install:
+          extensions:
+            - image: ghcr.io/siderolabs/nonfree-kmod-nvidia-production:550.127.05-v1.11.0
+            - image: ghcr.io/siderolabs/nvidia-container-toolkit-production:550.127.05-v1.11.0
+EOF
 fi
 
 # Append all individual machine configs
