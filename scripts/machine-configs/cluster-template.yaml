@@ -23,7 +23,6 @@
 # Or apply individual machine configs:
 #   omnictl cluster template sync -f machine-configs/<hostname>.yaml
 # =============================================================================
-
 ---
 kind: Cluster
 name: talos-prod-cluster
@@ -35,623 +34,614 @@ features:
   diskEncryption: false
   enableWorkloadProxy: true
 systemExtensions:
-  - siderolabs/iscsi-tools
-  - siderolabs/nfsd
-  - siderolabs/qemu-guest-agent
-  - siderolabs/util-linux-tools
-
+- siderolabs/iscsi-tools
+- siderolabs/nfsd
+- siderolabs/qemu-guest-agent
+- siderolabs/util-linux-tools
 ---
 kind: ControlPlane
 machines:
-  - 8953dd47-36c2-4fdb-bb40-d228d185e6be
-  - 04b9fa6a-374a-441a-a739-32a608bf34e4
-  - 1c0821e4-b51e-491d-af81-8e57c19be95d
+- 8953dd47-36c2-4fdb-bb40-d228d185e6be
+- 04b9fa6a-374a-441a-a739-32a608bf34e4
+- 1c0821e4-b51e-491d-af81-8e57c19be95d
 patches:
-  - idOverride: 400-control-planes-untaint
-    annotations:
-      name: ""
-    inline:
-      cluster:
-        allowSchedulingOnControlPlanes: false
-        proxy:
-          disabled: true
-
+- idOverride: 400-control-planes-untaint
+  annotations:
+    name: ""
+  inline:
+    cluster:
+      allowSchedulingOnControlPlanes: false
+      proxy:
+        disabled: true
 ---
 kind: Workers
 name: workers
 machines:
-  - ba432342-d5f3-4761-b6fa-b87aafa63b38
-  - 9fc1ea68-ce69-4b6a-bad5-157eb16233a2
-  - ac1b1b49-dacf-4d05-ac68-9907245b9e23
-  - c7cdeafc-27da-4c33-9dca-1833d4c906e9
-  - 80809d5c-8875-4c67-9e9f-62244b0b0e03
-
+- ba432342-d5f3-4761-b6fa-b87aafa63b38
+- 9fc1ea68-ce69-4b6a-bad5-157eb16233a2
+- ac1b1b49-dacf-4d05-ac68-9907245b9e23
+- c7cdeafc-27da-4c33-9dca-1833d4c906e9
+- 80809d5c-8875-4c67-9e9f-62244b0b0e03
 ---
 kind: Workers
 name: gpu-workers
 systemExtensions:
-  - siderolabs/nonfree-kmod-nvidia-production
-  - siderolabs/nvidia-container-toolkit-production
+- siderolabs/iscsi-tools
+- siderolabs/nfsd
+- siderolabs/qemu-guest-agent
+- siderolabs/util-linux-tools
+- siderolabs/nonfree-kmod-nvidia-production
+- siderolabs/nvidia-container-toolkit-production
 machines:
-  - a13f29b0-037e-408c-93eb-dcc0ba0257b2
+- a13f29b0-037e-408c-93eb-dcc0ba0257b2
 
 # ==============================================================================
 # Machine Configurations
 # ==============================================================================
-
 ---
 kind: Machine
 name: 8953dd47-36c2-4fdb-bb40-d228d185e6be
 patches:
-  - idOverride: 400-cm-8953dd47-36c2-4fdb-bb40-d228d185e6be-set-hostname-talos-control-1
-    annotations:
-      name: set-hostname-talos-control-1
-    inline:
-      machine:
-        network:
-          hostname: talos-control-1
-          interfaces:
-            - interface: eth0
-              addresses:
-                - 192.168.10.100/24
-              routes:
-                - network: 0.0.0.0/0
-                  gateway: 192.168.10.1
-          nameservers:
-            - 192.168.10.1
-        nodeLabels:
-          management-ip: 192.168.10.100
-          node-role: control-plane
-          topology.kubernetes.io/zone: proxmox
-          topology.proxmox.io/node: hp-server-1
-  - idOverride: 401-cm-8953dd47-36c2-4fdb-bb40-d228d185e6be-control-plane-config
-    annotations:
-      name: control-plane-config
-    inline:
-      cluster:
-        proxy:
-          disabled: true
-      machine:
-        features:
-          hostDNS:
-            enabled: true
-            forwardKubeDNSToHost: true
-          kubePrism:
-            enabled: true
-            port: 7445
-        kernel:
-          modules:
-            - name: br_netfilter
-              parameters:
-                - nf_conntrack_max=131072
-        sysctls:
-          fs.inotify.max_user_instances: "8192"
-          fs.inotify.max_user_watches: "1048576"
-        time:
-          disabled: false
-          servers:
-            - time.cloudflare.com
-
+- idOverride: 400-cm-8953dd47-36c2-4fdb-bb40-d228d185e6be-set-hostname-talos-control-1
+  annotations:
+    name: set-hostname-talos-control-1
+  inline:
+    machine:
+      network:
+        hostname: talos-control-1
+        interfaces:
+        - interface: eth0
+          addresses:
+          - 192.168.10.100/24
+          routes:
+          - network: 0.0.0.0/0
+            gateway: 192.168.10.1
+        nameservers:
+        - 192.168.10.1
+      nodeLabels:
+        management-ip: 192.168.10.100
+        node-role: control-plane
+        topology.kubernetes.io/zone: proxmox
+        topology.proxmox.io/node: hp-server-1
+- idOverride: 401-cm-8953dd47-36c2-4fdb-bb40-d228d185e6be-control-plane-config
+  annotations:
+    name: control-plane-config
+  inline:
+    cluster:
+      proxy:
+        disabled: true
+    machine:
+      features:
+        hostDNS:
+          enabled: true
+          forwardKubeDNSToHost: true
+        kubePrism:
+          enabled: true
+          port: 7445
+      kernel:
+        modules:
+        - name: br_netfilter
+          parameters:
+          - nf_conntrack_max=131072
+      sysctls:
+        fs.inotify.max_user_instances: "8192"
+        fs.inotify.max_user_watches: "1048576"
+      time:
+        disabled: false
+        servers:
+        - time.cloudflare.com
 ---
 kind: Machine
 name: 04b9fa6a-374a-441a-a739-32a608bf34e4
 patches:
-  - idOverride: 400-cm-04b9fa6a-374a-441a-a739-32a608bf34e4-set-hostname-talos-control-2
-    annotations:
-      name: set-hostname-talos-control-2
-    inline:
-      machine:
-        network:
-          hostname: talos-control-2
-          interfaces:
-            - interface: eth0
-              addresses:
-                - 192.168.10.101/24
-              routes:
-                - network: 0.0.0.0/0
-                  gateway: 192.168.10.1
-          nameservers:
-            - 192.168.10.1
-        nodeLabels:
-          management-ip: 192.168.10.101
-          node-role: control-plane
-          topology.kubernetes.io/zone: proxmox
-          topology.proxmox.io/node: hp-server-1
-  - idOverride: 401-cm-04b9fa6a-374a-441a-a739-32a608bf34e4-control-plane-config
-    annotations:
-      name: control-plane-config
-    inline:
-      cluster:
-        proxy:
-          disabled: true
-      machine:
-        features:
-          hostDNS:
-            enabled: true
-            forwardKubeDNSToHost: true
-          kubePrism:
-            enabled: true
-            port: 7445
-        kernel:
-          modules:
-            - name: br_netfilter
-              parameters:
-                - nf_conntrack_max=131072
-        sysctls:
-          fs.inotify.max_user_instances: "8192"
-          fs.inotify.max_user_watches: "1048576"
-        time:
-          disabled: false
-          servers:
-            - time.cloudflare.com
-
+- idOverride: 400-cm-04b9fa6a-374a-441a-a739-32a608bf34e4-set-hostname-talos-control-2
+  annotations:
+    name: set-hostname-talos-control-2
+  inline:
+    machine:
+      network:
+        hostname: talos-control-2
+        interfaces:
+        - interface: eth0
+          addresses:
+          - 192.168.10.101/24
+          routes:
+          - network: 0.0.0.0/0
+            gateway: 192.168.10.1
+        nameservers:
+        - 192.168.10.1
+      nodeLabels:
+        management-ip: 192.168.10.101
+        node-role: control-plane
+        topology.kubernetes.io/zone: proxmox
+        topology.proxmox.io/node: hp-server-1
+- idOverride: 401-cm-04b9fa6a-374a-441a-a739-32a608bf34e4-control-plane-config
+  annotations:
+    name: control-plane-config
+  inline:
+    cluster:
+      proxy:
+        disabled: true
+    machine:
+      features:
+        hostDNS:
+          enabled: true
+          forwardKubeDNSToHost: true
+        kubePrism:
+          enabled: true
+          port: 7445
+      kernel:
+        modules:
+        - name: br_netfilter
+          parameters:
+          - nf_conntrack_max=131072
+      sysctls:
+        fs.inotify.max_user_instances: "8192"
+        fs.inotify.max_user_watches: "1048576"
+      time:
+        disabled: false
+        servers:
+        - time.cloudflare.com
 ---
 kind: Machine
 name: 1c0821e4-b51e-491d-af81-8e57c19be95d
 patches:
-  - idOverride: 400-cm-1c0821e4-b51e-491d-af81-8e57c19be95d-set-hostname-talos-control-3
-    annotations:
-      name: set-hostname-talos-control-3
-    inline:
-      machine:
-        network:
-          hostname: talos-control-3
-          interfaces:
-            - interface: eth0
-              addresses:
-                - 192.168.10.102/24
-              routes:
-                - network: 0.0.0.0/0
-                  gateway: 192.168.10.1
-          nameservers:
-            - 192.168.10.1
-        nodeLabels:
-          management-ip: 192.168.10.102
-          node-role: control-plane
-          topology.kubernetes.io/zone: proxmox
-          topology.proxmox.io/node: hp-server-1
-  - idOverride: 401-cm-1c0821e4-b51e-491d-af81-8e57c19be95d-control-plane-config
-    annotations:
-      name: control-plane-config
-    inline:
-      cluster:
-        proxy:
-          disabled: true
-      machine:
-        features:
-          hostDNS:
-            enabled: true
-            forwardKubeDNSToHost: true
-          kubePrism:
-            enabled: true
-            port: 7445
-        kernel:
-          modules:
-            - name: br_netfilter
-              parameters:
-                - nf_conntrack_max=131072
-        sysctls:
-          fs.inotify.max_user_instances: "8192"
-          fs.inotify.max_user_watches: "1048576"
-        time:
-          disabled: false
-          servers:
-            - time.cloudflare.com
-
+- idOverride: 400-cm-1c0821e4-b51e-491d-af81-8e57c19be95d-set-hostname-talos-control-3
+  annotations:
+    name: set-hostname-talos-control-3
+  inline:
+    machine:
+      network:
+        hostname: talos-control-3
+        interfaces:
+        - interface: eth0
+          addresses:
+          - 192.168.10.102/24
+          routes:
+          - network: 0.0.0.0/0
+            gateway: 192.168.10.1
+        nameservers:
+        - 192.168.10.1
+      nodeLabels:
+        management-ip: 192.168.10.102
+        node-role: control-plane
+        topology.kubernetes.io/zone: proxmox
+        topology.proxmox.io/node: hp-server-1
+- idOverride: 401-cm-1c0821e4-b51e-491d-af81-8e57c19be95d-control-plane-config
+  annotations:
+    name: control-plane-config
+  inline:
+    cluster:
+      proxy:
+        disabled: true
+    machine:
+      features:
+        hostDNS:
+          enabled: true
+          forwardKubeDNSToHost: true
+        kubePrism:
+          enabled: true
+          port: 7445
+      kernel:
+        modules:
+        - name: br_netfilter
+          parameters:
+          - nf_conntrack_max=131072
+      sysctls:
+        fs.inotify.max_user_instances: "8192"
+        fs.inotify.max_user_watches: "1048576"
+      time:
+        disabled: false
+        servers:
+        - time.cloudflare.com
 ---
 kind: Machine
 name: ba432342-d5f3-4761-b6fa-b87aafa63b38
 patches:
-  - idOverride: 400-cm-ba432342-d5f3-4761-b6fa-b87aafa63b38-set-hostname-talos-worker-1
-    annotations:
-      name: set-hostname-talos-worker-1
-    inline:
-      machine:
-        network:
-          hostname: talos-worker-1
-          interfaces:
-            - interface: eth0
-              addresses:
-                - 192.168.10.110/24
-              routes:
-                - network: 0.0.0.0/0
-                  gateway: 192.168.10.1
-          nameservers:
-            - 192.168.10.1
-        nodeLabels:
-          management-ip: 192.168.10.110
-          node-role: worker
-          topology.kubernetes.io/zone: proxmox
-          topology.proxmox.io/node: hp-server-1
-  - idOverride: 401-cm-ba432342-d5f3-4761-b6fa-b87aafa63b38-regular-worker-config
-    annotations:
-      name: regular-worker-config
-    inline:
-      cluster:
-        proxy:
-          disabled: true
-      machine:
-        features:
-          hostDNS:
-            enabled: true
-            forwardKubeDNSToHost: true
-          kubePrism:
-            enabled: true
-            port: 7445
-        files:
-          - content: |
-              [plugins."io.containerd.grpc.v1.cri"]
-                enable_unprivileged_ports = true
-                enable_unprivileged_icmp = true
-            op: create
-            path: /etc/cri/conf.d/20-customization.part
-        kernel:
-          modules:
-            - name: br_netfilter
-              parameters:
-                - nf_conntrack_max=131072
-        sysctls:
-          fs.inotify.max_user_instances: "8192"
-          fs.inotify.max_user_watches: "1048576"
-        time:
-          disabled: false
-          servers:
-            - time.cloudflare.com
-
+- idOverride: 400-cm-ba432342-d5f3-4761-b6fa-b87aafa63b38-set-hostname-talos-worker-1
+  annotations:
+    name: set-hostname-talos-worker-1
+  inline:
+    machine:
+      network:
+        hostname: talos-worker-1
+        interfaces:
+        - interface: eth0
+          addresses:
+          - 192.168.10.110/24
+          routes:
+          - network: 0.0.0.0/0
+            gateway: 192.168.10.1
+        nameservers:
+        - 192.168.10.1
+      nodeLabels:
+        management-ip: 192.168.10.110
+        node-role: worker
+        topology.kubernetes.io/zone: proxmox
+        topology.proxmox.io/node: hp-server-1
+- idOverride: 401-cm-ba432342-d5f3-4761-b6fa-b87aafa63b38-regular-worker-config
+  annotations:
+    name: regular-worker-config
+  inline:
+    cluster:
+      proxy:
+        disabled: true
+    machine:
+      features:
+        hostDNS:
+          enabled: true
+          forwardKubeDNSToHost: true
+        kubePrism:
+          enabled: true
+          port: 7445
+      files:
+      - content: |
+          [plugins."io.containerd.grpc.v1.cri"]
+            enable_unprivileged_ports = true
+            enable_unprivileged_icmp = true
+        op: create
+        path: /etc/cri/conf.d/20-customization.part
+      kernel:
+        modules:
+        - name: br_netfilter
+          parameters:
+          - nf_conntrack_max=131072
+      sysctls:
+        fs.inotify.max_user_instances: "8192"
+        fs.inotify.max_user_watches: "1048576"
+      time:
+        disabled: false
+        servers:
+        - time.cloudflare.com
 ---
 kind: Machine
 name: 9fc1ea68-ce69-4b6a-bad5-157eb16233a2
 patches:
-  - idOverride: 400-cm-9fc1ea68-ce69-4b6a-bad5-157eb16233a2-set-hostname-talos-worker-2
-    annotations:
-      name: set-hostname-talos-worker-2
-    inline:
-      machine:
-        network:
-          hostname: talos-worker-2
-          interfaces:
-            - interface: eth0
-              addresses:
-                - 192.168.10.111/24
-              routes:
-                - network: 0.0.0.0/0
-                  gateway: 192.168.10.1
-          nameservers:
-            - 192.168.10.1
-        nodeLabels:
-          management-ip: 192.168.10.111
-          node-role: worker
-          topology.kubernetes.io/zone: proxmox
-          topology.proxmox.io/node: hp-server-1
-  - idOverride: 401-cm-9fc1ea68-ce69-4b6a-bad5-157eb16233a2-regular-worker-config
-    annotations:
-      name: regular-worker-config
-    inline:
-      cluster:
-        proxy:
-          disabled: true
-      machine:
-        features:
-          hostDNS:
-            enabled: true
-            forwardKubeDNSToHost: true
-          kubePrism:
-            enabled: true
-            port: 7445
-        files:
-          - content: |
-              [plugins."io.containerd.grpc.v1.cri"]
-                enable_unprivileged_ports = true
-                enable_unprivileged_icmp = true
-            op: create
-            path: /etc/cri/conf.d/20-customization.part
-        kernel:
-          modules:
-            - name: br_netfilter
-              parameters:
-                - nf_conntrack_max=131072
-        kubelet:
-          extraMounts:
-            - destination: /var/lib/longhorn
-              options:
-                - bind
-                - rshared
-                - rw
-              source: /var/mnt/longhorn
-              type: bind
-        sysctls:
-          fs.inotify.max_user_instances: "8192"
-          fs.inotify.max_user_watches: "1048576"
-        time:
-          disabled: false
-          servers:
-            - time.cloudflare.com
-
+- idOverride: 400-cm-9fc1ea68-ce69-4b6a-bad5-157eb16233a2-set-hostname-talos-worker-2
+  annotations:
+    name: set-hostname-talos-worker-2
+  inline:
+    machine:
+      network:
+        hostname: talos-worker-2
+        interfaces:
+        - interface: eth0
+          addresses:
+          - 192.168.10.111/24
+          routes:
+          - network: 0.0.0.0/0
+            gateway: 192.168.10.1
+        nameservers:
+        - 192.168.10.1
+      nodeLabels:
+        management-ip: 192.168.10.111
+        node-role: worker
+        topology.kubernetes.io/zone: proxmox
+        topology.proxmox.io/node: hp-server-1
+- idOverride: 401-cm-9fc1ea68-ce69-4b6a-bad5-157eb16233a2-regular-worker-config
+  annotations:
+    name: regular-worker-config
+  inline:
+    cluster:
+      proxy:
+        disabled: true
+    machine:
+      features:
+        hostDNS:
+          enabled: true
+          forwardKubeDNSToHost: true
+        kubePrism:
+          enabled: true
+          port: 7445
+      files:
+      - content: |
+          [plugins."io.containerd.grpc.v1.cri"]
+            enable_unprivileged_ports = true
+            enable_unprivileged_icmp = true
+        op: create
+        path: /etc/cri/conf.d/20-customization.part
+      kernel:
+        modules:
+        - name: br_netfilter
+          parameters:
+          - nf_conntrack_max=131072
+      kubelet:
+        extraMounts:
+        - destination: /var/lib/longhorn
+          options:
+          - bind
+          - rshared
+          - rw
+          source: /var/mnt/longhorn
+          type: bind
+      sysctls:
+        fs.inotify.max_user_instances: "8192"
+        fs.inotify.max_user_watches: "1048576"
+      time:
+        disabled: false
+        servers:
+        - time.cloudflare.com
 ---
 kind: Machine
 name: ac1b1b49-dacf-4d05-ac68-9907245b9e23
 patches:
-  - idOverride: 400-cm-ac1b1b49-dacf-4d05-ac68-9907245b9e23-set-hostname-talos-worker-3
-    annotations:
-      name: set-hostname-talos-worker-3
-    inline:
-      machine:
-        network:
-          hostname: talos-worker-3
-          interfaces:
-            - interface: eth0
-              addresses:
-                - 192.168.10.112/24
-              routes:
-                - network: 0.0.0.0/0
-                  gateway: 192.168.10.1
-          nameservers:
-            - 192.168.10.1
-        nodeLabels:
-          management-ip: 192.168.10.112
-          node-role: worker
-          topology.kubernetes.io/zone: proxmox
-          topology.proxmox.io/node: hp-server-1
-  - idOverride: 401-cm-ac1b1b49-dacf-4d05-ac68-9907245b9e23-regular-worker-config
-    annotations:
-      name: regular-worker-config
-    inline:
-      cluster:
-        proxy:
-          disabled: true
-      machine:
-        features:
-          hostDNS:
-            enabled: true
-            forwardKubeDNSToHost: true
-          kubePrism:
-            enabled: true
-            port: 7445
-        files:
-          - content: |
-              [plugins."io.containerd.grpc.v1.cri"]
-                enable_unprivileged_ports = true
-                enable_unprivileged_icmp = true
-            op: create
-            path: /etc/cri/conf.d/20-customization.part
-        kernel:
-          modules:
-            - name: br_netfilter
-              parameters:
-                - nf_conntrack_max=131072
-        kubelet:
-          extraMounts:
-            - destination: /var/lib/longhorn
-              options:
-                - bind
-                - rshared
-                - rw
-              source: /var/mnt/longhorn
-              type: bind
-        sysctls:
-          fs.inotify.max_user_instances: "8192"
-          fs.inotify.max_user_watches: "1048576"
-        time:
-          disabled: false
-          servers:
-            - time.cloudflare.com
-
+- idOverride: 400-cm-ac1b1b49-dacf-4d05-ac68-9907245b9e23-set-hostname-talos-worker-3
+  annotations:
+    name: set-hostname-talos-worker-3
+  inline:
+    machine:
+      network:
+        hostname: talos-worker-3
+        interfaces:
+        - interface: eth0
+          addresses:
+          - 192.168.10.112/24
+          routes:
+          - network: 0.0.0.0/0
+            gateway: 192.168.10.1
+        nameservers:
+        - 192.168.10.1
+      nodeLabels:
+        management-ip: 192.168.10.112
+        node-role: worker
+        topology.kubernetes.io/zone: proxmox
+        topology.proxmox.io/node: hp-server-1
+- idOverride: 401-cm-ac1b1b49-dacf-4d05-ac68-9907245b9e23-regular-worker-config
+  annotations:
+    name: regular-worker-config
+  inline:
+    cluster:
+      proxy:
+        disabled: true
+    machine:
+      features:
+        hostDNS:
+          enabled: true
+          forwardKubeDNSToHost: true
+        kubePrism:
+          enabled: true
+          port: 7445
+      files:
+      - content: |
+          [plugins."io.containerd.grpc.v1.cri"]
+            enable_unprivileged_ports = true
+            enable_unprivileged_icmp = true
+        op: create
+        path: /etc/cri/conf.d/20-customization.part
+      kernel:
+        modules:
+        - name: br_netfilter
+          parameters:
+          - nf_conntrack_max=131072
+      kubelet:
+        extraMounts:
+        - destination: /var/lib/longhorn
+          options:
+          - bind
+          - rshared
+          - rw
+          source: /var/mnt/longhorn
+          type: bind
+      sysctls:
+        fs.inotify.max_user_instances: "8192"
+        fs.inotify.max_user_watches: "1048576"
+      time:
+        disabled: false
+        servers:
+        - time.cloudflare.com
 ---
 kind: Machine
 name: c7cdeafc-27da-4c33-9dca-1833d4c906e9
 patches:
-  - idOverride: 400-cm-c7cdeafc-27da-4c33-9dca-1833d4c906e9-set-hostname-talos-worker-4
-    annotations:
-      name: set-hostname-talos-worker-4
-    inline:
-      machine:
-        network:
-          hostname: talos-worker-4
-          interfaces:
-            - interface: eth0
-              addresses:
-                - 192.168.10.113/24
-              routes:
-                - network: 0.0.0.0/0
-                  gateway: 192.168.10.1
-          nameservers:
-            - 192.168.10.1
-        nodeLabels:
-          management-ip: 192.168.10.113
-          node-role: worker
-          topology.kubernetes.io/zone: proxmox
-          topology.proxmox.io/node: hp-server-1
-  - idOverride: 401-cm-c7cdeafc-27da-4c33-9dca-1833d4c906e9-regular-worker-config
-    annotations:
-      name: regular-worker-config
-    inline:
-      cluster:
-        proxy:
-          disabled: true
-      machine:
-        features:
-          hostDNS:
-            enabled: true
-            forwardKubeDNSToHost: true
-          kubePrism:
-            enabled: true
-            port: 7445
-        files:
-          - content: |
-              [plugins."io.containerd.grpc.v1.cri"]
-                enable_unprivileged_ports = true
-                enable_unprivileged_icmp = true
-            op: create
-            path: /etc/cri/conf.d/20-customization.part
-        kernel:
-          modules:
-            - name: br_netfilter
-              parameters:
-                - nf_conntrack_max=131072
-        kubelet:
-          extraMounts:
-            - destination: /var/lib/longhorn
-              options:
-                - bind
-                - rshared
-                - rw
-              source: /var/mnt/longhorn
-              type: bind
-        sysctls:
-          fs.inotify.max_user_instances: "8192"
-          fs.inotify.max_user_watches: "1048576"
-        time:
-          disabled: false
-          servers:
-            - time.cloudflare.com
-
+- idOverride: 400-cm-c7cdeafc-27da-4c33-9dca-1833d4c906e9-set-hostname-talos-worker-4
+  annotations:
+    name: set-hostname-talos-worker-4
+  inline:
+    machine:
+      network:
+        hostname: talos-worker-4
+        interfaces:
+        - interface: eth0
+          addresses:
+          - 192.168.10.113/24
+          routes:
+          - network: 0.0.0.0/0
+            gateway: 192.168.10.1
+        nameservers:
+        - 192.168.10.1
+      nodeLabels:
+        management-ip: 192.168.10.113
+        node-role: worker
+        topology.kubernetes.io/zone: proxmox
+        topology.proxmox.io/node: hp-server-1
+- idOverride: 401-cm-c7cdeafc-27da-4c33-9dca-1833d4c906e9-regular-worker-config
+  annotations:
+    name: regular-worker-config
+  inline:
+    cluster:
+      proxy:
+        disabled: true
+    machine:
+      features:
+        hostDNS:
+          enabled: true
+          forwardKubeDNSToHost: true
+        kubePrism:
+          enabled: true
+          port: 7445
+      files:
+      - content: |
+          [plugins."io.containerd.grpc.v1.cri"]
+            enable_unprivileged_ports = true
+            enable_unprivileged_icmp = true
+        op: create
+        path: /etc/cri/conf.d/20-customization.part
+      kernel:
+        modules:
+        - name: br_netfilter
+          parameters:
+          - nf_conntrack_max=131072
+      kubelet:
+        extraMounts:
+        - destination: /var/lib/longhorn
+          options:
+          - bind
+          - rshared
+          - rw
+          source: /var/mnt/longhorn
+          type: bind
+      sysctls:
+        fs.inotify.max_user_instances: "8192"
+        fs.inotify.max_user_watches: "1048576"
+      time:
+        disabled: false
+        servers:
+        - time.cloudflare.com
 ---
 kind: Machine
 name: 80809d5c-8875-4c67-9e9f-62244b0b0e03
 patches:
-  - idOverride: 400-cm-80809d5c-8875-4c67-9e9f-62244b0b0e03-set-hostname-talos-worker-5
-    annotations:
-      name: set-hostname-talos-worker-5
-    inline:
-      machine:
-        network:
-          hostname: talos-worker-5
-          interfaces:
-            - interface: eth0
-              addresses:
-                - 192.168.10.114/24
-              routes:
-                - network: 0.0.0.0/0
-                  gateway: 192.168.10.1
-          nameservers:
-            - 192.168.10.1
-        nodeLabels:
-          management-ip: 192.168.10.114
-          node-role: worker
-          topology.kubernetes.io/zone: proxmox
-          topology.proxmox.io/node: hp-server-1
-  - idOverride: 401-cm-80809d5c-8875-4c67-9e9f-62244b0b0e03-regular-worker-config
-    annotations:
-      name: regular-worker-config
-    inline:
-      cluster:
-        proxy:
-          disabled: true
-      machine:
-        features:
-          hostDNS:
-            enabled: true
-            forwardKubeDNSToHost: true
-          kubePrism:
-            enabled: true
-            port: 7445
-        files:
-          - content: |
-              [plugins."io.containerd.grpc.v1.cri"]
-                enable_unprivileged_ports = true
-                enable_unprivileged_icmp = true
-            op: create
-            path: /etc/cri/conf.d/20-customization.part
-        kernel:
-          modules:
-            - name: br_netfilter
-              parameters:
-                - nf_conntrack_max=131072
-        kubelet:
-          extraMounts:
-            - destination: /var/lib/longhorn
-              options:
-                - bind
-                - rshared
-                - rw
-              source: /var/mnt/longhorn
-              type: bind
-        sysctls:
-          fs.inotify.max_user_instances: "8192"
-          fs.inotify.max_user_watches: "1048576"
-        time:
-          disabled: false
-          servers:
-            - time.cloudflare.com
-
+- idOverride: 400-cm-80809d5c-8875-4c67-9e9f-62244b0b0e03-set-hostname-talos-worker-5
+  annotations:
+    name: set-hostname-talos-worker-5
+  inline:
+    machine:
+      network:
+        hostname: talos-worker-5
+        interfaces:
+        - interface: eth0
+          addresses:
+          - 192.168.10.114/24
+          routes:
+          - network: 0.0.0.0/0
+            gateway: 192.168.10.1
+        nameservers:
+        - 192.168.10.1
+      nodeLabels:
+        management-ip: 192.168.10.114
+        node-role: worker
+        topology.kubernetes.io/zone: proxmox
+        topology.proxmox.io/node: hp-server-1
+- idOverride: 401-cm-80809d5c-8875-4c67-9e9f-62244b0b0e03-regular-worker-config
+  annotations:
+    name: regular-worker-config
+  inline:
+    cluster:
+      proxy:
+        disabled: true
+    machine:
+      features:
+        hostDNS:
+          enabled: true
+          forwardKubeDNSToHost: true
+        kubePrism:
+          enabled: true
+          port: 7445
+      files:
+      - content: |
+          [plugins."io.containerd.grpc.v1.cri"]
+            enable_unprivileged_ports = true
+            enable_unprivileged_icmp = true
+        op: create
+        path: /etc/cri/conf.d/20-customization.part
+      kernel:
+        modules:
+        - name: br_netfilter
+          parameters:
+          - nf_conntrack_max=131072
+      kubelet:
+        extraMounts:
+        - destination: /var/lib/longhorn
+          options:
+          - bind
+          - rshared
+          - rw
+          source: /var/mnt/longhorn
+          type: bind
+      sysctls:
+        fs.inotify.max_user_instances: "8192"
+        fs.inotify.max_user_watches: "1048576"
+      time:
+        disabled: false
+        servers:
+        - time.cloudflare.com
 ---
 kind: Machine
 name: a13f29b0-037e-408c-93eb-dcc0ba0257b2
 patches:
-  - idOverride: 400-cm-a13f29b0-037e-408c-93eb-dcc0ba0257b2-set-hostname-talos-worker-gpu-1
-    annotations:
-      name: set-hostname-talos-worker-gpu-1
-    inline:
-      machine:
-        network:
-          hostname: talos-worker-gpu-1
-          interfaces:
-            - interface: eth0
-              addresses:
-                - 192.168.10.115/24
-              routes:
-                - network: 0.0.0.0/0
-                  gateway: 192.168.10.1
-          nameservers:
-            - 192.168.10.1
-        nodeLabels:
-          management-ip: 192.168.10.115
-          node-role: gpu-worker
-          topology.kubernetes.io/zone: proxmox
-          topology.proxmox.io/node: hp-server-1
-          nvidia.com/gpu: "true"
-  - idOverride: 401-cm-a13f29b0-037e-408c-93eb-dcc0ba0257b2-gpu-worker-config
-    annotations:
-      name: gpu-worker-config
-    inline:
-      machine:
-        features:
-          hostDNS:
-            enabled: true
-            forwardKubeDNSToHost: true
-          kubePrism:
-            enabled: true
-            port: 7445
-        files:
-          - content: |
-              [plugins."io.containerd.grpc.v1.cri"]
-                enable_unprivileged_ports = true
-                enable_unprivileged_icmp = true
-              [plugins."io.containerd.grpc.v1.cri".containerd]
-                default_runtime_name = "nvidia"
-              [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia]
-                privileged_without_host_devices = false
-                runtime_engine = ""
-                runtime_root = ""
-                runtime_type = "io.containerd.runc.v2"
-                [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia.options]
-                  BinaryName = "/usr/bin/nvidia-container-runtime"
-            op: create
-            path: /etc/cri/conf.d/20-customization.part
-        kernel:
-          modules:
-            - name: nvidia
-            - name: nvidia_uvm
-            - name: nvidia_drm
-            - name: nvidia_modeset
-            - name: br_netfilter
-              parameters:
-                - nf_conntrack_max=131072
-        kubelet:
-          extraMounts:
-            - destination: /var/lib/longhorn
-              options:
-                - bind
-                - rshared
-                - rw
-              source: /var/mnt/longhorn
-              type: bind
-        sysctls:
-          fs.inotify.max_user_instances: "8192"
-          fs.inotify.max_user_watches: "1048576"
-          net.core.bpf_jit_harden: "1"
-        time:
-          disabled: false
-          servers:
-            - time.cloudflare.com
-
+- idOverride: 400-cm-a13f29b0-037e-408c-93eb-dcc0ba0257b2-set-hostname-talos-worker-gpu-1
+  annotations:
+    name: set-hostname-talos-worker-gpu-1
+  inline:
+    machine:
+      network:
+        hostname: talos-worker-gpu-1
+        interfaces:
+        - interface: eth0
+          addresses:
+          - 192.168.10.115/24
+          routes:
+          - network: 0.0.0.0/0
+            gateway: 192.168.10.1
+        nameservers:
+        - 192.168.10.1
+      nodeLabels:
+        management-ip: 192.168.10.115
+        node-role: gpu-worker
+        topology.kubernetes.io/zone: proxmox
+        topology.proxmox.io/node: hp-server-1
+        nvidia.com/gpu: "true"
+- idOverride: 401-cm-a13f29b0-037e-408c-93eb-dcc0ba0257b2-gpu-worker-config
+  annotations:
+    name: gpu-worker-config
+  inline:
+    machine:
+      features:
+        hostDNS:
+          enabled: true
+          forwardKubeDNSToHost: true
+        kubePrism:
+          enabled: true
+          port: 7445
+      files:
+      - content: |
+          [plugins."io.containerd.grpc.v1.cri"]
+            enable_unprivileged_ports = true
+            enable_unprivileged_icmp = true
+          [plugins."io.containerd.grpc.v1.cri".containerd]
+            default_runtime_name = "nvidia"
+          [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia]
+            privileged_without_host_devices = false
+            runtime_engine = ""
+            runtime_root = ""
+            runtime_type = "io.containerd.runc.v2"
+            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia.options]
+              BinaryName = "/usr/bin/nvidia-container-runtime"
+        op: create
+        path: /etc/cri/conf.d/20-customization.part
+      kernel:
+        modules:
+        - name: nvidia
+        - name: nvidia_uvm
+        - name: nvidia_drm
+        - name: nvidia_modeset
+        - name: br_netfilter
+          parameters:
+          - nf_conntrack_max=131072
+      kubelet:
+        extraMounts:
+        - destination: /var/lib/longhorn
+          options:
+          - bind
+          - rshared
+          - rw
+          source: /var/mnt/longhorn
+          type: bind
+      sysctls:
+        fs.inotify.max_user_instances: "8192"
+        fs.inotify.max_user_watches: "1048576"
+        net.core.bpf_jit_harden: "1"
+      time:
+        disabled: false
+        servers:
+        - time.cloudflare.com

@@ -304,26 +304,23 @@ resource "proxmox_vm_qemu" "gpu_worker" {
   name        = each.value.name
   vmid        = 120 + each.value.index  # GPU Workers: 120, 121, 122, ...
   target_node = var.proxmox_servers[each.value.proxmox_server].node_name
-  description = "Talos GPU Worker - Managed by Terraform - Talos ${var.talos_version} - Boot: ${upper(var.boot_method)} - GPU PCI: ${each.value.gpu_pci_id} (Configure manually)"
+  description = "Talos GPU Worker - Managed by Terraform - Talos ${var.talos_version} - Boot: ISO (GPU-enabled) - GPU PCI: ${each.value.gpu_pci_id} (Configure manually)"
 
   memory  = each.value.memory_mb
   machine = "q35"  # Modern chipset required for GPU passthrough
   scsihw  = "virtio-scsi-single"
-  boot    = var.boot_method == "iso" ? "order=ide2;scsi0" : "order=scsi0;net0"
+  boot    = "order=ide2;scsi0"  # GPU workers always boot from ISO (with NVIDIA drivers)
   cpu {
     cores   = each.value.cpu_cores
     sockets = 1
   }
 
-  # CD-ROM with Talos ISO (only for ISO boot method)
-  # Note: For GPU workers with ISO boot, use GPU-enabled ISO from Talos Image Factory
-  dynamic "disk" {
-    for_each = var.boot_method == "iso" ? [1] : []
-    content {
-      type = "cdrom"
-      slot = "ide2"
-      iso  = var.talos_iso
-    }
+  # CD-ROM with Talos GPU ISO (includes NVIDIA drivers and extensions)
+  # This ISO is generated from Image Factory with gpu-worker.yaml schematic
+  disk {
+    type = "cdrom"
+    slot = "ide2"
+    iso  = var.talos_gpu_iso
   }
 
   # OS Disk

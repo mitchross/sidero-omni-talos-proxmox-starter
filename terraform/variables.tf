@@ -101,6 +101,22 @@ variable "talos_iso" {
   # 4. Set this variable to: "local:iso/metal-amd64.iso" or your storage:iso/filename
 }
 
+variable "talos_gpu_iso" {
+  description = "Talos ISO with NVIDIA extensions for GPU workers (Proxmox format: 'storage:iso/filename.iso')"
+  type        = string
+  default     = "local:iso/metal-amd64-gpu-talos-1.11.5.iso"
+
+  # Factory Image Schematic ID: 6db1f20beb0d74f938132978f24a9e6096928c248969a61f56c43bbe530f274a
+  # Direct download: https://factory.talos.dev/image/6db1f20beb0d74f938132978f24a9e6096928c248969a61f56c43bbe530f274a/v1.11.5/metal-amd64.iso
+  #
+  # This ISO includes:
+  # - iscsi-tools, nfsd, qemu-guest-agent, util-linux-tools (standard)
+  # - nonfree-kmod-nvidia-production (NVIDIA proprietary drivers)
+  # - nvidia-container-toolkit-production (container runtime support)
+  #
+  # Uploaded to Proxmox as: metal-amd64-gpu-talos-1.11.5.iso
+}
+
 variable "talos_version" {
   description = "Talos version for documentation purposes"
   type        = string
