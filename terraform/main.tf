@@ -121,7 +121,7 @@ resource "proxmox_vm_qemu" "control_plane" {
   name        = each.value.name
   vmid        = 100 + each.value.index  # Control planes: 100, 101, 102, ...
   target_node = var.proxmox_servers[each.value.proxmox_server].node_name
-  description = "Talos Control Plane - Managed by Terraform - Talos ${var.talos_version} - Boot: ${upper(var.boot_method)}"
+  description = "Talos Control Plane - Managed by Terraform - Talos ${var.talos_version} - Boot: ${var.talos_iso != "" ? "ISO" : "PXE"}"
 
   # VM Resources
   memory  = each.value.memory_mb
@@ -134,16 +134,16 @@ resource "proxmox_vm_qemu" "control_plane" {
   # SCSI Controller
   scsihw = "virtio-scsi-single"
 
-  # Boot order depends on boot method
-  # ISO: Boot from CD-ROM first, then disk
-  # PXE: Boot from disk first (empty disk falls through to network)
-  #      This ensures machines boot from disk after Talos is installed,
-  #      preventing UUID/identity changes on every reboot
-  boot = var.boot_method == "iso" ? "order=ide2;scsi0" : "order=scsi0;net0"
+  # Boot order depends on whether ISO is provided
+  # ISO provided: Boot from CD-ROM first, then disk (order=ide2;scsi0)
+  # No ISO: Boot from disk first, PXE fallback (order=scsi0;net0)
+  #         This ensures machines boot from disk after Talos is installed,
+  #         preventing UUID/identity changes on every reboot
+  boot = var.talos_iso != "" ? "order=ide2;scsi0" : "order=scsi0;net0"
 
-  # CD-ROM with Talos ISO (only for ISO boot method)
+  # CD-ROM with Talos ISO (only if ISO is provided)
   dynamic "disk" {
-    for_each = var.boot_method == "iso" ? [1] : []
+    for_each = var.talos_iso != "" ? [1] : []
     content {
       type = "cdrom"
       slot = "ide2"
@@ -219,20 +219,20 @@ resource "proxmox_vm_qemu" "worker" {
   name        = each.value.name
   vmid        = 110 + each.value.index  # Workers: 110, 111, 112, ...
   target_node = var.proxmox_servers[each.value.proxmox_server].node_name
-  description = "Talos Worker - Managed by Terraform - Talos ${var.talos_version} - Boot: ${upper(var.boot_method)}"
+  description = "Talos Worker - Managed by Terraform - Talos ${var.talos_version} - Boot: ${var.talos_iso != "" ? "ISO" : "PXE"}"
 
   memory  = each.value.memory_mb
   machine = "q35"  # Modern chipset for better PCIe/GPU support
   scsihw  = "virtio-scsi-single"
-  boot    = var.boot_method == "iso" ? "order=ide2;scsi0" : "order=scsi0;net0"
+  boot    = var.talos_iso != "" ? "order=ide2;scsi0" : "order=scsi0;net0"
   cpu {
     cores   = each.value.cpu_cores
     sockets = 1
   }
 
-  # CD-ROM with Talos ISO (only for ISO boot method)
+  # CD-ROM with Talos ISO (only if ISO is provided)
   dynamic "disk" {
-    for_each = var.boot_method == "iso" ? [1] : []
+    for_each = var.talos_iso != "" ? [1] : []
     content {
       type = "cdrom"
       slot = "ide2"
@@ -304,23 +304,27 @@ resource "proxmox_vm_qemu" "gpu_worker" {
   name        = each.value.name
   vmid        = 120 + each.value.index  # GPU Workers: 120, 121, 122, ...
   target_node = var.proxmox_servers[each.value.proxmox_server].node_name
-  description = "Talos GPU Worker - Managed by Terraform - Talos ${var.talos_version} - Boot: ISO (GPU-enabled) - GPU: nvidia-gpu-1 (mapped resource)"
+  description = "Talos GPU Worker - Managed by Terraform - Talos ${var.talos_version} - Boot: ${var.talos_gpu_iso != "" ? "ISO (GPU-enabled)" : "PXE"} - GPU: nvidia-gpu-1 (mapped resource)"
 
   memory  = each.value.memory_mb
   machine = "q35"  # Modern chipset required for GPU passthrough
   scsihw  = "virtio-scsi-single"
-  boot    = "order=ide2;scsi0"  # GPU workers always boot from ISO (with NVIDIA drivers)
+  boot    = var.talos_gpu_iso != "" ? "order=ide2;scsi0" : "order=scsi0;net0"
   cpu {
     cores   = each.value.cpu_cores
     sockets = 1
   }
 
-  # CD-ROM with Talos GPU ISO (includes NVIDIA drivers and extensions)
+  # CD-ROM with Talos GPU ISO (only if ISO is provided)
   # This ISO is generated from Image Factory with gpu-worker.yaml schematic
-  disk {
-    type = "cdrom"
-    slot = "ide2"
-    iso  = var.talos_gpu_iso
+  # Includes NVIDIA drivers and extensions baked in
+  dynamic "disk" {
+    for_each = var.talos_gpu_iso != "" ? [1] : []
+    content {
+      type = "cdrom"
+      slot = "ide2"
+      iso  = var.talos_gpu_iso
+    }
   }
 
   # OS Disk

@@ -37,12 +37,12 @@ Replace `{SCHEMATIC_ID}` with your actual ID and `v1.11.5` with your Talos versi
 ```bash
 # Download ISO (about 150-200 MB)
 wget https://factory.talos.dev/image/{SCHEMATIC_ID}/v1.11.5/metal-amd64.iso \
-  -O talos-gpu-v1.11.5.iso
+  -O talos-1.11.5-gpu.iso
 ```
 
 Or use the web interface:
 - Go to: `https://factory.talos.dev/image/{SCHEMATIC_ID}/v1.11.5/metal-amd64.iso`
-- Download and rename to `talos-gpu-v1.11.5.iso`
+- Download and rename to `talos-1.11.5-gpu.iso`
 
 ## Step 2: Upload ISO to Proxmox
 
@@ -51,14 +51,14 @@ Or use the web interface:
 1. Open Proxmox web interface
 2. Navigate to: **Datacenter** → **hp-server-1** → **local** → **ISO Images**
 3. Click **Upload**
-4. Select your `talos-gpu-v1.11.5.iso` file
+4. Select your `talos-1.11.5-gpu.iso` file
 5. Wait for upload to complete
 
 ### Option B: Via SCP (Faster for large files)
 
 ```bash
 # From your local machine
-scp talos-gpu-v1.11.5.iso root@192.168.10.160:/var/lib/vz/template/iso/
+scp talos-1.11.5-gpu.iso root@192.168.10.160:/var/lib/vz/template/iso/
 ```
 
 ## Step 3: Verify Terraform Configuration
@@ -70,7 +70,7 @@ Check your `terraform/terraform.tfvars`:
 boot_method = "pxe"
 
 # GPU ISO location (adjust if using different storage)
-talos_gpu_iso = "local:iso/talos-gpu-v1.11.5.iso"
+talos_gpu_iso = "local:iso/talos-1.11.5-gpu.iso"
 ```
 
 ## Step 4: Deploy Workflow
@@ -145,7 +145,7 @@ When upgrading Talos:
    ```bash
    # Same schematic YAML, new version
    wget https://factory.talos.dev/image/{SCHEMATIC_ID}/v1.12.0/metal-amd64.iso \
-     -O talos-gpu-v1.12.0.iso
+     -O talos-1.12.0-gpu.iso
    ```
 
 2. Upload new ISO to Proxmox
@@ -153,7 +153,7 @@ When upgrading Talos:
 3. Update `terraform.tfvars`:
    ```hcl
    talos_version = "v1.12.0"
-   talos_gpu_iso = "local:iso/talos-gpu-v1.12.0.iso"
+   talos_gpu_iso = "local:iso/talos-1.12.0-gpu.iso"
    ```
 
 4. Recreate or update VMs
@@ -175,7 +175,7 @@ talosctl -n 192.168.10.115 get extensions
 
 ### GPU ISO not found
 - Check ISO uploaded to correct storage: `local` storage
-- Verify filename matches: `talos-gpu-v1.11.5.iso`
+- Verify filename matches: `talos-1.11.5-gpu.iso`
 - Check Proxmox ISO list: Datacenter → local → ISO Images
 
 ### Extensions not installing
@@ -197,7 +197,7 @@ talosctl -n 192.168.10.115 get extensions
 | Terraform Resource | `proxmox_vm_qemu.worker` | `proxmox_vm_qemu.gpu_worker` |
 | GPU Passthrough | N/A | Automated (mapped resource) |
 | Manual Steps | None | Create mapped resource (one-time) |
-| ISO Location | N/A | `local:iso/talos-gpu-v1.11.5.iso` |
+| ISO Location | N/A | `local:iso/talos-1.11.5-gpu.iso` |
 
 ## Related Documentation
 

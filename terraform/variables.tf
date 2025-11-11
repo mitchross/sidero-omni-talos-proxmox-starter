@@ -66,45 +66,26 @@ variable "network_config" {
 # Talos Configuration
 # =============================================================================
 
-variable "boot_method" {
-  description = "VM boot method: 'iso' or 'pxe'"
-  type        = string
-  default     = "iso"
-
-  validation {
-    condition     = contains(["iso", "pxe"], var.boot_method)
-    error_message = "boot_method must be either 'iso' or 'pxe'"
-  }
-
-  # Boot Method Options:
-  #
-  # "iso" - Boot from Talos ISO (requires talos_iso to be set)
-  #   - VMs boot from mounted ISO in maintenance mode
-  #   - Good for: Manual setup, single deployments
-  #   - Requires: ISO uploaded to Proxmox storage
-  #
-  # "pxe" - Boot from network via PXE (requires Sidero Booter)
-  #   - VMs PXE boot and pull Talos image from Sidero Booter
-  #   - Good for: Automated deployments, bare metal feel
-  #   - Requires: Sidero Booter running and DHCP configured for PXE
-}
-
 variable "talos_iso" {
-  description = "Talos ISO file in Proxmox format: 'storage:iso/filename.iso' (only used if boot_method='iso')"
+  description = "Talos ISO file in Proxmox format: 'storage:iso/filename.iso'. Leave empty to use PXE boot."
   type        = string
-  default     = "local:iso/talos-amd64.iso"
+  default     = "local:iso/talos-1.11.5.iso"
 
+  # Boot Strategy:
+  # - If ISO is provided: VMs boot from ISO first, then disk (order=ide2;scsi0)
+  # - If ISO is empty "": VMs boot from disk first, PXE fallback (order=scsi0;net0)
+  #
   # To download Talos ISO:
   # 1. Go to https://factory.talos.dev or https://github.com/siderolabs/talos/releases
-  # 2. Download the ISO (e.g., metal-amd64.iso)
+  # 2. Download the ISO for v1.11.5 (e.g., metal-amd64.iso)
   # 3. Upload to Proxmox: Datacenter → Storage → ISO Images → Upload
-  # 4. Set this variable to: "local:iso/metal-amd64.iso" or your storage:iso/filename
+  # 4. Rename to: talos-1.11.5.iso
 }
 
 variable "talos_gpu_iso" {
-  description = "Talos ISO with NVIDIA extensions for GPU workers (Proxmox format: 'storage:iso/filename.iso')"
+  description = "Talos ISO with NVIDIA extensions for GPU workers (Proxmox format: 'storage:iso/filename.iso'). Leave empty to use PXE boot."
   type        = string
-  default     = "local:iso/metal-amd64-gpu-talos-1.11.5.iso"
+  default     = "local:iso/talos-1.11.5-gpu.iso"
 
   # Factory Image Schematic ID: 6db1f20beb0d74f938132978f24a9e6096928c248969a61f56c43bbe530f274a
   # Direct download: https://factory.talos.dev/image/6db1f20beb0d74f938132978f24a9e6096928c248969a61f56c43bbe530f274a/v1.11.5/metal-amd64.iso
@@ -114,7 +95,7 @@ variable "talos_gpu_iso" {
   # - nonfree-kmod-nvidia-production (NVIDIA proprietary drivers)
   # - nvidia-container-toolkit-production (container runtime support)
   #
-  # Uploaded to Proxmox as: metal-amd64-gpu-talos-1.11.5.iso
+  # Upload to Proxmox and rename to: talos-1.11.5-gpu.iso
 }
 
 variable "talos_version" {

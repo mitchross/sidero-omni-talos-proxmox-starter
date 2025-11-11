@@ -7,7 +7,7 @@ set -e
 
 SCHEMATIC_ID="6db1f20beb0d74f938132978f24a9e6096928c248969a61f56c43bbe530f274a"
 TALOS_VERSION="v1.11.5"
-ISO_NAME="talos-gpu-${TALOS_VERSION}.iso"
+ISO_NAME="talos-1.11.5-gpu.iso"
 ISO_URL="https://factory.talos.dev/image/${SCHEMATIC_ID}/${TALOS_VERSION}/metal-amd64.iso"
 
 # Optional: Proxmox server IP (set via environment or edit here)
