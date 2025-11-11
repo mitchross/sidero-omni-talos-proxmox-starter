@@ -162,6 +162,15 @@ patches:
       machine:
         network:
           hostname: ${HOSTNAME}
+          interfaces:
+            - interface: eth0
+              addresses:
+                - ${IP_ADDRESS}/24
+              routes:
+                - network: 0.0.0.0/0
+                  gateway: 192.168.10.1
+          nameservers:
+            - 192.168.10.1
         nodeLabels:
           management-ip: ${IP_ADDRESS}
           node-role: ${ROLE}
