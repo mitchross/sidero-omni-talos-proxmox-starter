@@ -95,7 +95,16 @@ talos_gpu_iso = "local:iso/talos-gpu-v1.11.5.iso"
 
 The terraform configuration uses Proxmox's mapped resource feature:
 ```hcl
-hostpci0 = "mapping=nvidia-gpu-1,pcie=1,rombar=0"
+pcis {
+  pci0 {
+    mapping {
+      mapping_id  = "nvidia-gpu-1"
+      pcie        = true
+      rombar      = true
+      primary_gpu = false
+    }
+  }
+}
 ```
 
 **Setup mapped resource in Proxmox** (one-time):
