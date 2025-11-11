@@ -125,6 +125,7 @@ resource "proxmox_vm_qemu" "control_plane" {
 
   # VM Resources
   memory  = each.value.memory_mb
+  machine = "q35"  # Modern chipset for better PCIe/GPU support
   cpu {
     cores   = each.value.cpu_cores
     sockets = 1
@@ -221,8 +222,9 @@ resource "proxmox_vm_qemu" "worker" {
   description = "Talos Worker - Managed by Terraform - Talos ${var.talos_version} - Boot: ${upper(var.boot_method)}"
 
   memory  = each.value.memory_mb
-  scsihw = "virtio-scsi-single"
-  boot   = var.boot_method == "iso" ? "order=ide2;scsi0" : "order=scsi0;net0"
+  machine = "q35"  # Modern chipset for better PCIe/GPU support
+  scsihw  = "virtio-scsi-single"
+  boot    = var.boot_method == "iso" ? "order=ide2;scsi0" : "order=scsi0;net0"
   cpu {
     cores   = each.value.cpu_cores
     sockets = 1
@@ -305,8 +307,9 @@ resource "proxmox_vm_qemu" "gpu_worker" {
   description = "Talos GPU Worker - Managed by Terraform - Talos ${var.talos_version} - Boot: ${upper(var.boot_method)} - GPU PCI: ${each.value.gpu_pci_id} (Configure manually)"
 
   memory  = each.value.memory_mb
-  scsihw = "virtio-scsi-single"
-  boot   = var.boot_method == "iso" ? "order=ide2;scsi0" : "order=scsi0;net0"
+  machine = "q35"  # Modern chipset required for GPU passthrough
+  scsihw  = "virtio-scsi-single"
+  boot    = var.boot_method == "iso" ? "order=ide2;scsi0" : "order=scsi0;net0"
   cpu {
     cores   = each.value.cpu_cores
     sockets = 1
