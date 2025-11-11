@@ -272,6 +272,100 @@ kubectl get pods -A
 
 ---
 
+## Complete Workflow: How Everything Fits Together
+
+This section explains the **complete end-to-end flow** from Terraform to a running cluster, including critical details about boot order and system extensions that prevent common issues.
+
+### Full Deployment Flow
+
+```mermaid
+flowchart TD
+    A[1. Terraform Creates VMs] -->|VM Config:<br/>- VMID: 100-129<br/>- Boot: scsi0,net0<br/>- Agent: enabled<br/>- MAC addresses| B[VMs Created in Proxmox]
+
+    B -->|First boot:<br/>Empty disk| C{Boot Order Check}
+    C -->|Disk empty| D[Falls through to PXE]
+
+    D -->|DHCP Request| E[Booter DHCP Proxy]
+    E -->|Serves Talos Image<br/>+ Base Extensions*| F[Talos Boots in Memory]
+
+    F -->|SideroLink Connection| G[Registers with Omni<br/>Gets UUID]
+
+    G --> H[2. Scripts: discover-machines.sh]
+    H -->|Match by MAC| I[Terraform VMs ↔ Omni UUIDs]
+
+    I --> J[3. Scripts: generate-machine-configs.sh]
+    J -->|Creates cluster-template.yaml<br/>+ Cluster Extensions**<br/>+ GPU Pool Extensions***| K[Machine Configs Generated]
+
+    K --> L[4. Scripts: apply-machine-configs.sh]
+    L -->|omnictl cluster template sync| M[Omni Applies Config]
+
+    M -->|Installs Talos to Disk<br/>+ All Extensions| N[VM Reboots]
+
+    N -->|Second boot:<br/>Disk has OS| C
+    C -->|Disk has Talos| O[Boots from Disk]
+    O -->|Maintains UUID ✓| P[Cluster Running]
+
+    style A fill:#e1f5ff
+    style G fill:#fff4e1
+    style M fill:#f0e1ff
+    style P fill:#e1ffe1
+```
+
+### Critical Implementation Details
+
+#### 🔑 Boot Order: `scsi0;net0` (Disk First)
+
+**Why this matters**:
+- **First boot**: Disk is empty → Falls through to PXE → Talos installs
+- **Subsequent boots**: Disk has Talos → Boots from disk → **Maintains machine identity**
+- **What we prevent**: If boot order was `net0;scsi0`, every reboot would PXE boot first, potentially generating new UUIDs and breaking Omni's tracking
+
+**Location**: `terraform/main.tf`
+```hcl
+boot = "order=scsi0;net0"  # Disk first, network fallback
+```
+
+#### 🧩 System Extensions: Two-Layer Architecture
+
+System extensions add functionality to Talos (iSCSI, NFS, QEMU agent, NVIDIA drivers). They're applied in two layers:
+
+**Layer 1 - PXE Boot (Booter)***:
+- **When**: During initial PXE boot (optional)
+- **How**: Booter serves Talos image with extensions baked in via Image Factory schematic
+- **Extensions**: Base extensions only (iscsi-tools, nfsd, qemu-guest-agent, util-linux-tools)
+- **Purpose**: Machines boot with base functionality from first boot
+- **Configure**: Run `./deployment-methods/pxe-boot/generate-schematic.sh`
+
+**Layer 2 - Omni Cluster Templates**:
+- **When**: When cluster template is applied (Step 4)
+- **How**: Defined in `cluster-template.yaml` at Cluster and Workers pool levels
+- **Extensions**:
+  - Cluster level**: iscsi-tools, nfsd, qemu-guest-agent, util-linux-tools (all machines)
+  - GPU pool***: nonfree-kmod-nvidia-production, nvidia-container-toolkit-production (GPU workers only)
+- **Purpose**: Ensures all machines have required extensions regardless of PXE boot config
+- **Result**: GPU workers get 6 total extensions (4 base + 2 NVIDIA)
+
+**Why two layers?**
+- **Redundancy**: Extensions applied via Omni even if Booter schematic not configured
+- **Flexibility**: GPU extensions only on gpu-workers pool, not PXE image
+- **Production-ready**: Base functionality available immediately on first boot
+
+#### ⚡ Fast VM Creation: Skip Guest Agent Wait
+
+**The issue**: Terraform with `agent = 1` waits for QEMU guest agent to respond before completing
+**The problem**: Agent not available until Talos boots and extension loads (30+ minute timeout)
+**The fix**: `define_connection_info = false` tells Terraform not to wait
+
+**Location**: `terraform/main.tf`
+```hcl
+agent = 1                          # Enable QEMU agent in Proxmox
+define_connection_info = false     # Don't wait for agent during creation
+```
+
+**Result**: Fast VM creation (seconds) + Guest agent works after Talos boots
+
+---
+
 ## What Each Component Does
 
 | Component | Purpose | Location |
