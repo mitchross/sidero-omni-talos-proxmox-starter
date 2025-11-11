@@ -304,7 +304,7 @@ resource "proxmox_vm_qemu" "gpu_worker" {
   name        = each.value.name
   vmid        = 120 + each.value.index  # GPU Workers: 120, 121, 122, ...
   target_node = var.proxmox_servers[each.value.proxmox_server].node_name
-  description = "Talos GPU Worker - Managed by Terraform - Talos ${var.talos_version} - Boot: ISO (GPU-enabled) - GPU PCI: ${each.value.gpu_pci_id} (Configure manually)"
+  description = "Talos GPU Worker - Managed by Terraform - Talos ${var.talos_version} - Boot: ISO (GPU-enabled) - GPU: nvidia-gpu-1 (mapped resource)"
 
   memory  = each.value.memory_mb
   machine = "q35"  # Modern chipset required for GPU passthrough
@@ -356,9 +356,10 @@ resource "proxmox_vm_qemu" "gpu_worker" {
     tag     = var.network_config.vlan_id
   }
 
-  # GPU Passthrough - MUST be configured manually in Proxmox UI
-  # Uncomment after manual GPU configuration:
-  # hostpci0 = "${each.value.gpu_pci_id},pcie=1"
+  # GPU Passthrough using Proxmox mapped resource
+  # Mapped resource name: nvidia-gpu-1 (configured in Proxmox Datacenter → Resource Mappings)
+  # This automatically assigns the correct GPU PCI device to the VM
+  hostpci0 = "mapping=nvidia-gpu-1,pcie=1,rombar=0"
 
   onboot = var.vm_start_on_boot
   agent  = 1  # QEMU Guest Agent enabled (requires qemu-guest-agent system extension in Talos)
@@ -371,15 +372,13 @@ resource "proxmox_vm_qemu" "gpu_worker" {
     "gpu-worker",
     var.cluster_name,
     "terraform-managed",
-    "gpu-${each.value.gpu_pci_id}"
+    "gpu-mapped"
   ])
 
   lifecycle {
     ignore_changes = [
       network[0].macaddr,
       description,
-      # Ignore GPU passthrough changes (configured manually)
-      # hostpci0,
     ]
   }
 }

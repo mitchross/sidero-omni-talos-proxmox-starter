@@ -81,15 +81,39 @@ talos_gpu_iso = "local:iso/talos-gpu-v1.11.5.iso"
 3. Get base extensions: iscsi-tools, nfsd, qemu-guest-agent, util-linux-tools
 4. Apply machine configs via Omni
 
-### GPU Workers (ISO Boot)  
-1. `terraform apply` creates GPU VMs
-2. VMs boot from GPU ISO (includes NVIDIA drivers)
-3. **Manually add GPU PCI device** in Proxmox UI
+### GPU Workers (ISO Boot)
+1. Create mapped resource in Proxmox (one-time): `nvidia-gpu-1`
+2. `terraform apply` creates GPU VMs with GPU passthrough (automated!)
+3. VMs boot from GPU ISO (includes NVIDIA drivers)
 4. Apply machine configs via Omni (with NVIDIA kernel module declarations)
 
-## Step 5: Manual GPU Passthrough Configuration
+## Step 5: GPU Passthrough Configuration
 
-After Terraform creates the GPU worker VM:
+### Using Proxmox Mapped Resources (Recommended)
+
+**This method is automated via Terraform** - no manual configuration needed!
+
+The terraform configuration uses Proxmox's mapped resource feature:
+```hcl
+hostpci0 = "mapping=nvidia-gpu-1,pcie=1,rombar=0"
+```
+
+**Setup mapped resource in Proxmox** (one-time):
+1. Proxmox UI → **Datacenter** → **Resource Mappings**
+2. Click **Add** → **PCI Device**
+3. Name: `nvidia-gpu-1`
+4. Select your NVIDIA GPU device
+5. Click **Create**
+
+**Benefits**:
+- ✅ Terraform fully manages GPU passthrough
+- ✅ Portable across hardware changes
+- ✅ More descriptive than raw PCI IDs
+- ✅ Automatic VM recreation includes GPU
+
+### Alternative: Manual GPU Passthrough
+
+If not using mapped resources:
 
 1. In Proxmox, select VM 120 (talos-worker-gpu-1)
 2. Go to **Hardware**
@@ -101,6 +125,8 @@ After Terraform creates the GPU worker VM:
    - ✅ **PCI-Express**
 6. Click **Add**
 7. **Start the VM**
+
+**Note**: With Terraform, the mapped resource method is preferred.
 
 ## Updating to New Talos Version
 
@@ -160,7 +186,8 @@ talosctl -n 192.168.10.115 get extensions
 | Boot Method | PXE (Sidero Booter) | ISO (Factory Image) |
 | Extensions | Base only | Base + NVIDIA |
 | Terraform Resource | `proxmox_vm_qemu.worker` | `proxmox_vm_qemu.gpu_worker` |
-| Manual Steps | None | Add GPU PCI device |
+| GPU Passthrough | N/A | Automated (mapped resource) |
+| Manual Steps | None | Create mapped resource (one-time) |
 | ISO Location | N/A | `local:iso/talos-gpu-v1.11.5.iso` |
 
 ## Related Documentation
