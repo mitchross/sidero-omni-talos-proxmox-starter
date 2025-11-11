@@ -148,9 +148,10 @@ while IFS= read -r tf_machine; do
 
     # Search for matching machine in Omni by MAC address
     # MAC addresses are in .spec.network.networklinks[].hardwareaddress
-    # Use 'first' to ensure we only get one match even if multiple interfaces exist
+    # Prioritize connected machines if multiple matches exist (handles stale registrations)
     OMNI_MATCH=$(echo "${OMNI_MACHINES}" | jq --arg mac "$TF_MAC" '
-        [.[] | select(.spec.network.networklinks[]? | .hardwareaddress | ascii_upcase == $mac)] | first
+        [.[] | select(.spec.network.networklinks[]? | .hardwareaddress | ascii_upcase == $mac)] |
+        sort_by(.spec.connected | not) | first
     ')
 
     if [[ -n "${OMNI_MATCH}" && "${OMNI_MATCH}" != "null" ]]; then

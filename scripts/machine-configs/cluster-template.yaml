@@ -44,7 +44,7 @@ systemExtensions:
 kind: ControlPlane
 machines:
   - 018de83f-7d44-46a4-aa1d-f1ef596c5a3b
-  - 13215c19-70c0-4225-93dd-66c441ae1ffe
+  - 3494c73d-cf2f-4de7-ac5a-7a15c942b0a6
   - 74071310-5bd7-41d0-860e-9c7e33a1daf9
 patches:
   - idOverride: 400-control-planes-untaint
@@ -136,9 +136,9 @@ patches:
 
 ---
 kind: Machine
-name: 13215c19-70c0-4225-93dd-66c441ae1ffe
+name: 3494c73d-cf2f-4de7-ac5a-7a15c942b0a6
 patches:
-  - idOverride: 400-cm-13215c19-70c0-4225-93dd-66c441ae1ffe-set-hostname-talos-control-2
+  - idOverride: 400-cm-3494c73d-cf2f-4de7-ac5a-7a15c942b0a6-set-hostname-talos-control-2
     annotations:
       name: set-hostname-talos-control-2
     inline:
@@ -159,7 +159,7 @@ patches:
           node-role: control-plane
           topology.kubernetes.io/zone: proxmox
           topology.proxmox.io/node: hp-server-1
-  - idOverride: 401-cm-13215c19-70c0-4225-93dd-66c441ae1ffe-control-plane-config
+  - idOverride: 401-cm-3494c73d-cf2f-4de7-ac5a-7a15c942b0a6-control-plane-config
     annotations:
       name: control-plane-config
     inline:

@@ -1,5 +1,5 @@
 talos-control-1=018de83f-7d44-46a4-aa1d-f1ef596c5a3b
-talos-control-2=13215c19-70c0-4225-93dd-66c441ae1ffe
+talos-control-2=3494c73d-cf2f-4de7-ac5a-7a15c942b0a6
 talos-control-3=74071310-5bd7-41d0-860e-9c7e33a1daf9
 talos-worker-1=1db6301b-1e6f-4445-9793-116fb58bd27b
 talos-worker-2=247b65f4-9188-4f99-b153-2057193e0920
