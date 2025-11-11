@@ -196,13 +196,9 @@ The automation scripts connect Terraform data to Omni machines:
 ```bash
 cd scripts
 
-# Install omnictl
-# Get download link from Omni UI → Settings → CLI
-
-# Configure omnictl
-# Optional if already have configured
-omnictl config new
-# Enter your Omni URL and authenticate
+# Step 0: Install and configure omnictl
+# Download omnictl binary from your Omni dashboard
+# See detailed instructions below in "Installing omnictl"
 
 # 1. Match VMs to Omni machines by MAC address
 ./discover-machines.sh

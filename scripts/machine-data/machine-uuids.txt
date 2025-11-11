@@ -1,9 +1,7 @@
-talos-control-1=711d425e-0c2e-4878-b9b8-0eabc03689b2
-talos-control-2=04b9fa6a-374a-441a-a739-32a608bf34e4
-talos-control-3=1c0821e4-b51e-491d-af81-8e57c19be95d
-talos-worker-1=016adc61-15c5-4998-b079-36fb744b7b9a
-talos-worker-2=9fc1ea68-ce69-4b6a-bad5-157eb16233a2
-talos-worker-3=ac1b1b49-dacf-4d05-ac68-9907245b9e23
-talos-worker-4=af67025b-1233-44df-98f4-e51a15768ff2
-talos-worker-5=022f2ae6-41f6-45cf-bd43-32cf14fe39af
-talos-worker-gpu-1=a13f29b0-037e-408c-93eb-dcc0ba0257b2
+talos-control-1=018de83f-7d44-46a4-aa1d-f1ef596c5a3b
+talos-control-2=13215c19-70c0-4225-93dd-66c441ae1ffe
+talos-control-3=74071310-5bd7-41d0-860e-9c7e33a1daf9
+talos-worker-1=1db6301b-1e6f-4445-9793-116fb58bd27b
+talos-worker-2=247b65f4-9188-4f99-b153-2057193e0920
+talos-worker-3=ba6acc44-7b5d-4d78-b187-0bfb707bc2ee
+talos-worker-gpu-1=cc93520b-a6d1-4aa8-8de1-28e03f16fcb5
