@@ -1,20 +1,29 @@
 ---
 kind: Machine
-name: b529ed83-2bdc-493d-b80b-06232d1b83f9
+name: c7cdeafc-27da-4c33-9dca-1833d4c906e9
 patches:
-  - idOverride: 400-cm-b529ed83-2bdc-493d-b80b-06232d1b83f9-set-hostname-talos-worker-4
+  - idOverride: 400-cm-c7cdeafc-27da-4c33-9dca-1833d4c906e9-set-hostname-talos-worker-4
     annotations:
       name: set-hostname-talos-worker-4
     inline:
       machine:
         network:
           hostname: talos-worker-4
+          interfaces:
+            - interface: eth0
+              addresses:
+                - 192.168.10.113/24
+              routes:
+                - network: 0.0.0.0/0
+                  gateway: 192.168.10.1
+          nameservers:
+            - 192.168.10.1
         nodeLabels:
           management-ip: 192.168.10.113
           node-role: worker
           topology.kubernetes.io/zone: proxmox
           topology.proxmox.io/node: hp-server-1
-  - idOverride: 401-cm-b529ed83-2bdc-493d-b80b-06232d1b83f9-regular-worker-config
+  - idOverride: 401-cm-c7cdeafc-27da-4c33-9dca-1833d4c906e9-regular-worker-config
     annotations:
       name: regular-worker-config
     inline:
