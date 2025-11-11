@@ -436,6 +436,8 @@ EOF
 fi
 
 # Add GPU workers section
+# CRITICAL: Workers pool systemExtensions OVERRIDE cluster-level extensions.
+# Must include ALL extensions: cluster base (4) + GPU specific (2) = 6 total
 if [[ ${#GPU_WORKER_MACHINES[@]} -gt 0 ]]; then
     cat >> "${CLUSTER_TEMPLATE}" <<EOF
 
@@ -443,6 +445,10 @@ if [[ ${#GPU_WORKER_MACHINES[@]} -gt 0 ]]; then
 kind: Workers
 name: gpu-workers
 systemExtensions:
+  - siderolabs/iscsi-tools
+  - siderolabs/nfsd
+  - siderolabs/qemu-guest-agent
+  - siderolabs/util-linux-tools
   - siderolabs/nonfree-kmod-nvidia-production
   - siderolabs/nvidia-container-toolkit-production
 machines:
