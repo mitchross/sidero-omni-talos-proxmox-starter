@@ -1,8 +1,8 @@
 ---
 kind: Machine
-name: 80809d5c-8875-4c67-9e9f-62244b0b0e03
+name: 022f2ae6-41f6-45cf-bd43-32cf14fe39af
 patches:
-  - idOverride: 400-cm-80809d5c-8875-4c67-9e9f-62244b0b0e03-set-hostname-talos-worker-5
+  - idOverride: 400-cm-022f2ae6-41f6-45cf-bd43-32cf14fe39af-set-hostname-talos-worker-5
     annotations:
       name: set-hostname-talos-worker-5
     inline:
@@ -23,7 +23,7 @@ patches:
           node-role: worker
           topology.kubernetes.io/zone: proxmox
           topology.proxmox.io/node: hp-server-1
-  - idOverride: 401-cm-80809d5c-8875-4c67-9e9f-62244b0b0e03-regular-worker-config
+  - idOverride: 401-cm-022f2ae6-41f6-45cf-bd43-32cf14fe39af-regular-worker-config
     annotations:
       name: regular-worker-config
     inline:
