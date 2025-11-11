@@ -359,7 +359,16 @@ resource "proxmox_vm_qemu" "gpu_worker" {
   # GPU Passthrough using Proxmox mapped resource
   # Mapped resource name: nvidia-gpu-1 (configured in Proxmox Datacenter → Resource Mappings)
   # This automatically assigns the correct GPU PCI device to the VM
-  hostpci0 = "mapping=nvidia-gpu-1,pcie=1,rombar=0"
+  pcis {
+    pci0 {
+      mapping {
+        mapping_id  = "nvidia-gpu-1"
+        pcie        = true
+        rombar      = true
+        primary_gpu = false
+      }
+    }
+  }
 
   onboot = var.vm_start_on_boot
   agent  = 1  # QEMU Guest Agent enabled (requires qemu-guest-agent system extension in Talos)
