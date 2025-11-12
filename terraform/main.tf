@@ -308,7 +308,7 @@ resource "proxmox_vm_qemu" "gpu_worker" {
   memory  = each.value.memory_mb
   machine = "q35"  # Modern chipset required for GPU passthrough
   scsihw  = "virtio-scsi-single"
-  boot    = var.talos_gpu_iso != "" ? "order=ide2;scsi0" : "order=scsi0;net0"
+  boot    = var.talos_gpu_iso != "" ? "order=scsi0;ide2" : "order=scsi0;net0"
   cpu {
     cores   = each.value.cpu_cores
     sockets = 1
