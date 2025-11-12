@@ -125,10 +125,12 @@ while IFS= read -r machine; do
     HOSTNAME=$(echo "${machine}" | jq -r '.hostname')
     OMNI_UUID=$(echo "${machine}" | jq -r '.omni_uuid')
     IP_ADDRESS=$(echo "${machine}" | jq -r '.ip_address')
+    MAC_ADDRESS=$(echo "${machine}" | jq -r '.mac_address')
     ROLE=$(echo "${machine}" | jq -r '.role')
-    PROXMOX_NODE=$(echo "${machine}" | jq -r '.terraform_data.proxmox_server')
+    PROXMOX_NODE=$(echo "${machine}" | jq -r '.terraform_data.proxmox_node')
     GATEWAY=$(echo "${machine}" | jq -r '.terraform_data.gateway')
-    DNS_SERVERS=$(echo "${machine}" | jq -r '.terraform_data.dns_servers | join("\",\"")' | sed 's/^/["/; s/$/"]/')
+    DNS_SERVER_1=$(echo "${machine}" | jq -r '.terraform_data.dns_servers[0]')
+    DNS_SERVER_2=$(echo "${machine}" | jq -r '.terraform_data.dns_servers[1] // "1.0.0.1"')
     HAS_DATA_DISK=$(echo "${machine}" | jq -r '.terraform_data.has_data_disk')
 
     echo "Processing: ${HOSTNAME} (${OMNI_UUID})"
@@ -163,14 +165,17 @@ patches:
         network:
           hostname: ${HOSTNAME}
           interfaces:
-            - interface: eth0
+            - deviceSelector:
+                hardwareAddr: "${MAC_ADDRESS}"
+              dhcp: false
               addresses:
                 - ${IP_ADDRESS}/24
               routes:
                 - network: 0.0.0.0/0
-                  gateway: 192.168.10.1
+                  gateway: ${GATEWAY}
           nameservers:
-            - 192.168.10.1
+            - ${DNS_SERVER_1}
+            - ${DNS_SERVER_2}
         nodeLabels:
           management-ip: ${IP_ADDRESS}
           node-role: ${ROLE}
@@ -260,6 +265,10 @@ EOF
         # Add Longhorn mount for GPU workers (if they have data disk)
         if [[ "${HAS_DATA_DISK}" == "true" ]]; then
             cat >> "${CONFIG_FILE}" <<EOF
+        disks:
+          - device: /dev/sdb
+            partitions:
+              - mountpoint: /var/mnt/longhorn_sdb
         kubelet:
           extraMounts:
             - destination: /var/lib/longhorn
@@ -267,7 +276,7 @@ EOF
                 - bind
                 - rshared
                 - rw
-              source: /var/mnt/longhorn
+              source: /var/mnt/longhorn_sdb
               type: bind
 EOF
         fi
@@ -315,6 +324,10 @@ EOF
         # Add Longhorn mount for regular workers (if they have data disk)
         if [[ "${HAS_DATA_DISK}" == "true" ]]; then
             cat >> "${CONFIG_FILE}" <<EOF
+        disks:
+          - device: /dev/sdb
+            partitions:
+              - mountpoint: /var/mnt/longhorn_sdb
         kubelet:
           extraMounts:
             - destination: /var/lib/longhorn
@@ -322,7 +335,7 @@ EOF
                 - bind
                 - rshared
                 - rw
-              source: /var/mnt/longhorn
+              source: /var/mnt/longhorn_sdb
               type: bind
 EOF
         fi
@@ -370,7 +383,8 @@ cat > "${CLUSTER_TEMPLATE}" <<EOF
 #   - Role-specific configurations (hostDNS, kubePrism, containerd)
 #   - Longhorn mounts (for workers with data disks)
 #
-# Network: Using DHCP (PXE boot), not static IPs
+# Network: Using static IPs with MAC-based interface selection
+# DNS: Using Cloudflare DNS (1.1.1.1, 1.0.0.1)
 #
 # Apply with:
 #   omnictl cluster template sync -f ${CLUSTER_TEMPLATE}
