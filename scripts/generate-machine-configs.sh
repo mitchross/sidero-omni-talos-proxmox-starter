@@ -260,10 +260,6 @@ EOF
         # Add Longhorn mount for GPU workers (if they have data disk)
         if [[ "${HAS_DATA_DISK}" == "true" ]]; then
             cat >> "${CONFIG_FILE}" <<EOF
-        disks:
-          - device: /dev/sdb
-            partitions:
-              - mountpoint: /var/mnt/longhorn
         kubelet:
           extraMounts:
             - destination: /var/lib/longhorn
@@ -319,10 +315,6 @@ EOF
         # Add Longhorn mount for regular workers (if they have data disk)
         if [[ "${HAS_DATA_DISK}" == "true" ]]; then
             cat >> "${CONFIG_FILE}" <<EOF
-        disks:
-          - device: /dev/sdb
-            partitions:
-              - mountpoint: /var/mnt/longhorn
         kubelet:
           extraMounts:
             - destination: /var/lib/longhorn

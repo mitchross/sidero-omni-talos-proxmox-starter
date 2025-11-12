@@ -196,9 +196,13 @@ The automation scripts connect Terraform data to Omni machines:
 ```bash
 cd scripts
 
-# Step 0: Install and configure omnictl
-# Download omnictl binary from your Omni dashboard
-# See detailed instructions below in "Installing omnictl"
+# Install omnictl
+# Get download link from Omni UI → Settings → CLI
+
+# Configure omnictl
+# Optional if already have configured
+omnictl config new
+# Enter your Omni URL and authenticate
 
 # 1. Match VMs to Omni machines by MAC address
 ./discover-machines.sh
@@ -233,97 +237,6 @@ cd scripts
 - ✅ Production configs (hostDNS, kubePrism, Longhorn mounts, GPU support)
 
 📖 **Full Guide**: [scripts/README.md](scripts/README.md)
-
----
-
-## Installing omnictl
-
-The `omnictl` CLI is required to interact with your Omni instance. Follow these steps to install and configure it on macOS.
-
-### Step 1: Download omnictl
-
-Download the `omnictl` binary from your Omni dashboard:
-
-1. Open your Omni UI (e.g., `https://omni.vanillax.me`)
-2. Click the download button to get `omnictl-darwin-amd64` (macOS Intel) or `omnictl-darwin-arm64` (macOS Apple Silicon)
-3. Also download `omniconfig.yaml` from the same page
-
-### Step 2: Install the Binary
-
-```bash
-# Navigate to your downloads
-cd ~/Downloads
-
-# Make executable and move to system path
-chmod +x omnictl-darwin-amd64
-sudo mv omnictl-darwin-amd64 /usr/local/bin/omnictl
-
-# Verify installation
-omnictl --version
-# Should show: omnictl version v1.3.1 (API Version: 1)
-```
-
-### Step 3: Configure omnictl
-
-**Important**: On macOS, omnictl uses **two possible config locations** (checks in this order):
-1. **Primary**: `~/.talos/omni/config` (recommended)
-2. **Fallback**: `~/Library/Application Support/omni/config` (deprecated but still works)
-
-Copy your `omniconfig.yaml` to the correct location:
-
-```bash
-# Option 1: Use ~/.talos/omni/config (recommended)
-mkdir -p ~/.talos/omni
-cp ~/Downloads/omniconfig.yaml ~/.talos/omni/config
-
-# Option 2: Use ~/Library/Application Support/omni/config (legacy)
-mkdir -p ~/Library/Application\ Support/omni
-cp ~/Downloads/omniconfig.yaml ~/Library/Application\ Support/omni/config
-```
-
-### Step 4: Verify Configuration
-
-```bash
-# List contexts
-omnictl config contexts
-
-# Should show:
-# CURRENT   NAME      URL
-# *         default   https://omni.vanillax.me
-
-# Test connection
-omnictl get clusters
-
-# Should show empty list or existing clusters (no errors)
-```
-
-### Troubleshooting omnictl
-
-**"unknown service cosi.resource.State" error**:
-- **Cause**: Version mismatch between omnictl and Omni server
-- **Fix**: Download omnictl from your Omni dashboard (not Homebrew)
-
-**"dns resolver: missing address" error**:
-- **Cause**: Using wrong config file (talosconfig instead of omniconfig)
-- **Fix**: Use the `omniconfig.yaml` from Omni dashboard, not `talosconfig.yaml`
-
-**Config not loading**:
-```bash
-# Check which config file is being used
-omnictl --help | grep omniconfig
-
-# Default path should be: $HOME/.talos/omni/config
-
-# Verify config exists
-cat ~/.talos/omni/config
-```
-
-**Auth0 login issues**:
-```bash
-# Clear old auth and re-authenticate
-rm -rf ~/.talos/keys
-omnictl get clusters  # Will trigger browser login
-```
 
 ---
 

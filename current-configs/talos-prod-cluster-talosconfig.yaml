@@ -1,5 +1,0 @@
-context: default-talos-prod-cluster
-contexts:
-    default-talos-prod-cluster:
-        endpoints:
-            - 192.168.10.117
