@@ -134,12 +134,11 @@ resource "proxmox_vm_qemu" "control_plane" {
   # SCSI Controller
   scsihw = "virtio-scsi-single"
 
-  # Boot order depends on whether ISO is provided
-  # ISO provided: Boot from CD-ROM first, then disk (order=ide2;scsi0)
-  # No ISO: Boot from disk first, PXE fallback (order=scsi0;net0)
-  #         This ensures machines boot from disk after Talos is installed,
-  #         preventing UUID/identity changes on every reboot
-  boot = var.talos_iso != "" ? "order=ide2;scsi0" : "order=scsi0;net0"
+  # Boot order: Disk first, then ISO fallback
+  # - First boot: Disk empty → Falls through to ISO → Installs Talos
+  # - After install: Disk has Talos → Boots from disk → Never reaches ISO
+  # This prevents booting from ISO every time (which causes the halt_if_installed error)
+  boot = var.talos_iso != "" ? "order=scsi0;ide2" : "order=scsi0;net0"
 
   # CD-ROM with Talos ISO (only if ISO is provided)
   dynamic "disk" {
@@ -224,7 +223,7 @@ resource "proxmox_vm_qemu" "worker" {
   memory  = each.value.memory_mb
   machine = "q35"  # Modern chipset for better PCIe/GPU support
   scsihw  = "virtio-scsi-single"
-  boot    = var.talos_iso != "" ? "order=ide2;scsi0" : "order=scsi0;net0"
+  boot    = var.talos_iso != "" ? "order=scsi0;ide2" : "order=scsi0;net0"
   cpu {
     cores   = each.value.cpu_cores
     sockets = 1
