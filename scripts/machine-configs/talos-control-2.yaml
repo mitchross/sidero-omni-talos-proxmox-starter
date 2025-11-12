@@ -1,0 +1,55 @@
+---
+kind: Machine
+name: 73d9b30a-0f22-4226-962b-5d75628bea2d
+patches:
+  - idOverride: 400-cm-73d9b30a-0f22-4226-962b-5d75628bea2d-set-hostname-talos-control-2
+    annotations:
+      name: set-hostname-talos-control-2
+    inline:
+      machine:
+        network:
+          hostname: talos-control-2
+          interfaces:
+            - deviceSelector:
+                hardwareAddr: "BC:24:11:01:00:01"
+              dhcp: false
+              addresses:
+                - 192.168.10.101/24
+              routes:
+                - network: 0.0.0.0/0
+                  gateway: 192.168.10.1
+          nameservers:
+            - 1.1.1.1
+            - 1.0.0.1
+        nodeLabels:
+          management-ip: 192.168.10.101
+          node-role: control-plane
+          topology.kubernetes.io/zone: proxmox
+          topology.proxmox.io/node: hp-server-1
+  - idOverride: 401-cm-73d9b30a-0f22-4226-962b-5d75628bea2d-control-plane-config
+    annotations:
+      name: control-plane-config
+    inline:
+      cluster:
+        proxy:
+          disabled: true
+      machine:
+        features:
+          hostDNS:
+            enabled: true
+            forwardKubeDNSToHost: true
+          kubePrism:
+            enabled: true
+            port: 7445
+        kernel:
+          modules:
+            - name: br_netfilter
+              parameters:
+                - nf_conntrack_max=131072
+        sysctls:
+          fs.inotify.max_user_instances: "8192"
+          fs.inotify.max_user_watches: "1048576"
+        time:
+          disabled: false
+          servers:
+            - time.cloudflare.com

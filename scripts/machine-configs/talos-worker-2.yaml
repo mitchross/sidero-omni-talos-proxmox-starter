@@ -1,0 +1,75 @@
+---
+kind: Machine
+name: a24fcd51-6b5d-482d-a930-ee9e0f1c902a
+patches:
+  - idOverride: 400-cm-a24fcd51-6b5d-482d-a930-ee9e0f1c902a-set-hostname-talos-worker-2
+    annotations:
+      name: set-hostname-talos-worker-2
+    inline:
+      machine:
+        network:
+          hostname: talos-worker-2
+          interfaces:
+            - deviceSelector:
+                hardwareAddr: "BC:24:11:02:00:01"
+              dhcp: false
+              addresses:
+                - 192.168.10.111/24
+              routes:
+                - network: 0.0.0.0/0
+                  gateway: 192.168.10.1
+          nameservers:
+            - 1.1.1.1
+            - 1.0.0.1
+        nodeLabels:
+          management-ip: 192.168.10.111
+          node-role: worker
+          topology.kubernetes.io/zone: proxmox
+          topology.proxmox.io/node: hp-server-1
+  - idOverride: 401-cm-a24fcd51-6b5d-482d-a930-ee9e0f1c902a-regular-worker-config
+    annotations:
+      name: regular-worker-config
+    inline:
+      cluster:
+        proxy:
+          disabled: true
+      machine:
+        features:
+          hostDNS:
+            enabled: true
+            forwardKubeDNSToHost: true
+          kubePrism:
+            enabled: true
+            port: 7445
+        files:
+          - content: |
+              [plugins."io.containerd.grpc.v1.cri"]
+                enable_unprivileged_ports = true
+                enable_unprivileged_icmp = true
+            op: create
+            path: /etc/cri/conf.d/20-customization.part
+        kernel:
+          modules:
+            - name: br_netfilter
+              parameters:
+                - nf_conntrack_max=131072
+        disks:
+          - device: /dev/sdb
+            partitions:
+              - mountpoint: /var/mnt/longhorn_sdb
+        kubelet:
+          extraMounts:
+            - destination: /var/lib/longhorn
+              options:
+                - bind
+                - rshared
+                - rw
+              source: /var/mnt/longhorn_sdb
+              type: bind
+        sysctls:
+          fs.inotify.max_user_instances: "8192"
+          fs.inotify.max_user_watches: "1048576"
+        time:
+          disabled: false
+          servers:
+            - time.cloudflare.com

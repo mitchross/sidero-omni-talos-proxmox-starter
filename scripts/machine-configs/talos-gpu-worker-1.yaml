@@ -1,0 +1,87 @@
+---
+kind: Machine
+name: 15498cdd-048b-4c81-bd0d-016a7f0d59b1
+patches:
+  - idOverride: 400-cm-15498cdd-048b-4c81-bd0d-016a7f0d59b1-set-hostname-talos-gpu-worker-1
+    annotations:
+      name: set-hostname-talos-gpu-worker-1
+    inline:
+      machine:
+        network:
+          hostname: talos-gpu-worker-1
+          interfaces:
+            - deviceSelector:
+                hardwareAddr: "BC:24:11:03:00:00"
+              dhcp: false
+              addresses:
+                - 192.168.10.115/24
+              routes:
+                - network: 0.0.0.0/0
+                  gateway: 192.168.10.1
+          nameservers:
+            - 1.1.1.1
+            - 1.0.0.1
+        nodeLabels:
+          management-ip: 192.168.10.115
+          node-role: gpu-worker
+          topology.kubernetes.io/zone: proxmox
+          topology.proxmox.io/node: hp-server-1
+          nvidia.com/gpu: "true"
+  - idOverride: 401-cm-15498cdd-048b-4c81-bd0d-016a7f0d59b1-gpu-worker-config
+    annotations:
+      name: gpu-worker-config
+    inline:
+      machine:
+        features:
+          hostDNS:
+            enabled: true
+            forwardKubeDNSToHost: true
+          kubePrism:
+            enabled: true
+            port: 7445
+        files:
+          - content: |
+              [plugins."io.containerd.grpc.v1.cri"]
+                enable_unprivileged_ports = true
+                enable_unprivileged_icmp = true
+              [plugins."io.containerd.grpc.v1.cri".containerd]
+                default_runtime_name = "nvidia"
+              [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia]
+                privileged_without_host_devices = false
+                runtime_engine = ""
+                runtime_root = ""
+                runtime_type = "io.containerd.runc.v2"
+                [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia.options]
+                  BinaryName = "/usr/bin/nvidia-container-runtime"
+            op: create
+            path: /etc/cri/conf.d/20-customization.part
+        kernel:
+          modules:
+            - name: nvidia
+            - name: nvidia_uvm
+            - name: nvidia_drm
+            - name: nvidia_modeset
+            - name: br_netfilter
+              parameters:
+                - nf_conntrack_max=131072
+        disks:
+          - device: /dev/sdb
+            partitions:
+              - mountpoint: /var/mnt/longhorn_sdb
+        kubelet:
+          extraMounts:
+            - destination: /var/lib/longhorn
+              options:
+                - bind
+                - rshared
+                - rw
+              source: /var/mnt/longhorn_sdb
+              type: bind
+        sysctls:
+          fs.inotify.max_user_instances: "8192"
+          fs.inotify.max_user_watches: "1048576"
+          net.core.bpf_jit_harden: "1"
+        time:
+          disabled: false
+          servers:
+            - time.cloudflare.com
