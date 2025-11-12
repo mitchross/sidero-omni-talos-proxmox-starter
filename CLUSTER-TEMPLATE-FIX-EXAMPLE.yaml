@@ -1,0 +1,234 @@
+# Example: How to fix your cluster template
+# This shows the critical changes needed for each machine
+
+---
+kind: Machine
+name: YOUR-MACHINE-UUID-HERE
+patches:
+  - idOverride: 400-set-hostname-and-network
+    annotations:
+      name: set-hostname-and-network
+    inline:
+      machine:
+        network:
+          hostname: talos-control-1
+          interfaces:
+            - deviceSelector:
+                hardwareAddr: "AC:24:21:A4:B2:97"  # ⭐ CRITICAL: Match NIC by MAC address
+              dhcp: false  # ⭐ CRITICAL: Disable DHCP
+              addresses:
+                - 192.168.10.100/24
+              routes:
+                - network: 0.0.0.0/0
+                  gateway: 192.168.10.1
+          nameservers:
+            - 1.1.1.1  # ⭐ CHANGED: Use Cloudflare DNS (not gateway)
+            - 1.0.0.1
+        nodeLabels:
+          management-ip: 192.168.10.100
+          node-role: control-plane
+
+  - idOverride: 401-control-plane-config
+    annotations:
+      name: control-plane-config
+    inline:
+      cluster:
+        proxy:
+          disabled: true
+      machine:
+        features:
+          hostDNS:
+            enabled: true
+            forwardKubeDNSToHost: true
+          kubePrism:
+            enabled: true
+            port: 7445
+        kernel:
+          modules:
+            - name: br_netfilter
+              parameters:
+                - nf_conntrack_max=131072
+        sysctls:
+          fs.inotify.max_user_instances: "8192"
+          fs.inotify.max_user_watches: "1048576"
+        time:
+          disabled: false
+          servers:
+            - time.cloudflare.com
+
+---
+# Example Worker with Longhorn disk configuration
+kind: Machine
+name: YOUR-WORKER-UUID-HERE
+patches:
+  - idOverride: 400-set-hostname-and-network
+    annotations:
+      name: set-hostname-and-network
+    inline:
+      machine:
+        network:
+          hostname: talos-worker-1
+          interfaces:
+            - deviceSelector:
+                hardwareAddr: "AC:24:21:4C:99:A1"  # ⭐ CRITICAL: Match NIC by MAC
+              dhcp: false  # ⭐ CRITICAL: Disable DHCP
+              addresses:
+                - 192.168.10.111/24
+              routes:
+                - network: 0.0.0.0/0
+                  gateway: 192.168.10.1
+          nameservers:
+            - 1.1.1.1  # ⭐ CHANGED: Cloudflare DNS
+            - 1.0.0.1
+        # ⭐ ADDED: Disk configuration for Longhorn
+        disks:
+          - device: /dev/sdb
+            partitions:
+              - mountpoint: /var/mnt/longhorn_sdb
+        nodeLabels:
+          management-ip: 192.168.10.111
+          node-role: worker
+
+  - idOverride: 401-worker-config
+    annotations:
+      name: worker-config
+    inline:
+      cluster:
+        proxy:
+          disabled: true
+      machine:
+        features:
+          hostDNS:
+            enabled: true
+            forwardKubeDNSToHost: true
+          kubePrism:
+            enabled: true
+            port: 7445
+        files:
+          - content: |
+              [plugins."io.containerd.grpc.v1.cri"]
+                enable_unprivileged_ports = true
+                enable_unprivileged_icmp = true
+            op: create
+            path: /etc/cri/conf.d/20-customization.part
+        kernel:
+          modules:
+            - name: br_netfilter
+              parameters:
+                - nf_conntrack_max=131072
+        # ⭐ EXISTING: Longhorn kubelet mount (this was already there)
+        kubelet:
+          extraMounts:
+            - destination: /var/lib/longhorn
+              options:
+                - bind
+                - rshared
+                - rw
+              source: /var/mnt/longhorn_sdb  # ⭐ CHANGED: Point to mounted disk
+              type: bind
+        sysctls:
+          fs.inotify.max_user_instances: "8192"
+          fs.inotify.max_user_watches: "1048576"
+        time:
+          disabled: false
+          servers:
+            - time.cloudflare.com
+
+---
+# Example GPU Worker
+kind: Machine
+name: YOUR-GPU-WORKER-UUID-HERE
+patches:
+  - idOverride: 400-set-hostname-and-network
+    annotations:
+      name: set-hostname-and-network
+    inline:
+      machine:
+        network:
+          hostname: talos-gpu-worker-1
+          interfaces:
+            - deviceSelector:
+                hardwareAddr: "AC:24:21:AD:82:A3"  # ⭐ CRITICAL: Match NIC by MAC
+              dhcp: false  # ⭐ CRITICAL: Disable DHCP
+              addresses:
+                - 192.168.10.113/24
+              routes:
+                - network: 0.0.0.0/0
+                  gateway: 192.168.10.1
+          nameservers:
+            - 1.1.1.1  # ⭐ CHANGED: Cloudflare DNS
+            - 1.0.0.1
+        # ⭐ ADDED: Disk configuration for Longhorn
+        disks:
+          - device: /dev/sdb
+            partitions:
+              - mountpoint: /var/mnt/longhorn_sdb
+        nodeLabels:
+          management-ip: 192.168.10.113
+          node-role: gpu-worker
+          nvidia.com/gpu: "true"
+
+  - idOverride: 401-gpu-worker-config
+    annotations:
+      name: gpu-worker-config
+    inline:
+      machine:
+        features:
+          hostDNS:
+            enabled: true
+            forwardKubeDNSToHost: true
+          kubePrism:
+            enabled: true
+            port: 7445
+        files:
+          - content: |
+              [plugins."io.containerd.grpc.v1.cri"]
+                enable_unprivileged_ports = true
+                enable_unprivileged_icmp = true
+              [plugins."io.containerd.grpc.v1.cri".containerd]
+                default_runtime_name = "nvidia"
+              [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia]
+                privileged_without_host_devices = false
+                runtime_engine = ""
+                runtime_root = ""
+                runtime_type = "io.containerd.runc.v2"
+                [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia.options]
+                  BinaryName = "/usr/bin/nvidia-container-runtime"
+            op: create
+            path: /etc/cri/conf.d/20-customization.part
+        kernel:
+          modules:
+            - name: nvidia
+            - name: nvidia_uvm
+            - name: nvidia_drm
+            - name: nvidia_modeset
+            - name: br_netfilter
+              parameters:
+                - nf_conntrack_max=131072
+        kubelet:
+          extraMounts:
+            - destination: /var/lib/longhorn
+              options:
+                - bind
+                - rshared
+                - rw
+              source: /var/mnt/longhorn_sdb  # ⭐ CHANGED: Point to mounted disk
+              type: bind
+        sysctls:
+          fs.inotify.max_user_instances: "8192"
+          fs.inotify.max_user_watches: "1048576"
+          net.core.bpf_jit_harden: "1"
+        time:
+          disabled: false
+          servers:
+            - time.cloudflare.com
+
+# ==============================================================================
+# KEY CHANGES SUMMARY
+# ==============================================================================
+#
+# 1. ⭐ deviceSelector with hardwareAddr (CRITICAL - without this, network won't work)
+# 2. ⭐ dhcp: false on interfaces (CRITICAL - prevents DHCP override)
+# 3. ⭐ nameservers: 1.1.1.1/1.0.0.1 (was using gateway, should use real DNS)
+# 4. ⭐ machine.disks configuration (for Longhorn extra disk)
+# 5. ⭐ kubelet mount source changed to /var/mnt/longhorn_sdb (matches disk mount)
