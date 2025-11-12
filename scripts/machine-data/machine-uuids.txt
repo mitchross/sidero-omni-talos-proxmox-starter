@@ -1,0 +1,7 @@
+talos-control-1=e8ebd88b-ff6b-4f77-b775-cf9e14f57472
+talos-control-2=73d9b30a-0f22-4226-962b-5d75628bea2d
+talos-control-3=8e49c19b-f776-4ca6-b9f7-ba4e6cd9c4c2
+talos-gpu-worker-1=15498cdd-048b-4c81-bd0d-016a7f0d59b1
+talos-worker-1=aff4cb8e-eca5-4257-b91d-2de5e6cc2736
+talos-worker-2=a24fcd51-6b5d-482d-a930-ee9e0f1c902a
+talos-worker-3=cc1e0d4d-afc9-4c8d-926f-26267d369625
