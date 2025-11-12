@@ -262,55 +262,6 @@ echo "${MATCHED_MACHINES}" | jq -r '.[] | "\(.ip_address)=\(.omni_uuid)"' > "${O
 echo "✓ Quick reference files created in ${OUTPUT_DIR}/"
 echo ""
 
-# =============================================================================
-# Apply Machine Labels in Omni
-# =============================================================================
-
-echo "======================================"
-echo "Applying Machine Labels in Omni"
-echo "======================================"
-echo ""
-
-LABEL_SUCCESS=0
-LABEL_FAIL=0
-
-# Apply labels to each matched machine
-while IFS= read -r machine; do
-    HOSTNAME=$(echo "${machine}" | jq -r '.hostname')
-    UUID=$(echo "${machine}" | jq -r '.omni_uuid')
-    ROLE=$(echo "${machine}" | jq -r '.role')
-    HAS_LONGHORN=$(echo "${machine}" | jq -r '.terraform_data.data_disk_size_gb > 0')
-
-    echo "Applying labels to ${HOSTNAME} (${UUID})..."
-
-    # Apply labels using omnictl
-    # Format: omnictl label machine <uuid> key=value key2=value2
-    if omnictl label machine "${UUID}" \
-        "role=${ROLE}" \
-        "hostname=${HOSTNAME}" \
-        "node-role=${ROLE}" \
-        "has-longhorn=${HAS_LONGHORN}" \
-        &>/dev/null; then
-        echo "  ✓ Labels applied successfully"
-        LABEL_SUCCESS=$((LABEL_SUCCESS + 1))
-    else
-        echo "  ⚠️  Failed to apply labels (machine may not support labeling yet)"
-        LABEL_FAIL=$((LABEL_FAIL + 1))
-    fi
-done < <(echo "${MATCHED_MACHINES}" | jq -c '.[]')
-
-echo ""
-echo "Label Summary:"
-echo "  Successful: ${LABEL_SUCCESS}"
-echo "  Failed:     ${LABEL_FAIL}"
-echo ""
-
-if [[ ${LABEL_FAIL} -gt 0 ]]; then
-    echo "⚠️  Some machines couldn't be labeled. This is normal if they haven't fully registered yet."
-    echo "   You can re-run this script later to apply labels."
-    echo ""
-fi
-
 echo "======================================"
 echo "Next Steps"
 echo "======================================"
@@ -318,9 +269,9 @@ echo ""
 echo "1. Review matched machines:"
 echo "   cat ${MATCHED_FILE} | jq '.'"
 echo ""
-echo "2. Generate machine configurations:"
+echo "2. Generate cluster template with machine configurations:"
 echo "   ./generate-machine-configs.sh"
 echo ""
-echo "3. Apply configurations to Omni:"
+echo "3. Apply cluster template to Omni (creates cluster + applies all patches):"
 echo "   omnictl cluster template sync -f machine-configs/cluster-template.yaml"
 echo ""
