@@ -13,7 +13,7 @@ This document explains how all the components work together in the Omni + Talos 
   - SideroLink for secure node communication
   - Etcd for state storage
 - **Location**: Ubuntu host (Docker container)
-- **Port Requirements**: 443, 8090, 8099, 50042, 50180, 51821/udp
+- **Port Requirements**: 443, 8090, 8100, 8091, 50180/udp
 
 ### Proxmox Infrastructure Provider
 - **Purpose**: Bridge between Omni and Proxmox
@@ -88,11 +88,10 @@ This document explains how all the components work together in the Omni + Talos 
 **Omni Server**:
 ```
 443 (TCP)       - HTTPS (Web UI + API)
-8090 (TCP)      - Kubernetes proxy
-8099 (TCP)      - Machine API (gRPC)
-50042 (TCP)     - Event sink
-50180 (TCP)     - SideroLink API
-51821 (UDP)     - WireGuard (SideroLink tunnel)
+8090 (TCP)      - Machine API (SideroLink gRPC)
+8100 (TCP)      - Kubernetes proxy
+8091 (TCP)      - Event sink
+50180 (UDP)     - WireGuard (SideroLink tunnel)
 ```
 
 **Proxmox Provider**:

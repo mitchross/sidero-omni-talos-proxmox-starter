@@ -157,15 +157,15 @@ OMNI_IMG_TAG=1.3.2                            # Omni version (latest stable)
 # Required: Domain and Network
 OMNI_DOMAIN_NAME=omni.yourdomain.com          # Your domain
 BIND_ADDR=0.0.0.0:443                         # HTTPS bind address
-MACHINE_API_BIND_ADDR=0.0.0.0:8099            # Machine API
-K8S_PROXY_BIND_ADDR=0.0.0.0:8090              # K8s proxy
-EVENT_SINK_PORT=50042                         # Event sink
+MACHINE_API_BIND_ADDR=0.0.0.0:8090            # Machine API (SideroLink)
+K8S_PROXY_BIND_ADDR=0.0.0.0:8100              # K8s proxy
+EVENT_SINK_PORT=8091                          # Event sink
 
 # Required: Advertised URLs (use your domain)
-ADVERTISED_API_URL=https://omni.yourdomain.com:443/
-ADVERTISED_K8S_PROXY_URL=https://omni.yourdomain.com:8090/
-SIDEROLINK_ADVERTISED_API_URL=https://omni.yourdomain.com:8099/
-SIDEROLINK_WIREGUARD_ADVERTISED_ADDR=10.10.1.100:51821  # Your Omni host WireGuard IP
+ADVERTISED_API_URL=https://omni.yourdomain.com
+ADVERTISED_K8S_PROXY_URL=https://omni.yourdomain.com:8100/
+SIDEROLINK_ADVERTISED_API_URL=https://omni.yourdomain.com:8090/
+SIDEROLINK_WIREGUARD_ADVERTISED_ADDR=10.10.1.100:50180  # Your Omni host WireGuard IP
 
 # Required: SSL Certificates
 TLS_CERT=/etc/letsencrypt/live/omni.yourdomain.com/fullchain.pem
@@ -234,7 +234,7 @@ docker compose ps
 docker compose logs omni | grep -i error
 
 # Verify ports are listening
-sudo netstat -tulpn | grep -E '443|8090|8099|50042|50180|51821'
+sudo netstat -tulpn | grep -E '443|8090|8100|8091|50180'
 ```
 
 ## Auto-Start on Reboot
