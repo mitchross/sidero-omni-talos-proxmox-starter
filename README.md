@@ -58,10 +58,15 @@ A complete, production-ready starter kit for deploying self-hosted Sidero Omni w
 │   └── config.yaml.example
 ├── talos-configs/             # Example Talos configurations
 │   └── gpu-worker-patch.yaml  # NVIDIA GPU support
+├── examples/                  # Complete deployment examples
+│   ├── simple-homelab/        # Minimal 3-node cluster
+│   ├── gpu-ml-cluster/        # GPU-enabled for AI/ML
+│   └── production-ha/         # HA cluster with Cilium CNI
 └── docs/                      # Additional documentation
     ├── ARCHITECTURE.md
     ├── PREREQUISITES.md
-    └── TROUBLESHOOTING.md
+    ├── TROUBLESHOOTING.md
+    └── CILIUM_CNI.md          # Cilium CNI deployment guide
 ```
 
 ## Key Features
@@ -77,6 +82,74 @@ Include NVIDIA GPU support for AI/ML workloads. See [talos-configs/README.md](ta
 - Etcd data encryption with GPG
 - Auth0, SAML, or OIDC authentication
 - High availability support
+
+## Deployment Examples
+
+Choose the example that best fits your use case:
+
+### 🏠 [Simple Homelab](examples/simple-homelab/)
+Perfect for learning and home use:
+- **3 nodes** (1 control plane + 2 workers)
+- **Minimal resources** (12 cores, 24GB RAM total)
+- **Flannel CNI** (default, simple)
+- **Quick setup** (~10 minutes)
+- **Cost effective** for homelabs
+
+**Best for**: Learning Kubernetes, home automation, media servers, development
+
+### 🤖 [GPU ML Cluster](examples/gpu-ml-cluster/)
+Optimized for AI/ML workloads:
+- **4 nodes** (1 control plane + 1 regular + 2 GPU workers)
+- **NVIDIA GPU support** with proprietary drivers
+- **TensorFlow/PyTorch ready**
+- **Jupyter notebooks**, LLM inference, Stable Diffusion
+- **24 cores, 88GB RAM total**
+
+**Best for**: Machine learning, AI inference, GPU compute, data science
+
+### 🏭 [Production HA with Cilium](examples/production-ha/)
+Enterprise-grade cluster:
+- **6+ nodes** (3 control plane + 3+ workers)
+- **High availability** with redundant control plane
+- **Cilium CNI** with eBPF for performance
+- **Gateway API** with ALPN and AppProtocol
+- **No kube-proxy** (Cilium replacement mode)
+- **Hubble observability**
+
+**Best for**: Production workloads, enterprise applications, high-traffic services
+
+## Advanced Networking
+
+### Cilium CNI
+
+For production deployments, we recommend Cilium CNI:
+- **10-40% better performance** vs traditional CNIs
+- **eBPF-based** load balancing (replaces kube-proxy)
+- **Gateway API** support with advanced routing
+- **L3-L7 network policies** for security
+- **Hubble** for deep network observability
+- **Service mesh** capabilities without sidecars
+
+See the complete guide: [docs/CILIUM_CNI.md](docs/CILIUM_CNI.md)
+
+**Quick Install**:
+```bash
+# Disable kube-proxy in cluster config, then:
+kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.0.0/standard-install.yaml
+
+cilium install \
+    --set ipam.mode=kubernetes \
+    --set kubeProxyReplacement=true \
+    --set securityContext.capabilities.ciliumAgent="{CHOWN,KILL,NET_ADMIN,NET_RAW,IPC_LOCK,SYS_ADMIN,SYS_RESOURCE,DAC_OVERRIDE,FOWNER,SETGID,SETUID}" \
+    --set securityContext.capabilities.cleanCiliumState="{NET_ADMIN,SYS_ADMIN,SYS_RESOURCE}" \
+    --set cgroup.autoMount.enabled=false \
+    --set cgroup.hostRoot=/sys/fs/cgroup \
+    --set k8sServiceHost=localhost \
+    --set k8sServicePort=7445 \
+    --set gatewayAPI.enabled=true \
+    --set gatewayAPI.enableAlpn=true \
+    --set gatewayAPI.enableAppProtocol=true
+```
 
 ## Important Notes
 
