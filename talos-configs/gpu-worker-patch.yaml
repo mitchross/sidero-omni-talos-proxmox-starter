@@ -1,0 +1,99 @@
+# ==============================================================================
+# Talos Machine Config Patch for NVIDIA GPU Workers
+# ==============================================================================
+# This patch enables NVIDIA GPU support on Talos worker nodes.
+#
+# Prerequisites:
+# 1. NVIDIA GPU passed through from Proxmox host
+# 2. System extensions installed:
+#    - nonfree-kmod-nvidia
+#    - nvidia-container-toolkit
+#    (both with matching driver versions)
+# 3. Proxmox host configured for GPU passthrough (IOMMU enabled, VFIO loaded)
+#
+# Usage:
+# - In Omni UI, navigate to your cluster
+# - Go to Config Patches
+# - Create new patch for worker nodes (or specific machine class)
+# - Paste the patch content below
+#
+# Note: This patch LOADS the kernel modules. The extensions must be present
+# in the Talos image (either via cluster template or custom ISO) before this
+# patch will work.
+# ==============================================================================
+
+machine:
+  kernel:
+    # Load NVIDIA kernel modules
+    # These modules enable GPU hardware access from the kernel
+    modules:
+      # Main NVIDIA driver module
+      - name: nvidia
+
+      # Unified Memory (required for CUDA)
+      - name: nvidia_uvm
+
+      # Direct Rendering Manager (for graphics)
+      - name: nvidia_drm
+
+      # Mode setting (for display configuration)
+      - name: nvidia_modeset
+
+  # System control parameters
+  sysctls:
+    # Harden BPF JIT compiler
+    # Recommended security setting when using NVIDIA drivers
+    net.core.bpf_jit_harden: 1
+
+# ==============================================================================
+# Additional Notes
+# ==============================================================================
+#
+# 1. RuntimeClass Configuration:
+#    After nodes are running, create a RuntimeClass in Kubernetes:
+#
+#    apiVersion: node.k8s.io/v1
+#    kind: RuntimeClass
+#    metadata:
+#      name: nvidia
+#    handler: nvidia
+#
+# 2. NVIDIA Device Plugin:
+#    Deploy the device plugin to expose GPUs to Kubernetes:
+#
+#    helm repo add nvdp https://nvidia.github.io/k8s-device-plugin
+#    helm install nvidia-device-plugin nvdp/nvidia-device-plugin \
+#      --namespace kube-system \
+#      --set runtimeClassName=nvidia
+#
+# 3. Using GPUs in Pods:
+#    Specify the RuntimeClass and request GPU resources:
+#
+#    apiVersion: v1
+#    kind: Pod
+#    metadata:
+#      name: gpu-workload
+#    spec:
+#      runtimeClassName: nvidia
+#      containers:
+#      - name: cuda-app
+#        image: nvidia/cuda:12.0.0-base-ubuntu22.04
+#        resources:
+#          limits:
+#            nvidia.com/gpu: 1
+#
+# 4. Verification Commands:
+#    # Check modules loaded
+#    talosctl read /proc/modules | grep nvidia
+#
+#    # Check extensions installed
+#    talosctl get extensions
+#
+#    # Check driver version
+#    talosctl read /proc/driver/nvidia/version
+#
+#    # Test GPU from Kubernetes
+#    kubectl run gpu-test --rm -it --restart=Never \
+#      --image=nvidia/cuda:12.0.0-base-ubuntu22.04 \
+#      --overrides='{"spec":{"runtimeClassName":"nvidia"}}' \
+#      -- nvidia-smi
