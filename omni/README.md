@@ -6,6 +6,16 @@ This guide walks through deploying your own Omni instance on-premises.
 
 Omni is Sidero's SaaS platform for managing Talos Linux clusters. This deployment runs it on your own infrastructure with full control over data and access.
 
+### Latest Version: v1.3.2 (November 2025)
+
+The latest Omni release includes important stability improvements:
+- ✅ **Better extension handling** - More reliable system extension management
+- ✅ **Improved state management** - Reduced stale data issues
+- ✅ **UI fixes** - Exposed services sidebar and scrollbar issues resolved
+- ✅ **Enhanced MachineSet handling** - Better cluster reference management
+
+**Recommended for new deployments**. Check [release notes](https://github.com/siderolabs/omni/releases) for the latest version.
+
 ## Prerequisites
 
 Before starting, ensure you have completed:
@@ -142,7 +152,7 @@ Edit `omni.env` with your values:
 # Required: Omni Configuration
 OMNI_ACCOUNT_UUID=your-uuid-here              # Generate with: uuidgen
 NAME=omni-prod                                 # Deployment name
-OMNI_IMG_TAG=1.2.1                            # Omni version
+OMNI_IMG_TAG=1.3.2                            # Omni version (latest stable)
 
 # Required: Domain and Network
 OMNI_DOMAIN_NAME=omni.yourdomain.com          # Your domain
