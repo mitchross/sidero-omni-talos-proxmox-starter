@@ -15,7 +15,6 @@ systemExtensions:
   - siderolabs/qemu-guest-agent
   - siderolabs/util-linux-tools
 patches:
-  - file: patches/cilium-cni.yaml
   - name: disable-default-cni
     inline:
       cluster:
