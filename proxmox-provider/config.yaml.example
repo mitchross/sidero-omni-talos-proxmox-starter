@@ -5,28 +5,31 @@
 # DO NOT commit config.yaml to version control - it contains credentials!
 
 proxmox:
-  # Proxmox user credentials
-  # Format: username@realm
-  # Common realms:
-  #   - pam: Linux PAM authentication (for local users like root)
-  #   - pve: Proxmox VE authentication
-  username: "root@pam"
-
-  # Proxmox user password
-  password: "your-proxmox-password-here"
-
   # Proxmox API endpoint
   # Format: https://[proxmox-host]:[port]/api2/json
   # Default port: 8006
-  # Examples:
-  #   - https://192.168.1.100:8006/api2/json
-  #   - https://pve.example.com:8006/api2/json
   url: "https://192.168.1.100:8006/api2/json"
 
   # Skip SSL certificate verification
   # Set to true for self-signed certificates (common for Proxmox)
   # Set to false for production with valid certificates
   insecureSkipVerify: true
+
+  # ==============================================================================
+  # AUTHENTICATION: Choose ONE method below
+  # ==============================================================================
+
+  # OPTION 1: API Token (RECOMMENDED for production)
+  # More secure - no password stored, can be revoked independently
+  # Format: username@realm!tokenid=secret
+  # Create in Proxmox: Datacenter → Permissions → API Tokens
+  apiToken: "user@pve!tokenid=your-token-secret-here"
+
+  # OPTION 2: Username/Password (easier for testing)
+  # Comment out apiToken above to use this method
+  # username: "root"
+  # password: "your-proxmox-password-here"
+  # realm: "pam"  # Common realms: pam (Linux users) or pve (Proxmox users)
 
 # ==============================================================================
 # MACHINE CLASS CONFIGURATION EXAMPLES

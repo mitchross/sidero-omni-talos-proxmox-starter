@@ -146,13 +146,21 @@ cd omni/
 cp omni.env.example omni.env
 ```
 
+Create a symlink for Docker Compose auto-loading:
+
+```bash
+ln -s omni.env .env
+```
+
+**Why?** Docker Compose automatically loads `.env` for variable substitution in `docker-compose.yml`. The symlink allows you to keep the descriptive `omni.env` filename while enabling clean `docker compose up` commands without `--env-file` flags.
+
 Edit `omni.env` with your values:
 
 ```bash
 # Required: Omni Configuration
 OMNI_ACCOUNT_UUID=your-uuid-here              # Generate with: uuidgen
 NAME=omni-prod                                 # Deployment name
-OMNI_IMG_TAG=1.3.2                            # Omni version (latest stable)
+OMNI_IMG_TAG=v1.3.2                           # Omni version (latest stable - note the 'v' prefix)
 
 # Required: Domain and Network
 OMNI_DOMAIN_NAME=omni.yourdomain.com          # Your domain
@@ -206,7 +214,7 @@ AUTH=--auth-auth0-enabled=true --auth-auth0-domain=YOUR_AUTH0_DOMAIN --auth-auth
 Start the container:
 
 ```bash
-docker compose --env-file omni.env up -d
+docker compose up -d
 ```
 
 Check logs:
