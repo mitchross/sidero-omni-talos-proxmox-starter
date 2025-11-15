@@ -8,13 +8,8 @@ kubernetes:
   version: v1.34.1
 talos:
   version: v1.11.5
-systemExtensions:
-  #- siderolabs/qemu-guest-agent # qemu agent isn't enabled on machine creation (yet?)
-  - siderolabs/iscsi-tools
-  - siderolabs/nfsd
-  - siderolabs/qemu-guest-agent
-  - siderolabs/util-linux-tools
 patches:
+  - file: patches/cilium-cni.yaml
   - name: disable-default-cni
     inline:
       cluster:
@@ -28,6 +23,11 @@ kind: ControlPlane
 machineClass:
   name: proxmox-control-plane
   size: 3
+systemExtensions:
+  - siderolabs/iscsi-tools
+  - siderolabs/nfsd
+  - siderolabs/qemu-guest-agent
+  - siderolabs/util-linux-tools
 # patches:
 # - inline:
 #     cluster:
@@ -39,6 +39,11 @@ name: workers
 machineClass:
   name: proxmox-worker
   size: 3
+systemExtensions:
+  - siderolabs/iscsi-tools
+  - siderolabs/nfsd
+  - siderolabs/qemu-guest-agent
+  - siderolabs/util-linux-tools
 patches:
   - file: patches/disk-provisioning.yaml
 ---
@@ -48,6 +53,12 @@ machineClass:
   name: proxmox-gpu-worker
   size: 1
 systemExtensions:
+  # General-purpose extensions
+  - siderolabs/iscsi-tools
+  - siderolabs/nfsd
+  - siderolabs/qemu-guest-agent
+  - siderolabs/util-linux-tools
+  # GPU-specific extensions
   - siderolabs/nonfree-kmod-nvidia
   - siderolabs/nvidia-container-toolkit
 patches:
