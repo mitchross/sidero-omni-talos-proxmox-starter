@@ -1,9 +1,25 @@
+# Volume configuration to limit EPHEMERAL partition size
+# This leaves space for Longhorn storage partition
+---
+apiVersion: v1alpha1
+kind: VolumeConfig
+name: EPHEMERAL
+provisioning:
+  # Limit EPHEMERAL partition to 30GB instead of using all available space
+  maxSize: 30GiB
+  grow: false  # Don't automatically grow to use all space
+---
+# Machine configuration for Longhorn storage
 machine:
+  # Create additional partition for Longhorn after system partitions
   disks:
     - device: /dev/sda
       partitions:
+        # This will use remaining space after EPHEMERAL is limited to 30GB
         - mountpoint: /var/mnt/longhorn
           size: 0  # Use all remaining space
+  
+  # Bind mount for kubelet to access Longhorn storage
   kubelet:
     extraMounts:
       - destination: /var/lib/longhorn
