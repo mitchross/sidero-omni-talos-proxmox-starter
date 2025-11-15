@@ -1,20 +1,15 @@
-name: disk-provisioning-longhorn
-inline:
-  machine:
-    install:
-      # This assumes your Proxmox VMs use /dev/vda. 
-      # If they use /dev/sda, change it here.
-      disk: /dev/vda 
-      diskPartitions:
-        - mountpoint: /
-          size: 60Gi # Caps the OS partition at 60GB
-
-    disks:
-      - device: /dev/vda # Must match the install disk
-        volume:
-          grow: false # CRITICAL: Stops Talos from using the whole disk
-        
-        # Creates a new partition in the remaining free space
-        partitions:
-          - mountpoint: /var/mnt/longhorn
-            filesystem: ext4
+machine:
+  disks:
+    - device: /dev/sda
+      partitions:
+        - mountpoint: /var/mnt/longhorn
+          size: 0  # Use all remaining space
+  kubelet:
+    extraMounts:
+      - destination: /var/lib/longhorn
+        type: bind
+        source: /var/mnt/longhorn
+        options:
+          - bind
+          - rshared
+          - rw
