@@ -36,7 +36,7 @@ machineClass:
 systemExtensions:
   - siderolabs/iscsi-tools
   - siderolabs/nfsd
-  #- siderolabs/qemu-guest-agent
+  #- siderolabs/qemu-guest-agent 
   - siderolabs/util-linux-tools
 patches:
   - name: worker-labels
