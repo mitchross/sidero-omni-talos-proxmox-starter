@@ -1,155 +1,189 @@
-# Sidero Omni + Talos + Proxmox Starter Kit
+# Sidero Omni + Talos on Proxmox Starter Kit
 
-A comprehensive starter kit for deploying self-hosted Sidero Omni with Talos Linux clusters on Proxmox VE infrastructure.
+A complete, production-ready starter kit for deploying self-hosted Sidero Omni with the Proxmox infrastructure provider to automatically provision Talos Linux clusters.
 
-## Overview
+## What This Provides
 
-This repository provides a complete Infrastructure as Code (IaC) solution for:
+- **Self-hosted Omni deployment** - Run your own Omni instance on-premises
+- **Proxmox integration** - Automatically provision Talos VMs in your Proxmox cluster
+- **GPU support** (optional) - Configure NVIDIA GPU passthrough for AI/ML workloads
+- **Complete examples** - Working configurations you can customize
+- **Setup automation** - Scripts to streamline SSL and encryption setup
 
-1. **Sidero Omni Self-Hosted** - Deploy and manage Omni in your own infrastructure
-2. **Terraform for Proxmox** - Automated VM provisioning on Proxmox VE
-3. **Talos Cluster Templates** - Pre-configured cluster templates for Sidero Omni
-
-## Repository Structure
+## Architecture Overview
 
 ```
-.
-├── README.md
-├── sidero-omni/              # Sidero Omni self-hosted deployment (Docker)
-│   ├── README.md
-│   ├── docker-compose.yml    # Docker Compose configuration
-│   ├── .env.example          # Environment variables template
-│   ├── setup-certificates.sh # SSL certificate setup script
-│   ├── generate-gpg-key.sh   # GPG key generation script
-│   └── config.yaml           # Omni configuration reference
-├── terraform/                # Terraform IaC for Proxmox VMs
-│   ├── README.md
-│   ├── main.tf              # Main Terraform configuration
-│   ├── variables.tf         # Variable definitions
-│   ├── outputs.tf           # Output definitions
-│   └── terraform.tfvars.example  # Example variables
-└── bootstrap/               # Talos cluster bootstrap configuration
-    ├── README.md
-    ├── cluster-template.yaml    # Cluster template
-    ├── machines.yaml            # Machine definitions
-    ├── generate-cluster-template.sh  # Template generator script
-    └── patches/                 # Machine configuration patches
-        ├── control-plane.yaml
-        ├── regular-worker.yaml
-        └── gpu-worker.yaml
+┌─────────────────────────────────────────────────────────┐
+│                    Your Infrastructure                   │
+│                                                          │
+│  ┌──────────────┐         ┌─────────────────────────┐  │
+│  │ Omni Server  │◄────────┤ Proxmox Infrastructure  │  │
+│  │ (Self-hosted)│         │ Provider (Docker)       │  │
+│  │              │         │                         │  │
+│  │ - Web UI     │         │ - Watches Omni API     │  │
+│  │ - API        │         │ - Creates VMs          │  │
+│  │ - SideroLink │         │ - Manages lifecycle    │  │
+│  └──────┬───────┘         └──────────┬──────────────┘  │
+│         │                            │                  │
+│         │         ┌──────────────────▼─────┐            │
+│         │         │   Proxmox Cluster      │            │
+│         │         │                        │            │
+│         └────────►│  ┌──────────────────┐  │            │
+│                   │  │ Talos VM Node 1  │  │            │
+│                   │  │ Talos VM Node 2  │  │            │
+│                   │  │ Talos VM Node 3  │  │            │
+│                   │  └──────────────────┘  │            │
+│                   └────────────────────────┘            │
+└─────────────────────────────────────────────────────────┘
 ```
 
 ## Quick Start
 
-### Prerequisites
+1. **Prerequisites** - See [docs/PREREQUISITES.md](docs/PREREQUISITES.md)
+2. **Deploy Omni** - Follow [omni/README.md](omni/README.md)
+3. **Setup Provider** - Follow [proxmox-provider/README.md](proxmox-provider/README.md)
+4. **Create Clusters** - Use Omni UI to define machine classes and provision clusters
 
-- Proxmox VE 7.x or later
-- Terraform 1.0+
-- Docker and Docker Compose
-- Ubuntu/Debian VM or mini PC (for Omni)
-- Domain name with Cloudflare DNS
-- Auth0 account for authentication
+## Project Structure
 
-### Step 1: Deploy Sidero Omni
-
-Navigate to the `sidero-omni/` directory and follow the Docker-based deployment instructions:
-
-```bash
-cd sidero-omni
-
-# Set up SSL certificates
-sudo ./setup-certificates.sh
-
-# Generate GPG key for etcd encryption
-./generate-gpg-key.sh
-
-# Configure environment variables
-cp .env.example .env
-nano .env
-
-# Deploy Omni
-docker-compose up -d
+```
+.
+├── omni/                      # Self-hosted Omni deployment
+│   ├── docker-compose.yml
+│   ├── omni.env.example
+│   └── scripts/               # SSL and GPG setup automation
+├── proxmox-provider/          # Proxmox infrastructure provider
+│   ├── docker-compose.yml
+│   ├── .env.example
+│   └── config.yaml.example
+├── talos-configs/             # Example Talos configurations
+│   └── gpu-worker-patch.yaml  # NVIDIA GPU support
+├── examples/                  # Complete deployment examples
+│   ├── simple-homelab/        # Minimal 3-node cluster
+│   ├── gpu-ml-cluster/        # GPU-enabled for AI/ML
+│   └── production-ha/         # HA cluster with Cilium CNI
+└── docs/                      # Additional documentation
+    ├── ARCHITECTURE.md
+    ├── PREREQUISITES.md
+    ├── TROUBLESHOOTING.md
+    └── CILIUM_CNI.md          # Cilium CNI deployment guide
 ```
 
-See [sidero-omni/README.md](sidero-omni/README.md) for detailed instructions.
+## Key Features
 
-### Step 2: Provision VMs with Terraform
+### Automated Provisioning
+Define "machine classes" in Omni that specify CPU, RAM, and disk resources. The Proxmox provider watches for new machines and automatically creates VMs matching your specifications.
 
-Configure and deploy VMs on Proxmox:
+### GPU Support (Optional)
+Include NVIDIA GPU support for AI/ML workloads. See [talos-configs/README.md](talos-configs/README.md) for configuration details.
 
+### Production Ready
+- SSL/TLS encryption with Let's Encrypt
+- Etcd data encryption with GPG
+- Auth0, SAML, or OIDC authentication
+- High availability support
+
+## Deployment Examples
+
+Choose the example that best fits your use case:
+
+### 🏠 [Simple Homelab](examples/simple-homelab/)
+Perfect for learning and home use:
+- **3 nodes** (1 control plane + 2 workers)
+- **Minimal resources** (12 cores, 24GB RAM total)
+- **Flannel CNI** (default, simple)
+- **Quick setup** (~10 minutes)
+- **Cost effective** for homelabs
+
+**Best for**: Learning Kubernetes, home automation, media servers, development
+
+### 🤖 [GPU ML Cluster](examples/gpu-ml-cluster/)
+Optimized for AI/ML workloads:
+- **4 nodes** (1 control plane + 1 regular + 2 GPU workers)
+- **NVIDIA GPU support** with proprietary drivers
+- **TensorFlow/PyTorch ready**
+- **Jupyter notebooks**, LLM inference, Stable Diffusion
+- **24 cores, 88GB RAM total**
+
+**Best for**: Machine learning, AI inference, GPU compute, data science
+
+### 🏭 [Production HA with Cilium](examples/production-ha/)
+Enterprise-grade cluster:
+- **6+ nodes** (3 control plane + 3+ workers)
+- **High availability** with redundant control plane
+- **Cilium CNI** with eBPF for performance
+- **Gateway API** with ALPN and AppProtocol
+- **No kube-proxy** (Cilium replacement mode)
+- **Hubble observability**
+
+**Best for**: Production workloads, enterprise applications, high-traffic services
+
+## Advanced Networking
+
+### Cilium CNI
+
+For production deployments, we recommend Cilium CNI:
+- **10-40% better performance** vs traditional CNIs
+- **eBPF-based** load balancing (replaces kube-proxy)
+- **Gateway API** support with advanced routing
+- **L3-L7 network policies** for security
+- **Hubble** for deep network observability
+- **Service mesh** capabilities without sidecars
+
+See the complete guide: [docs/CILIUM_CNI.md](docs/CILIUM_CNI.md)
+
+**Quick Install**:
 ```bash
-cd terraform
-cp terraform.tfvars.example terraform.tfvars
-# Edit terraform.tfvars with your configuration
-terraform init
-terraform plan
-terraform apply
+# Disable kube-proxy in cluster config, then:
+kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.0.0/standard-install.yaml
+
+cilium install \
+    --set ipam.mode=kubernetes \
+    --set kubeProxyReplacement=true \
+    --set securityContext.capabilities.ciliumAgent="{CHOWN,KILL,NET_ADMIN,NET_RAW,IPC_LOCK,SYS_ADMIN,SYS_RESOURCE,DAC_OVERRIDE,FOWNER,SETGID,SETUID}" \
+    --set securityContext.capabilities.cleanCiliumState="{NET_ADMIN,SYS_ADMIN,SYS_RESOURCE}" \
+    --set cgroup.autoMount.enabled=false \
+    --set cgroup.hostRoot=/sys/fs/cgroup \
+    --set k8sServiceHost=localhost \
+    --set k8sServicePort=7445 \
+    --set gatewayAPI.enabled=true \
+    --set gatewayAPI.enableAlpn=true \
+    --set gatewayAPI.enableAppProtocol=true
 ```
 
-See [terraform/README.md](terraform/README.md) for detailed instructions.
+## Important Notes
 
-### Step 3: Bootstrap Talos Cluster
+⚠️ **Proxmox Provider Status**: The Proxmox infrastructure provider is currently in **beta**. Expect some limitations and potential bugs. Please report issues to the [upstream repository](https://github.com/siderolabs/omni-infra-provider-proxmox).
 
-Use the cluster templates to bootstrap your Talos cluster:
+⚠️ **Known Limitations**:
+- Single disk per VM (multiple disk support is a potential enhancement)
+- Extensions must be included in Talos image or specified in cluster template
 
-```bash
-cd bootstrap
-./generate-cluster-template.sh
-# Follow the instructions to apply the template to Omni
-```
+## Use Cases
 
-See [bootstrap/README.md](bootstrap/README.md) for detailed instructions.
-
-## Architecture
-
-### Components
-
-1. **Sidero Omni**: Central management platform for Talos clusters
-   - Runs as Docker container on dedicated VM or mini PC
-   - Provides a web UI and API for cluster management
-   - Handles machine registration and lifecycle via SideroLink
-   - Manages cluster templates and configurations
-   - Uses embedded etcd for storage with GPG encryption
-
-2. **Proxmox VE**: Virtualization platform
-   - Hosts the Talos Linux VMs
-   - Provides compute, storage, and networking resources
-
-3. **Talos Linux**: Kubernetes-optimized OS
-   - Runs on Proxmox VMs
-   - Managed by Sidero Omni
-   - Immutable and secure by default
-
-### Workflow
-
-1. **Infrastructure Provisioning**: Terraform creates VMs in Proxmox
-2. **Machine Registration**: VMs boot with Talos and register with Omni
-3. **Cluster Creation**: Use Omni to create clusters from registered machines
-4. **Configuration Management**: Apply patches and templates via Omni
-
-## Configuration
-
-### Machine Types
-
-This starter kit supports three types of nodes:
-
-- **Control Plane**: 3 nodes (4 vCPU, 8GB RAM, 50GB disk)
-- **Regular Workers**: 3 nodes (8 vCPU, 16GB RAM, 100GB disk)
-- **GPU Workers**: 2 nodes (16 vCPU, 32GB RAM, 200GB disk)
-
-All configurations can be customized in `terraform/variables.tf` and `bootstrap/machines.yaml`.
-
-## Documentation
-
-- [Sidero Omni Documentation](https://www.siderolabs.com/omni/docs/)
-- [Talos Linux Documentation](https://www.talos.dev/)
-- [Proxmox VE Documentation](https://pve.proxmox.com/wiki/Main_Page)
-- [Terraform Proxmox Provider](https://registry.terraform.io/providers/Telmate/proxmox/latest/docs)
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit issues or pull requests.
+- **Homelab**: Self-hosted Kubernetes cluster management
+- **Edge Computing**: Manage distributed Talos clusters
+- **Development**: Rapid cluster provisioning for testing
+- **Production**: Enterprise-grade cluster lifecycle management
 
 ## License
 
-This project is provided as-is for use as a starter template.
+This starter kit is provided as-is for use with Sidero Omni. Note that:
+- Omni uses Business Source License (BSL) - free for non-production use
+- Talos Linux is MPL-2.0 licensed
+- Proxmox provider is MPL-2.0 licensed
+
+## Contributing
+
+Found a bug? Have an enhancement? PRs welcome! This is a community-driven starter kit.
+
+## Resources
+
+- [Omni Documentation](https://docs.siderolabs.com/omni/)
+- [Talos Documentation](https://docs.siderolabs.com/talos/)
+- [Proxmox Provider](https://github.com/siderolabs/omni-infra-provider-proxmox)
+- [Sidero Labs Slack](https://slack.dev.talos-systems.io/)
+
+## Credits
+
+Built by the community, for the community. Special thanks to the Sidero Labs team for their support and tooling.
