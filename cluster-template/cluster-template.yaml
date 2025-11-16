@@ -1,4 +1,4 @@
-# omnictl cluster template sync -v -f cluster-template.yaml
+# omnictl cluster template sync -v -f cluster-template-working.yaml
 ---
 kind: Cluster
 name: talos-prod-cluster
@@ -9,7 +9,6 @@ kubernetes:
 talos:
   version: v1.11.5
 patches:
-  - file: patches/cilium-cni.yaml
   - name: disable-default-cni
     inline:
       cluster:
@@ -28,11 +27,6 @@ systemExtensions:
   - siderolabs/nfsd
   - siderolabs/qemu-guest-agent
   - siderolabs/util-linux-tools
-# patches:
-# - inline:
-#     cluster:
-#       allowSchedulingOnControlPlanes: true
-#   name: cp-schedulable
 ---
 kind: Workers
 name: workers
@@ -45,7 +39,18 @@ systemExtensions:
   - siderolabs/qemu-guest-agent
   - siderolabs/util-linux-tools
 patches:
-  - file: patches/disk-provisioning.yaml
+  - name: longhorn-storage
+    inline:
+      machine:
+        kubelet:
+          extraMounts:
+            - destination: /var/lib/longhorn
+              type: bind
+              source: /var/local/longhorn
+              options:
+                - bind
+                - rshared
+                - rw
 ---
 kind: Workers
 name: gpu-workers
@@ -53,14 +58,23 @@ machineClass:
   name: proxmox-gpu-worker
   size: 1
 systemExtensions:
-  # General-purpose extensions
   - siderolabs/iscsi-tools
   - siderolabs/nfsd
   - siderolabs/qemu-guest-agent
   - siderolabs/util-linux-tools
-  # GPU-specific extensions
   - siderolabs/nonfree-kmod-nvidia
   - siderolabs/nvidia-container-toolkit
 patches:
   - file: patches/gpu-worker.yaml
-  - file: patches/disk-provisioning.yaml
+  - name: longhorn-storage
+    inline:
+      machine:
+        kubelet:
+          extraMounts:
+            - destination: /var/lib/longhorn
+              type: bind
+              source: /var/local/longhorn
+              options:
+                - bind
+                - rshared
+                - rw

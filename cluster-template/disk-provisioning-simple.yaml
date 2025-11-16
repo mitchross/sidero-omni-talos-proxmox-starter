@@ -1,0 +1,12 @@
+# Simple disk provisioning for Longhorn on workers
+# Uses existing /var filesystem space
+machine:
+  kubelet:
+    extraMounts:
+      - destination: /var/lib/longhorn
+        type: bind
+        source: /var/local/longhorn
+        options:
+          - bind
+          - rshared
+          - rw

@@ -1,6 +1,0 @@
-cluster:
-  proxy:
-    disabled: true
-  network:
-    cni:
-      name: none
