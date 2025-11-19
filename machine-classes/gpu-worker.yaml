@@ -11,9 +11,9 @@ spec:
     kernelargs: []
     metavalues: []
     providerdata: |
-      cores: 8
+      cores: 24
       sockets: 1
-      memory: 32768
+      memory: 327680
       disk_size: 400
       network_bridge: vmbr0
       storage_selector: name == "ssdpool"

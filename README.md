@@ -42,7 +42,9 @@ A complete, production-ready starter kit for deploying self-hosted Sidero Omni w
 1. **Prerequisites** - See [docs/PREREQUISITES.md](docs/PREREQUISITES.md)
 2. **Deploy Omni** - Follow [omni/README.md](omni/README.md)
 3. **Setup Provider** - Follow [proxmox-provider/README.md](proxmox-provider/README.md)
-4. **Create Clusters** - Use Omni UI to define machine classes and provision clusters
+4. **Apply Machine Classes** - `omnictl apply -f machine-classes/`
+5. **Sync Cluster Template** - `omnictl cluster template sync -v -f cluster-template/cluster-template.yaml`
+6. **Create Clusters** - Use Omni UI to provision clusters using your machine classes
 
 ## Project Structure
 
