@@ -181,10 +181,15 @@ Found a bug? Have an enhancement? PRs welcome! This is a community-driven starte
 
 ## Resources
 
+- [Omni GitHub Repository](https://github.com/siderolabs/omni)
 - [Omni Documentation](https://docs.siderolabs.com/omni/)
 - [Talos Documentation](https://docs.siderolabs.com/talos/)
-- [Proxmox Provider](https://github.com/siderolabs/omni-infra-provider-proxmox)
+- [Proxmox Infrastructure Provider](https://github.com/siderolabs/omni-infra-provider-proxmox)
 - [Sidero Labs Slack](https://slack.dev.talos-systems.io/)
+
+### Reference Guides
+
+- [How to Install Talos Omni On-Prem for Effortless Kubernetes Management](https://www.virtualizationhowto.com/2025/08/how-to-install-talos-omni-on-prem-for-effortless-kubernetes-management/) - Complete walkthrough by VirtualizationHowTo
 
 ## Credits
 
