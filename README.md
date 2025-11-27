@@ -2,6 +2,37 @@
 
 A complete, production-ready starter kit for deploying self-hosted Sidero Omni with the Proxmox infrastructure provider to automatically provision Talos Linux clusters.
 
+## 📺 Video Tutorial: Part 3
+
+[![Watch the Video](https://img.youtube.com/vi/PxnzfzkU6OU/maxresdefault.jpg)](https://www.youtube.com/watch?v=PxnzfzkU6OU)
+
+**Welcome to Part 3 of the Ultimate Kubernetes HomeLab series!**
+
+In this video, we’re diving deep into **Sidero Omni**, the **Omni Proxmox Infra Provider**, and deploying a full **Talos OS cluster from scratch**—all running fully self-hosted.
+
+You’ll learn how to set up Omni, connect it to Proxmox using the official infra provider, provision Talos machines, and manage the entire lifecycle of your Kubernetes nodes through a clean, modern UI.
+
+### 🚀 What You’ll Learn
+- Installing *Omni* from the self-hosted GitHub repo
+- Deploying the *Sidero Proxmox Infra Provider*
+- Configuring Proxmox to work with Omni
+- Creating Talos machine classes and templates
+- Provisioning Talos nodes automatically on Proxmox
+- Bootstrapping & lifecycle management workflows
+- Best practices for scaling your Talos cluster
+
+### 🔗 Video Series
+- **Part 1**: [Complete Kubernetes GitOps Setup Guide: Argo CD, Cilium, K3s](https://www.youtube.com/watch?v=Jm0R74_RkUo)
+- **Part 2**: [Complete Kubernetes GitOps Setup Guide Part 2: Talos OS, Proxmox, Terraform](https://www.youtube.com/watch?v=F-qV_n0xW-o)
+- **Part 3 (This Video)**: [Sidero Omni + Talos on Proxmox](https://www.youtube.com/watch?v=PxnzfzkU6OU)
+
+### 📦 Resources
+- **Omni**: [https://github.com/siderolabs/omni](https://github.com/siderolabs/omni)
+- **Proxmox Infra Provider**: [https://github.com/siderolabs/omni-infra-provider-proxmox](https://github.com/siderolabs/omni-infra-provider-proxmox)
+- **Reference Guide**: [VirtualizationHowTo Guide](https://www.virtualizationhowto.com/2025/08/how-to-install-talos-omni-on-prem-for-effortless-kubernetes-management/)
+
+---
+
 ## What This Provides
 
 - **Self-hosted Omni deployment** - Run your own Omni instance on-premises
@@ -67,8 +98,7 @@ A complete, production-ready starter kit for deploying self-hosted Sidero Omni w
 └── docs/                      # Additional documentation
     ├── ARCHITECTURE.md
     ├── PREREQUISITES.md
-    ├── TROUBLESHOOTING.md
-    └── CILIUM_CNI.md          # Cilium CNI deployment guide
+    └── TROUBLESHOOTING.md
 ```
 
 ## Key Features
@@ -85,40 +115,7 @@ Include NVIDIA GPU support for AI/ML workloads. See [talos-configs/README.md](ta
 - Auth0, SAML, or OIDC authentication
 - High availability support
 
-## Deployment Examples
 
-Choose the example that best fits your use case:
-
-### 🏠 [Simple Homelab](examples/simple-homelab/)
-Perfect for learning and home use:
-- **3 nodes** (1 control plane + 2 workers)
-- **Minimal resources** (12 cores, 24GB RAM total)
-- **Flannel CNI** (default, simple)
-- **Quick setup** (~10 minutes)
-- **Cost effective** for homelabs
-
-**Best for**: Learning Kubernetes, home automation, media servers, development
-
-### 🤖 [GPU ML Cluster](examples/gpu-ml-cluster/)
-Optimized for AI/ML workloads:
-- **4 nodes** (1 control plane + 1 regular + 2 GPU workers)
-- **NVIDIA GPU support** with proprietary drivers
-- **TensorFlow/PyTorch ready**
-- **Jupyter notebooks**, LLM inference, Stable Diffusion
-- **24 cores, 88GB RAM total**
-
-**Best for**: Machine learning, AI inference, GPU compute, data science
-
-### 🏭 [Production HA with Cilium](examples/production-ha/)
-Enterprise-grade cluster:
-- **6+ nodes** (3 control plane + 3+ workers)
-- **High availability** with redundant control plane
-- **Cilium CNI** with eBPF for performance
-- **Gateway API** with ALPN and AppProtocol
-- **No kube-proxy** (Cilium replacement mode)
-- **Hubble observability**
-
-**Best for**: Production workloads, enterprise applications, high-traffic services
 
 ## Advanced Networking
 
@@ -132,7 +129,7 @@ For production deployments, we recommend Cilium CNI:
 - **Hubble** for deep network observability
 - **Service mesh** capabilities without sidecars
 
-See the complete guide: [docs/CILIUM_CNI.md](docs/CILIUM_CNI.md)
+See the official documentation: [https://docs.cilium.io](https://docs.cilium.io)
 
 **Quick Install**:
 ```bash
