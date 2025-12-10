@@ -21,9 +21,14 @@ proxmox:
 
   # OPTION 1: API Token (RECOMMENDED for production)
   # More secure - no password stored, can be revoked independently
-  # Format: username@realm!tokenid=secret
+    # apiToken: "user@pve!tokenid=your-token-secret-here"
+  # Format: 
+    # tokenID: "username@realm!tokenid"
+    # tokenSecret: "your-token-secret-here"
   # Create in Proxmox: Datacenter → Permissions → API Tokens
-  apiToken: "user@pve!tokenid=your-token-secret-here"
+  # Use separate tokenID and tokenSecret fields to match provider 1.3.4
+  # tokenID: "username@realm!tokenid"
+  # tokenSecret: "your-token-secret-here"
 
   # OPTION 2: Username/Password (easier for testing)
   # Comment out apiToken above to use this method
