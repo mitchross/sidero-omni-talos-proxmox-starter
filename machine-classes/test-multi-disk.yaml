@@ -1,0 +1,23 @@
+---
+metadata:
+  namespace: default
+  type: MachineClasses.omni.sidero.dev
+  id: proxmox-test-multi-disk
+spec:
+  matchlabels: []
+  autoprovision:
+    providerid: proxmox
+    kernelargs: []
+    metavalues: []
+    providerdata: |
+      cores: 2
+      sockets: 1
+      memory: 4096
+      disk_size: 20
+      storage_selector: name == "fastpool"
+      additional_disks:
+        - disk_size: 40
+          storage_selector: name == "ssdpool"
+          disk_ssd: true
+      # Testing optionality: network_bridge should default to vmbr0
+      # cpu_type should default to x86-64-v2-AES

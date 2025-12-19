@@ -6,13 +6,18 @@ This guide walks through deploying your own Omni instance on-premises.
 
 Omni is Sidero's SaaS platform for managing Talos Linux clusters. This deployment runs it on your own infrastructure with full control over data and access.
 
-### Latest Version: v1.3.2 (November 2025)
+### Latest Version: v1.4.0 (December 2025)
 
-The latest Omni release includes important stability improvements:
-- ✅ **Better extension handling** - More reliable system extension management
-- ✅ **Improved state management** - Reduced stale data issues
-- ✅ **UI fixes** - Exposed services sidebar and scrollbar issues resolved
-- ✅ **Enhanced MachineSet handling** - Better cluster reference management
+The latest Omni release includes major storage consolidation and new features:
+- ✅ **SQLite Storage Consolidation** - Discovery service, audit logs, machine logs, and secondary resources now use a single SQLite backend
+- ✅ **OIDC Provider Support** - Added support for providers without `email_verified` claim (e.g., Azure)
+- ✅ **Dynamic SAML Label Roles** - New `update_on_each_login` field for SAML role updates
+- ✅ **Machine Class Improvements** - Support for locks, node deletion, and restore operations
+- ✅ **Platform Virtual Resources** - MetalPlatformConfig, CloudPlatformConfig, and SBCConfig resources
+- ✅ **Talos Version Protection** - Prevents downgrading below initial cluster version
+- ✅ **Force Delete Infra Resources** - Clean up MachineRequests and InfraMachines even if provider is unresponsive
+
+⚠️ **IMPORTANT**: v1.4.0 requires a new `--sqlite-storage-path` flag. See [Upgrade Notes](#upgrading-to-v140) below.
 
 **Recommended for new deployments**. Check [release notes](https://github.com/siderolabs/omni/releases) for the latest version.
 
@@ -41,7 +46,7 @@ sudo snap install certbot-dns-cloudflare
 
 #### Create Cloudflare Credentials
 
-Create a file at `~/omni/cloudflare.ini`:
+Create a file at `./omni/cloudflare.ini`:
 
 ```ini
 dns_cloudflare_api_token = YOUR_CLOUDFLARE_API_TOKEN
@@ -49,7 +54,7 @@ dns_cloudflare_api_token = YOUR_CLOUDFLARE_API_TOKEN
 
 Secure the file:
 ```bash
-chmod 600 ~/omni/cloudflare.ini
+chmod 600 ./omni/cloudflare.ini
 ```
 
 #### Generate Certificate
@@ -59,7 +64,7 @@ Replace `omni.yourdomain.com` with your actual domain:
 ```bash
 sudo certbot certonly \
   --dns-cloudflare \
-  --dns-cloudflare-credentials ~/omni/cloudflare.ini \
+  --dns-cloudflare-credentials ./omni/cloudflare.ini \
   -d omni.yourdomain.com
 ```
 
@@ -122,19 +127,26 @@ Replace with your email:
 gpg --export-secret-key --armor your-email@example.com > omni.asc
 ```
 
-### 3. Prepare Etcd Storage
+### 3. Prepare Storage Directories
 
-Create and configure the etcd data directory:
+Create and configure the etcd and SQLite data directories:
 
 ```bash
+# Etcd storage
 sudo mkdir -p /etc/etcd
 sudo chown -R 1000:1000 /etc/etcd
 sudo chmod -R 700 /etc/etcd
+
+# SQLite storage (NEW in v1.4.0 - REQUIRED)
+sudo mkdir -p /etc/omni/sqlite
+sudo chown -R 1000:1000 /etc/omni/sqlite
+sudo chmod -R 700 /etc/omni/sqlite
 ```
 
-**Optional**: If starting fresh, clear any existing etcd data:
+**Optional**: If starting fresh, clear any existing data:
 ```bash
 sudo rm -rf /etc/etcd/*
+sudo rm -rf /etc/omni/sqlite/*
 ```
 
 ### 4. Configure Environment Variables
@@ -160,7 +172,7 @@ Edit `omni.env` with your values:
 # Required: Omni Configuration
 OMNI_ACCOUNT_UUID=your-uuid-here              # Generate with: uuidgen
 NAME=omni-prod                                 # Deployment name
-OMNI_IMG_TAG=v1.3.2                           # Omni version (latest stable - note the 'v' prefix)
+OMNI_IMG_TAG=v1.4.0                           # Omni version (latest stable - note the 'v' prefix)
 
 # Required: Domain and Network
 OMNI_DOMAIN_NAME=omni.yourdomain.com          # Your domain
@@ -179,8 +191,9 @@ SIDEROLINK_WIREGUARD_ADVERTISED_ADDR=10.10.1.100:50180  # Your Omni host WireGua
 TLS_CERT=/etc/letsencrypt/live/omni.yourdomain.com/fullchain.pem
 TLS_KEY=/etc/letsencrypt/live/omni.yourdomain.com/privkey.pem
 
-# Required: Encryption
+# Required: Storage
 ETCD_VOLUME_PATH=/etc/etcd
+SQLITE_STORAGE_PATH=/etc/omni/sqlite          # NEW in v1.4.0 - Required!
 ETCD_ENCRYPTION_KEY=/path/to/omni.asc         # Path to exported GPG key
 
 # Required: Initial Admin
@@ -270,9 +283,39 @@ docker compose down
 nano omni.env
 
 # Pull new image and start
-docker compose --env-file omni.env pull
-docker compose --env-file omni.env up -d
+docker compose pull
+docker compose up -d
 ```
+
+### Upgrading to v1.4.0
+
+⚠️ **IMPORTANT**: v1.4.0 introduces a **required** new SQLite storage backend.
+
+1. **Create SQLite storage directory**:
+   ```bash
+   sudo mkdir -p /etc/omni/sqlite
+   sudo chown -R 1000:1000 /etc/omni/sqlite
+   sudo chmod -R 700 /etc/omni/sqlite
+   ```
+
+2. **Add `SQLITE_STORAGE_PATH` to `omni.env`**:
+   ```bash
+   SQLITE_STORAGE_PATH=/etc/omni/sqlite
+   ```
+
+3. **Automatic Migration**: On first startup, Omni will automatically migrate existing data (BoltDB, file-based logs) to SQLite. Keep your existing storage flags in place for the first run.
+
+4. **Deprecated Flags** (kept for migration only):
+   - `--audit-log-dir`
+   - `--secondary-storage-path`
+   - `--machine-log-storage-path`
+   - `--embedded-discovery-service-snapshot-path`
+
+5. **Removed Flags** (no longer supported):
+   - `--machine-log-storage-flush-period`
+   - `--machine-log-storage-flush-jitter`
+
+6. **Audit Logging**: Now enabled by default (`--audit-log-enabled=true`)
 
 ## Troubleshooting
 
@@ -322,6 +365,12 @@ Once Omni is deployed and accessible:
 
 ```bash
 sudo tar -czf omni-etcd-backup-$(date +%Y%m%d).tar.gz /etc/etcd/
+```
+
+### Backup SQLite Data (v1.4.0+)
+
+```bash
+sudo tar -czf omni-sqlite-backup-$(date +%Y%m%d).tar.gz /etc/omni/sqlite/
 ```
 
 ### Backup GPG Key

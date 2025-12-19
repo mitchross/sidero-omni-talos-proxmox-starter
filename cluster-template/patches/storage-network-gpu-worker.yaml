@@ -1,0 +1,23 @@
+# 10G Storage Network Configuration - PER-NODE PATCHES
+# =====================================================
+# Apply these via Omni UI after cluster creation:
+#   1. Go to Machines → Select node → Config Patches → Add Patch
+#   2. Paste the appropriate config for each node
+#
+# ens19 = Second NIC (vmbr1 in Proxmox) - 10G DAC to TrueNAS
+# Network: 172.31.250.0/24 (no gateway - storage traffic only)
+# TrueNAS DAC IP: 172.31.250.1
+#
+# =====================================================
+# GPU WORKER NODE (on ssdpool storage)
+# =====================================================
+#
+# GPU Worker:
+# -----------
+# machine:
+#   network:
+#     interfaces:
+#       - interface: ens19
+#         dhcp: false
+#         addresses:
+#           - 172.31.250.30/24

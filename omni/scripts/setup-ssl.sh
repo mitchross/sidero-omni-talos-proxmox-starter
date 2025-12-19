@@ -20,7 +20,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CLOUDFLARE_CREDS_FILE="${HOME}/omni/cloudflare.ini"
+CLOUDFLARE_CREDS_FILE="$(dirname "$SCRIPT_DIR")/cloudflare.ini"
 
 # ==============================================================================
 # Helper Functions
