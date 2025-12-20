@@ -17,6 +17,13 @@ patches:
             name: none
         proxy:
           disabled: true
+  - name: dns-config
+    inline:
+      machine:
+        network:
+          nameservers:
+            - 192.168.10.1
+            - 1.1.1.1
 ---
 kind: ControlPlane
 machineClass:
@@ -48,6 +55,9 @@ patches:
     inline:
       machine:
         kubelet:
+          nodeIP:
+            validSubnets:
+              - 192.168.10.0/24
           extraMounts:
             - destination: /var/lib/longhorn
               type: bind
@@ -80,6 +90,9 @@ patches:
     inline:
       machine:
         kubelet:
+          nodeIP:
+            validSubnets:
+              - 192.168.10.0/24
           extraMounts:
             - destination: /var/lib/longhorn
               type: bind

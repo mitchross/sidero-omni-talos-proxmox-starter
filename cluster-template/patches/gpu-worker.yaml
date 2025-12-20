@@ -7,6 +7,10 @@ machine:
         dhcp: false
         addresses:
           - 172.31.250.10/24
+  kubelet:
+    nodeIP:
+      validSubnets:
+        - 192.168.10.0/24
   kernel:
     modules:
       - name: nvidia
