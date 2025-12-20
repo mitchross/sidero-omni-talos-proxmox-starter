@@ -43,7 +43,7 @@ A complete, production-ready starter kit for deploying self-hosted Sidero Omni w
 2. **Deploy Omni** - Follow [omni/README.md](omni/README.md)
 3. **Setup Provider** - Follow [proxmox-provider/README.md](proxmox-provider/README.md)
 4. **Apply Machine Classes** - `omnictl apply -f machine-classes/control-plane.yaml` (repeat for all files)
-5. **Sync Cluster Template** - See [docs/OPERATIONS.md](docs/OPERATIONS.md#syncing-cluster-template)
+5. **Sync Cluster Template** - `cd cluster-template && omnictl cluster template sync -v -f cluster-template.yaml`
 6. **Create Clusters** - Follow the [Operations Guide](docs/OPERATIONS.md)
 
 ## Project Structure

@@ -23,7 +23,7 @@ spec:
     kernelargs: []
     metavalues: []
     providerdata: |
-      cores: 12
+      cores: 24
       sockets: 2
       memory: 480000
       disk_size: 450

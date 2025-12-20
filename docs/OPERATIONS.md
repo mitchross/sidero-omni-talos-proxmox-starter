@@ -69,7 +69,7 @@ omnictl get machineclasses
 The cluster template defines the high-level configuration for your Kubernetes clusters.
 
 ```bash
-omnictl cluster template sync -v -f cluster-template/
+cd cluster-template && omnictl cluster template sync -v -f cluster-template.yaml
 ```
 
 ### Creating a Cluster
