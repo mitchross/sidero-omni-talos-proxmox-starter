@@ -313,6 +313,7 @@ proxmox:
 # storage.filter(s, s.enabled && s.active && s.avail > 500000000000)[0].name
 
 # Complex selection (prefer NVMe, fallback to SSD):
+# Note: This performs filtering twice which is less efficient but more readable
 # storage.filter(s, s.enabled && s.active && s.name.contains("nvme")).size() > 0 ?
 #   storage.filter(s, s.enabled && s.active && s.name.contains("nvme"))[0].name :
 #   storage.filter(s, s.enabled && s.active && s.type == "lvmthin")[0].name
@@ -468,9 +469,14 @@ proxmox:
 #       pcie: true
 #
 # Host prerequisites for hugepages:
+#   # Example: Allocate 256GB of hugepages (256 * 1GB pages)
+#   # Adjust based on total system RAM and VM memory requirements
 #   echo 256 > /proc/sys/vm/nr_hugepages_1048576  # For 1GB pages
 #   # Add to /etc/sysctl.conf for persistence:
 #   vm.nr_hugepages_1048576 = 256
+#
+#   # Note: Ensure host has sufficient free memory before allocating hugepages
+#   # Reserve at least 10-20% of system RAM for host OS
 
 # ┌─────────────────────────────────────────────────────────────────────────┐
 # │ DATABASE SERVERS (PostgreSQL, MySQL, MongoDB)                           │
@@ -481,6 +487,8 @@ proxmox:
 #   numa: true                  # Multi-socket memory optimization
 #   balloon: false              # Prevent memory stealing
 #   disk_cache: none            # Bypass cache, rely on DB buffer pool
+#                               # Note: Use with battery-backed RAID or NVMe
+#                               # For write-heavy workloads with BBWC, writeback may be better
 #   disk_aio: io_uring          # Best I/O performance
 #   disk_iothread: true         # Dedicated I/O thread
 #   disk_ssd: true              # Enable for SSD/NVMe
