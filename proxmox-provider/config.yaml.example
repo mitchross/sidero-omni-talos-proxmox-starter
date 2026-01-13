@@ -282,13 +282,17 @@ proxmox:
 #
 # CEL expressions are evaluated at VM creation time and have access to the
 # 'storage' variable containing an array of all available storage pools.
+#
+# ⚠️ IMPORTANT: When using filter()[0], ensure the filter returns at least one
+# result, or the VM creation will fail. Use the simpler 'name == "storage-name"'
+# syntax when possible, or add size checks for robustness.
 
 # Select first available LVM-Thin storage:
 # storage.filter(s, s.type == "lvmthin" && s.enabled && s.active)[0].name
 
-# Select specific storage by name:
-# storage.filter(s, s.name == "local-lvm")[0].name
-# Or simply: name == "local-lvm"
+# Select specific storage by name (RECOMMENDED - simplest and safest):
+# name == "local-lvm"
+# Or with explicit filter: storage.filter(s, s.name == "local-lvm")[0].name
 
 # Select ZFS pool:
 # storage.filter(s, s.type == "zfspool" && s.enabled && s.active)[0].name
