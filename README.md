@@ -73,9 +73,9 @@ You’ll learn how to set up Omni, connect it to Proxmox using the official infr
 1. **Prerequisites** - See [docs/PREREQUISITES.md](docs/PREREQUISITES.md)
 2. **Deploy Omni** - Follow [omni/README.md](omni/README.md)
 3. **Setup Provider** - Follow [proxmox-provider/README.md](proxmox-provider/README.md)
-4. **Apply Machine Classes** - `omnictl apply -f machine-classes/`
-5. **Sync Cluster Template** - `omnictl cluster template sync -v -f cluster-template/cluster-template.yaml`
-6. **Create Clusters** - Use Omni UI to provision clusters using your machine classes
+4. **Apply Machine Classes** - `omnictl apply -f machine-classes/control-plane.yaml` (repeat for all files)
+5. **Sync Cluster Template** - `cd cluster-template && omnictl cluster template sync -v -f cluster-template.yaml`
+6. **Create Clusters** - Follow the [Operations Guide](docs/OPERATIONS.md)
 
 ## Project Structure
 
@@ -106,12 +106,29 @@ You’ll learn how to set up Omni, connect it to Proxmox using the official infr
 ### Automated Provisioning
 Define "machine classes" in Omni that specify CPU, RAM, and disk resources. The Proxmox provider watches for new machines and automatically creates VMs matching your specifications.
 
+### Dual Network Architecture (Management + Storage)
+Separate networks for optimal performance:
+- **Management Network (vmbr0/ens18)**: DHCP, cluster communication, SideroLink
+- **Storage Network (vmbr1/ens19)**: Static IPs, 10G DAC to TrueNAS/NAS
+
+### Storage Pool Separation
+Control planes and workers use different Proxmox storage pools:
+- **Control Planes**: `fastpool` (high-IOPS for etcd)
+- **Workers**: `ssdpool` (balanced performance)
+
 ### GPU Support (Optional)
-Include NVIDIA GPU support for AI/ML workloads. See [talos-configs/README.md](talos-configs/README.md) for configuration details.
+Include NVIDIA GPU support for AI/ML workloads with optimized VM settings:
+- CPU passthrough (`cpu=host`)
+- Q35 machine type for PCIe passthrough
+- NUMA awareness for multi-socket systems
+- 1GB hugepages for performance
+
+See [talos-configs/README.md](talos-configs/README.md) for configuration details.
 
 ### Production Ready
 - SSL/TLS encryption with Let's Encrypt
-- Etcd data encryption with GPG
+- Etcd data encryption with GPG  
+- SQLite storage backend (Omni v1.4.0+)
 - Auth0, SAML, or OIDC authentication
 - High availability support
 
@@ -155,7 +172,6 @@ cilium install \
 ⚠️ **Proxmox Provider Status**: The Proxmox infrastructure provider is currently in **beta**. Expect some limitations and potential bugs. Please report issues to the [upstream repository](https://github.com/siderolabs/omni-infra-provider-proxmox).
 
 ⚠️ **Known Limitations**:
-- Single disk per VM (multiple disk support is a potential enhancement)
 - Extensions must be included in Talos image or specified in cluster template
 
 ## Use Cases

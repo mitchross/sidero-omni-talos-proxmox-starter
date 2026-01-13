@@ -1,14 +1,14 @@
 services:
   omni-infra-provider-proxmox:
-    image: ghcr.io/siderolabs/omni-infra-provider-proxmox:latest
+    # Use local build with advanced VM options (disk, CPU, network features)
+    # To revert to upstream: ghcr.io/siderolabs/omni-infra-provider-proxmox:latest
+    image: ghcr.io/siderolabs/omni-infra-provider-proxmox:local-20251219-1428
     container_name: omni-infra-provider-proxmox
     env_file:
       - .env
     volumes:
       - ./config.yaml:/config.yaml:ro
     command: >
-      --config-file /config.yaml
-      --omni-api-endpoint ${OMNI_API_ENDPOINT}
-      --omni-service-account-key ${OMNI_INFRA_PROVIDER_KEY}
+      --config-file /config.yaml --omni-api-endpoint ${OMNI_API_ENDPOINT} --omni-service-account-key ${OMNI_INFRA_PROVIDER_KEY}
     restart: unless-stopped
     network_mode: host

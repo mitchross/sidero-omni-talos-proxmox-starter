@@ -10,6 +10,7 @@ services:
       - /dev/net/tun
     volumes:
       - ${ETCD_VOLUME_PATH}:/_out/etcd
+      - ${SQLITE_STORAGE_PATH}:/_out/sqlite
       - ${ETCD_ENCRYPTION_KEY}:/omni.asc
       - ${TLS_CERT}:/tls.crt
       - ${TLS_KEY}:/tls.key
@@ -34,4 +35,5 @@ services:
       --siderolink-api-advertised-url=${SIDEROLINK_ADVERTISED_API_URL}
       --siderolink-wireguard-advertised-addr=${SIDEROLINK_WIREGUARD_ADVERTISED_ADDR}
       --initial-users=${INITIAL_USER_EMAILS}
+      --sqlite-storage-path=/_out/sqlite/omni.db
       ${AUTH}

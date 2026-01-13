@@ -5,9 +5,9 @@ name: talos-prod-cluster
 labels:
   cluster-id: "1"
 kubernetes:
-  version: v1.34.2
+  version: v1.34.3
 talos:
-  version: v1.11.5
+  version: v1.11.6
 patches:
   - name: disable-default-cni
     inline:
@@ -17,6 +17,13 @@ patches:
             name: none
         proxy:
           disabled: true
+  - name: dns-config
+    inline:
+      machine:
+        network:
+          nameservers:
+            - 192.168.10.1
+            - 1.1.1.1
 ---
 kind: ControlPlane
 machineClass:
@@ -25,7 +32,7 @@ machineClass:
 systemExtensions:
   - siderolabs/iscsi-tools
   - siderolabs/nfsd
-  #- siderolabs/qemu-guest-agent
+  - siderolabs/qemu-guest-agent
   - siderolabs/util-linux-tools
 ---
 kind: Workers
@@ -36,7 +43,7 @@ machineClass:
 systemExtensions:
   - siderolabs/iscsi-tools
   - siderolabs/nfsd
-  #- siderolabs/qemu-guest-agent 
+  - siderolabs/qemu-guest-agent 
   - siderolabs/util-linux-tools
 patches:
   - name: worker-labels
@@ -48,6 +55,9 @@ patches:
     inline:
       machine:
         kubelet:
+          nodeIP:
+            validSubnets:
+              - 192.168.10.0/24
           extraMounts:
             - destination: /var/lib/longhorn
               type: bind
@@ -65,10 +75,10 @@ machineClass:
 systemExtensions:
   - siderolabs/iscsi-tools
   - siderolabs/nfsd
-  #- siderolabs/qemu-guest-agent
+  - siderolabs/qemu-guest-agent
   - siderolabs/util-linux-tools
-  - siderolabs/nonfree-kmod-nvidia
-  - siderolabs/nvidia-container-toolkit
+  - siderolabs/nonfree-kmod-nvidia-production
+  - siderolabs/nvidia-container-toolkit-production
 patches:
   - name: worker-labels
     inline:
@@ -80,6 +90,9 @@ patches:
     inline:
       machine:
         kubelet:
+          nodeIP:
+            validSubnets:
+              - 192.168.10.0/24
           extraMounts:
             - destination: /var/lib/longhorn
               type: bind

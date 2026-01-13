@@ -18,6 +18,7 @@ omni.asc
 *.key
 *.pem
 cloudflare.ini
+omni/cloudflare.ini
 
 # Backup files
 *.bak
