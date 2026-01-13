@@ -3,6 +3,12 @@
 # ==============================================================================
 # Copy this file to config.yaml and fill in your Proxmox details
 # DO NOT commit config.yaml to version control - it contains credentials!
+#
+# This configuration file supports the enhanced Proxmox provider with advanced
+# VM provisioning features including GPU passthrough, multi-disk support,
+# advanced networking, and high-performance optimizations.
+#
+# Reference: https://github.com/siderolabs/omni-infra-provider-proxmox/pull/36
 
 proxmox:
   # Proxmox API endpoint
@@ -39,76 +45,286 @@ proxmox:
 # ==============================================================================
 # MACHINE CLASS CONFIGURATION EXAMPLES
 # ==============================================================================
-# Machine classes define VM specifications and are created in Omni UI
-# These examples show common configurations and storage selection patterns
+# Machine classes define VM specifications and are created in Omni UI using
+# omnictl or the web interface. The providerdata field accepts YAML containing
+# the configuration options documented below.
+#
+# Basic Example Structure:
+# ------------------------
+# metadata:
+#   namespace: default
+#   type: MachineClasses.omni.sidero.dev
+#   id: my-machine-class
+# spec:
+#   autoprovision:
+#     providerid: proxmox
+#     providerdata: |
+#       cores: 4
+#       memory: 8192
+#       disk_size: 100
+#       storage_selector: name == "local-lvm"
 
-# Example 1: Small Worker Node
-# ----------------------------
-# cpu: 4
-# memory: 8192  # 8GB in MB
-# disk: 100     # 100GB
-# storage: |
-#   storage.filter(s, s.type == "lvmthin" && s.enabled && s.active)[0].storage
+# ==============================================================================
+# BASIC EXAMPLES
+# ==============================================================================
 
-# Example 2: Large Worker Node with ZFS
-# --------------------------------------
-# cpu: 8
-# memory: 16384  # 16GB in MB
-# disk: 200      # 200GB
-# storage: |
-#   storage.filter(s, s.type == "zfspool" && s.enabled && s.active)[0].storage
+# Example 1: Simple Control Plane Node
+# -------------------------------------
+# Basic configuration for etcd/control plane nodes
+# Minimal resource allocation for cluster management
+#
+# providerdata: |
+#   cores: 4
+#   memory: 8192  # 8GB in MB
+#   disk_size: 50      # 50GB
+#   storage_selector: name == "local-lvm"
 
-# Example 3: Control Plane Node
-# ------------------------------
-# cpu: 4
-# memory: 8192
-# disk: 50
-# storage: |
-#   storage.filter(s, s.type == "lvmthin" && s.enabled && s.active)[0].storage
+# Example 2: Standard Worker Node
+# --------------------------------
+# General-purpose worker with balanced resources
+#
+# providerdata: |
+#   cores: 8
+#   memory: 16384  # 16GB in MB
+#   disk_size: 200      # 200GB
+#   storage_selector: |
+#     storage.filter(s, s.type == "lvmthin" && s.enabled && s.active)[0].name
 
-# Example 4: GPU Worker Node
-# --------------------------
-# cpu: 8
-# memory: 32768  # 32GB in MB
-# disk: 200
-# storage: |
-#   storage.filter(s, s.type == "zfspool" && s.enabled && s.active)[0].storage
-# Note: GPU passthrough must be configured manually in Proxmox
+# Example 3: Small Development Node
+# ----------------------------------
+# Minimal resources for testing/development
+#
+# providerdata: |
+#   cores: 2
+#   memory: 4096   # 4GB in MB
+#   disk_size: 40       # 40GB
+#   storage_selector: name == "local-lvm"
+
+# ==============================================================================
+# ADVANCED EXAMPLES - New Features from Provider v1.4+
+# ==============================================================================
+
+# Example 4: High-Performance GPU Worker Node
+# --------------------------------------------
+# Optimized for AI/ML workloads with GPU passthrough
+# Features:
+# - CPU type 'host' for maximum performance
+# - Q35 machine type for native PCIe support
+# - NUMA topology for memory locality
+# - Hugepages for reduced TLB misses
+# - Memory ballooning disabled (required for GPU)
+# - Multiple PCI devices (GPUs)
+# - High-performance disk with io_uring
+# - Additional storage network interface
+#
+# providerdata: |
+#   cores: 24
+#   sockets: 2
+#   memory: 480000  # 480GB (for large ML models)
+#   disk_size: 500
+#   storage_selector: name == "nvme-pool"
+#   
+#   # CPU & Memory Optimizations
+#   cpu_type: host              # Pass through host CPU features
+#   machine_type: q35           # Modern chipset for PCIe passthrough
+#   numa: true                  # Enable NUMA topology
+#   hugepages: 1GB              # Use 1GB hugepages (requires host config)
+#   balloon: false              # Disable ballooning for GPU workloads
+#   
+#   # Disk Performance
+#   disk_ssd: true              # SSD emulation flag
+#   disk_discard: true          # TRIM support for thin provisioning
+#   disk_iothread: true         # Dedicated I/O thread
+#   disk_cache: none            # Direct I/O for best performance
+#   disk_aio: io_uring          # Modern async I/O (Linux 5.1+)
+#   
+#   # GPU Passthrough (using Proxmox Resource Mappings)
+#   pci_devices:
+#     - mapping: nvidia-rtx-4090-1  # First GPU
+#       pcie: true                   # Use PCIe mode
+#       primary_gpu: true            # Set as primary display
+#     - mapping: nvidia-rtx-4090-2  # Second GPU
+#       pcie: true
+#   
+#   # Additional Networks
+#   network_bridge: vmbr0       # Primary management network
+#   additional_nics:
+#     - bridge: vmbr1           # 10G storage network
+#       firewall: false
+
+# Example 5: Multi-Disk Storage Node
+# -----------------------------------
+# Node with multiple disks for different purposes
+# Features:
+# - Fast primary disk on NVMe for OS/containers
+# - Additional SSD disk for database storage
+# - Additional HDD disk for archive/backup
+# - Per-disk performance tuning
+#
+# providerdata: |
+#   cores: 16
+#   memory: 64000
+#   disk_size: 100              # Primary OS disk
+#   storage_selector: name == "nvme-pool"
+#   disk_ssd: true
+#   disk_iothread: true
+#   disk_aio: io_uring
+#   
+#   additional_disks:
+#     # Fast database disk
+#     - disk_size: 500
+#       storage_selector: name == "ssd-pool"
+#       disk_ssd: true
+#       disk_discard: true
+#       disk_iothread: true
+#       disk_cache: none
+#       disk_aio: io_uring
+#     
+#     # Archive/backup disk
+#     - disk_size: 2000
+#       storage_selector: |
+#         storage.filter(s, s.type == "dir" && s.enabled)[0].name
+#       disk_cache: writeback     # Write-back cache for bulk storage
+
+# Example 6: Multi-Network Worker Node
+# -------------------------------------
+# Worker with multiple network interfaces for network isolation
+# Features:
+# - Management network (vmbr0)
+# - Storage network (vmbr1) for NFS/iSCSI
+# - Application network (vmbr2) with VLAN tagging
+# - Isolated database network (vmbr3)
+#
+# providerdata: |
+#   cores: 8
+#   memory: 32000
+#   disk_size: 200
+#   storage_selector: name == "ssd-pool"
+#   
+#   # Disk optimization with TRIM
+#   disk_ssd: true
+#   disk_discard: true
+#   disk_iothread: true
+#   disk_cache: none
+#   disk_aio: io_uring
+#   
+#   # Primary NIC with VLAN
+#   network_bridge: vmbr0
+#   vlan: 10                    # VLAN tag for management
+#   
+#   # Additional network interfaces
+#   additional_nics:
+#     - bridge: vmbr1           # Storage network
+#       firewall: false         # Disable firewall for performance
+#     - bridge: vmbr2           # Application network
+#       vlan: 20                # VLAN 20
+#       firewall: true
+#     - bridge: vmbr3           # Database network
+#       firewall: true
+
+# Example 7: High-Performance Database Server
+# --------------------------------------------
+# Optimized for database workloads (PostgreSQL, MySQL, etc.)
+# Features:
+# - Multiple sockets for CPU scaling
+# - NUMA aware for better memory access
+# - High-performance disk with write cache disabled
+# - Large memory allocation
+#
+# providerdata: |
+#   cores: 8
+#   sockets: 2                  # 16 total cores (8 per socket)
+#   memory: 128000              # 128GB RAM
+#   disk_size: 1000
+#   storage_selector: name == "nvme-pool"
+#   
+#   # CPU optimizations
+#   cpu_type: host              # Maximum CPU feature set
+#   numa: true                  # NUMA topology for memory locality
+#   balloon: false              # Disable ballooning for consistent performance
+#   
+#   # Database-optimized disk settings
+#   disk_ssd: true
+#   disk_discard: true
+#   disk_iothread: true
+#   disk_cache: none            # Direct I/O (bypass cache)
+#   disk_aio: io_uring          # Best async I/O performance
+
+# Example 8: Node-Specific Placement
+# -----------------------------------
+# Pin VM to a specific Proxmox node
+# Useful for nodes with special hardware or network connectivity
+#
+# providerdata: |
+#   cores: 8
+#   memory: 16384
+#   disk_size: 200
+#   storage_selector: name == "local-lvm"
+#   node: pve-node-01           # Run only on this specific node
+
+# Example 9: Legacy Compatibility Node
+# -------------------------------------
+# Using i440fx machine type for older guest OS compatibility
+#
+# providerdata: |
+#   cores: 4
+#   memory: 8192
+#   disk_size: 100
+#   storage_selector: name == "local-lvm"
+#   machine_type: i440fx        # Older chipset for compatibility
+#   cpu_type: x86-64-v2-AES     # Default CPU type for compatibility
 
 # ==============================================================================
 # STORAGE SELECTION (CEL Expression Examples)
 # ==============================================================================
 # The provider uses CEL (Common Expression Language) to select storage
 # dynamically based on Proxmox storage pool characteristics
+#
+# CEL expressions are evaluated at VM creation time and have access to the
+# 'storage' variable containing an array of all available storage pools.
+#
+# ⚠️ IMPORTANT: When using filter()[0], ensure the filter returns at least one
+# result, or the VM creation will fail. Use the simpler 'name == "storage-name"'
+# syntax when possible, or add size checks for robustness.
 
 # Select first available LVM-Thin storage:
-# storage.filter(s, s.type == "lvmthin" && s.enabled && s.active)[0].storage
+# storage.filter(s, s.type == "lvmthin" && s.enabled && s.active)[0].name
 
-# Select specific storage by name:
-# storage.filter(s, s.storage == "local-lvm")[0].storage
+# Select specific storage by name (RECOMMENDED - simplest and safest):
+# name == "local-lvm"
+# Or with explicit filter: storage.filter(s, s.name == "local-lvm")[0].name
 
 # Select ZFS pool:
-# storage.filter(s, s.type == "zfspool" && s.enabled && s.active)[0].storage
+# storage.filter(s, s.type == "zfspool" && s.enabled && s.active)[0].name
 
 # Select Ceph storage:
-# storage.filter(s, s.type == "rbd" && s.enabled && s.active)[0].storage
+# storage.filter(s, s.type == "rbd" && s.enabled && s.active)[0].name
 
 # Select storage with most free space:
-# storage.filter(s, s.enabled && s.active).max(s, s.avail).storage
+# storage.filter(s, s.enabled && s.active).max(s, s.avail).name
 
 # Select directory storage:
-# storage.filter(s, s.type == "dir" && s.enabled && s.active)[0].storage
+# storage.filter(s, s.type == "dir" && s.enabled && s.active)[0].name
 
 # Select NFS storage:
-# storage.filter(s, s.type == "nfs" && s.enabled && s.active)[0].storage
+# storage.filter(s, s.type == "nfs" && s.enabled && s.active)[0].name
+
+# Select by minimum available space (500GB+):
+# storage.filter(s, s.enabled && s.active && s.avail > 500000000000)[0].name
+
+# Complex selection (prefer NVMe, fallback to SSD):
+# Note: This performs filtering twice which is less efficient but more readable
+# storage.filter(s, s.enabled && s.active && s.name.contains("nvme")).size() > 0 ?
+#   storage.filter(s, s.enabled && s.active && s.name.contains("nvme"))[0].name :
+#   storage.filter(s, s.enabled && s.active && s.type == "lvmthin")[0].name
 
 # ==============================================================================
 # AVAILABLE STORAGE FIELDS
 # ==============================================================================
 # Use these fields in your CEL expressions:
 #
-# s.storage  - Storage name (string)
-# s.type     - Storage type (lvmthin, zfspool, dir, nfs, rbd, etc.)
+# s.name     - Storage name (string) - e.g., "local-lvm", "nvme-pool"
+# s.type     - Storage type (string) - lvmthin, zfspool, dir, nfs, rbd, etc.
 # s.enabled  - Storage is enabled (boolean)
 # s.active   - Storage is active (boolean)
 # s.avail    - Available space in bytes (integer)
@@ -116,53 +332,434 @@ proxmox:
 # s.used     - Used space in bytes (integer)
 
 # ==============================================================================
+# COMPLETE FIELD REFERENCE
+# ==============================================================================
+# All available fields for machine class providerdata configuration
+# Fields marked with * are REQUIRED
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │ COMPUTE RESOURCES                                                        │
+# └─────────────────────────────────────────────────────────────────────────┘
+
+# cores: *                      # Number of CPU cores per socket (integer, min: 1)
+# sockets: 1                    # Number of CPU sockets (integer, min: 1, default: 1)
+# cpu_type: "x86-64-v2-AES"     # CPU type (string)
+#                               #   - "x86-64-v2-AES" (default, best compatibility)
+#                               #   - "host" (maximum performance, required for GPU)
+#                               #   - Other Proxmox CPU types (kvm64, Haswell, etc.)
+# machine_type: "i440fx"        # Machine/chipset type (string)
+#                               #   - "i440fx" (default, legacy compatibility)
+#                               #   - "q35" (modern, required for PCIe passthrough)
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │ MEMORY CONFIGURATION                                                     │
+# └─────────────────────────────────────────────────────────────────────────┘
+
+# memory: *                     # Memory in MB (integer, min: 2048)
+# numa: false                   # Enable NUMA topology (boolean, default: false)
+#                               # Recommended for multi-socket systems and HPC
+# hugepages: null               # Hugepage size (string, default: null)
+#                               #   - null (disabled, default)
+#                               #   - "2MB" (standard hugepages)
+#                               #   - "1GB" (large hugepages, GPU/HPC workloads)
+#                               # Note: Requires host configuration
+# balloon: true                 # Enable memory ballooning (boolean, default: true)
+#                               # Set to false for GPU passthrough or hugepages
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │ PRIMARY DISK CONFIGURATION                                               │
+# └─────────────────────────────────────────────────────────────────────────┘
+
+# disk_size: *                  # Disk size in GB (integer, min: 5)
+# storage_selector: *           # CEL expression for storage selection (string)
+#                               # Examples:
+#                               #   name == "local-lvm"
+#                               #   storage.filter(s, s.type == "lvmthin")[0].name
+
+# -- Disk Performance Options --
+# disk_ssd: false               # SSD emulation flag (boolean, default: false)
+#                               # Enable for SSD/NVMe storage
+# disk_discard: false           # TRIM/discard support (boolean, default: false)
+#                               # Enable for thin-provisioned storage
+# disk_iothread: false          # Dedicated I/O thread (boolean, default: false)
+#                               # Improves performance, especially with multiple disks
+# disk_cache: null              # Cache mode (string, default: null/default)
+#                               #   - null or omit (Proxmox default)
+#                               #   - "none" (best for SSD with battery-backed controller)
+#                               #   - "writethrough" (safe, but slower writes)
+#                               #   - "writeback" (fast, but risky on power loss)
+#                               #   - "directsync" (sync direct I/O)
+#                               #   - "unsafe" (fastest, no safety guarantees)
+# disk_aio: null                # Async I/O mode (string, default: null/default)
+#                               #   - null or omit (Proxmox default)
+#                               #   - "native" (kernel AIO)
+#                               #   - "threads" (POSIX AIO via threads)
+#                               #   - "io_uring" (best performance, Linux 5.1+)
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │ ADDITIONAL DISKS                                                         │
+# └─────────────────────────────────────────────────────────────────────────┘
+
+# additional_disks: []          # Array of additional disks (scsi1, scsi2, etc.)
+# Additional disk example:
+# additional_disks:
+#   - disk_size: 500            # Disk size in GB (integer, min: 1) *REQUIRED
+#     storage_selector: name == "ssd-pool"  # Storage selector *REQUIRED
+#     disk_ssd: true            # All disk performance options available
+#     disk_discard: true
+#     disk_iothread: true
+#     disk_cache: "none"
+#     disk_aio: "io_uring"
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │ NETWORK CONFIGURATION                                                    │
+# └─────────────────────────────────────────────────────────────────────────┘
+
+# network_bridge: "vmbr0"       # Primary network bridge (string, default: "vmbr0")
+# vlan: 0                       # VLAN tag for primary NIC (integer, 0 = no tag)
+
+# additional_nics: []           # Array of additional network interfaces
+# Additional NIC example:
+# additional_nics:
+#   - bridge: "vmbr1"           # Network bridge (string) *REQUIRED
+#     vlan: 20                  # VLAN tag (integer, 0 = no tag, optional)
+#     firewall: false           # Enable Proxmox firewall (boolean, optional)
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │ PCI PASSTHROUGH                                                          │
+# └─────────────────────────────────────────────────────────────────────────┘
+
+# pci_devices: []               # Array of PCI devices to pass through
+#                               # Uses Proxmox Resource Mappings
+#                               # Create mappings in Proxmox: Datacenter → Resource Mappings
+# PCI device example:
+# pci_devices:
+#   - mapping: "nvidia-gpu-1"   # Resource mapping name (string) *REQUIRED
+#     pcie: true                # Use PCIe mode (boolean, recommended for GPUs)
+#     primary_gpu: false        # Set as primary GPU/VGA (boolean, optional)
+#     rombar: true              # Enable ROM BAR (boolean, optional)
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │ NODE PLACEMENT                                                           │
+# └─────────────────────────────────────────────────────────────────────────┘
+
+# node: null                    # Specific Proxmox node (string, default: null/any)
+#                               # Example: "pve-node-01"
+#                               # Omit to allow automatic placement
+
+# ==============================================================================
+# PERFORMANCE RECOMMENDATIONS
+# ==============================================================================
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │ GPU / HPC WORKLOADS                                                      │
+# └─────────────────────────────────────────────────────────────────────────┘
+# Recommended settings for GPU passthrough and high-performance computing:
+#
+#   cpu_type: host              # Maximum CPU feature exposure
+#   machine_type: q35           # Modern chipset with PCIe support
+#   numa: true                  # Memory locality optimization
+#   hugepages: 1GB              # Reduce TLB misses (requires host config)
+#   balloon: false              # Must disable for GPU and hugepages
+#   disk_cache: none            # Direct I/O
+#   disk_aio: io_uring          # Best async I/O performance
+#   disk_iothread: true         # Offload I/O processing
+#   pci_devices:                # GPU passthrough
+#     - mapping: nvidia-gpu-1
+#       pcie: true
+#
+# Host prerequisites for hugepages:
+#   # Example: Allocate 256GB of hugepages (256 * 1GB pages)
+#   # Adjust based on total system RAM and VM memory requirements
+#   echo 256 > /proc/sys/vm/nr_hugepages_1048576  # For 1GB pages
+#   # Add to /etc/sysctl.conf for persistence:
+#   vm.nr_hugepages_1048576 = 256
+#
+#   # Note: Ensure host has sufficient free memory before allocating hugepages
+#   # Reserve at least 10-20% of system RAM for host OS
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │ DATABASE SERVERS (PostgreSQL, MySQL, MongoDB)                           │
+# └─────────────────────────────────────────────────────────────────────────┘
+# Optimized for database workloads requiring consistent I/O:
+#
+#   cpu_type: host              # Better performance
+#   numa: true                  # Multi-socket memory optimization
+#   balloon: false              # Prevent memory stealing
+#   disk_cache: none            # Bypass cache, rely on DB buffer pool
+#                               # Note: Use with battery-backed RAID or NVMe
+#                               # For write-heavy workloads with BBWC, writeback may be better
+#   disk_aio: io_uring          # Best I/O performance
+#   disk_iothread: true         # Dedicated I/O thread
+#   disk_ssd: true              # Enable for SSD/NVMe
+#   disk_discard: true          # TRIM support
+#
+# Additional considerations:
+#   - Use fast NVMe storage for data directories
+#   - Separate disk for WAL/logs (use additional_disks)
+#   - Disable swap on host for predictable performance
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │ GENERAL PURPOSE / WEB APPLICATIONS                                      │
+# └─────────────────────────────────────────────────────────────────────────┘
+# Balanced configuration for typical workloads:
+#
+#   cpu_type: x86-64-v2-AES     # Good compatibility (default)
+#   machine_type: i440fx        # Standard chipset (default)
+#   balloon: true               # Allow memory ballooning (default)
+#   disk_cache: writethrough    # Safe caching
+#   disk_aio: io_uring          # Modern async I/O
+#   disk_ssd: true              # If using SSD storage
+#   disk_discard: true          # If using thin provisioning
+#
+# This provides good performance while maintaining compatibility
+# and allowing Proxmox to optimize resource usage.
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │ STORAGE / FILE SERVERS                                                   │
+# └─────────────────────────────────────────────────────────────────────────┘
+# Configuration for high-throughput storage workloads:
+#
+#   cores: 8+                   # Multiple cores for parallel I/O
+#   disk_iothread: true         # Dedicated I/O thread per disk
+#   disk_cache: none            # Direct I/O for consistency
+#   disk_aio: io_uring          # Best async I/O
+#   additional_disks:           # Multiple disks for different purposes
+#     - disk_size: 1000
+#       storage_selector: name == "fast-pool"
+#       disk_ssd: true
+#       disk_iothread: true
+#     - disk_size: 4000
+#       storage_selector: name == "bulk-storage"
+#       disk_cache: writeback   # Faster for bulk storage
+#   additional_nics:            # Dedicated storage network
+#     - bridge: vmbr1
+#       firewall: false         # Reduce overhead
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │ CONTROL PLANE NODES                                                      │
+# └─────────────────────────────────────────────────────────────────────────┘
+# Optimized for etcd and control plane stability:
+#
+#   cores: 4                    # Moderate CPU for control tasks
+#   memory: 8192                # 8GB minimum for etcd
+#   disk_size: 50               # Smaller disk, etcd is lightweight
+#   disk_cache: none            # Consistency over performance
+#   disk_aio: io_uring          # Fast async I/O for etcd writes
+#   disk_iothread: true         # Reduce latency
+#   storage_selector:           # Use fastest storage available
+#     storage.filter(s, s.type == "lvmthin" && s.enabled)[0].name
+#
+# Etcd is latency-sensitive - prioritize fast, consistent storage
+# over capacity. SSD/NVMe strongly recommended.
+
+# ==============================================================================
 # PROXMOX USER PERMISSIONS (for dedicated user)
 # ==============================================================================
 # If not using root@pam, create a dedicated user with these permissions:
 #
-# - VM.Allocate
-# - VM.Config.Disk
-# - VM.Config.CPU
-# - VM.Config.Memory
-# - VM.Config.Network
-# - VM.Config.Options
-# - Datastore.AllocateSpace
-# - Datastore.Audit
+# REQUIRED PERMISSIONS:
+# - VM.Allocate              # Create/destroy VMs
+# - VM.Config.Disk           # Configure VM disks
+# - VM.Config.CPU            # Configure VM CPU
+# - VM.Config.Memory         # Configure VM memory
+# - VM.Config.Network        # Configure VM network
+# - VM.Config.Options        # Configure VM options
+# - VM.Config.HWType         # Configure hardware (for PCI passthrough)
+# - Datastore.AllocateSpace  # Allocate storage space
+# - Datastore.Audit          # Query storage information
 #
-# Create user in Proxmox:
+# Setup commands:
+#   # Create user
 #   pveum user add omni@pve
 #   pveum passwd omni@pve
+#   
+#   # Option 1: Use PVEVMAdmin role (covers most permissions)
 #   pveum aclmod / -user omni@pve -role PVEVMAdmin
+#   
+#   # Option 2: Create custom role with exact permissions
+#   pveum role add OmniProvider -privs "VM.Allocate VM.Config.Disk VM.Config.CPU VM.Config.Memory VM.Config.Network VM.Config.Options VM.Config.HWType Datastore.AllocateSpace Datastore.Audit"
+#   pveum aclmod / -user omni@pve -role OmniProvider
 #
-# Then update username above to: omni@pve
+# Then update username in config to: omni@pve
 
 # ==============================================================================
-# KNOWN LIMITATIONS
+# KNOWN LIMITATIONS & CHANGES
 # ==============================================================================
-# Current provider limitations (as of beta):
+# Provider v1.4.0+ changes and current limitations:
 #
-# - Single disk per VM only (multiple disk support is a potential feature)
-# - Basic networking (uses default Proxmox bridge)
-# - No automatic GPU passthrough configuration
-# - Limited advanced Proxmox features
+# RESOLVED (Previously limited, now supported):
+# ✓ Multiple disks per VM (use additional_disks)
+# ✓ Advanced networking (use additional_nics with VLANs)
+# ✓ PCI passthrough configuration (use pci_devices with resource mappings)
+# ✓ Advanced disk performance tuning (disk_cache, disk_aio, etc.)
+# ✓ CPU and memory optimization (cpu_type, numa, hugepages)
+#
+# CURRENT LIMITATIONS:
+# - QEMU guest agent is automatically installed by the provider
+# - VMs use SCSI controller (virtio-scsi-single) for disks
+# - Primary disk is always scsi0, additional disks are scsi1, scsi2, etc.
+# - Network adapters use virtio model
+# - Resource mappings for PCI devices must be created in Proxmox beforehand
+# - Hugepages require host kernel configuration
 #
 # See: https://github.com/siderolabs/omni-infra-provider-proxmox/issues
 
 # ==============================================================================
 # TROUBLESHOOTING
 # ==============================================================================
-# If you encounter issues:
-#
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │ GENERAL TROUBLESHOOTING                                                  │
+# └─────────────────────────────────────────────────────────────────────────┘
+
 # 1. Check provider logs:
 #    docker compose logs -f omni-infra-provider-proxmox
-#
+
 # 2. Verify Proxmox API access:
 #    curl -k https://proxmox-host:8006/api2/json/version
-#
+
 # 3. Test credentials:
 #    pvesh get /version --username root@pam
-#
+
 # 4. Check storage pools:
 #    pvesh get /storage
-#
+
 # 5. Verify network connectivity between provider and Proxmox
+
+# 6. Check machine class status in Omni:
+#    omnictl get machineclasses
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │ PCI PASSTHROUGH ISSUES                                                   │
+# └─────────────────────────────────────────────────────────────────────────┘
+
+# Problem: PCI device not found or passthrough fails
+# Solutions:
+#   - Verify resource mapping exists in Proxmox:
+#     Datacenter → Resource Mappings → PCI Devices
+#   - Ensure IOMMU is enabled on Proxmox host:
+#     Check: dmesg | grep -i iommu
+#     Enable: Add "intel_iommu=on" or "amd_iommu=on" to kernel cmdline
+#   - Verify device is in correct IOMMU group:
+#     find /sys/kernel/iommu_groups/ -type l
+#   - For GPUs, use machine_type: q35 and pcie: true
+#   - Check VM logs: qm showcmd <vmid>
+
+# Problem: GPU not detected in VM
+# Solutions:
+#   - Disable memory ballooning: balloon: false
+#   - Use cpu_type: host
+#   - Enable PCIe mode: pcie: true
+#   - Check if GPU is bound to correct driver on host
+#   - May need vfio-pci driver binding on host
+#   - Verify GPU ROM is available (rombar: true if needed)
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │ STORAGE SELECTION ISSUES                                                 │
+# └─────────────────────────────────────────────────────────────────────────┘
+
+# Problem: Storage selector returns no results
+# Solutions:
+#   - Check available storage: pvesh get /storage
+#   - Verify storage is enabled and active
+#   - Test CEL expression syntax carefully
+#   - Use simpler expression first: name == "storage-name"
+#   - Check provider logs for CEL evaluation errors
+
+# Problem: Wrong storage selected
+# Solutions:
+#   - Be more specific in filter conditions
+#   - Check storage metadata: pvesh get /storage/<storage-id>
+#   - Use multiple conditions: type == "lvmthin" && name.contains("ssd")
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │ NETWORK CONFIGURATION ISSUES                                             │
+# └─────────────────────────────────────────────────────────────────────────┘
+
+# Problem: Additional NICs not appearing
+# Solutions:
+#   - Verify bridge exists on Proxmox: brctl show
+#   - Check if VLAN is configured on bridge
+#   - Ensure firewall rules allow traffic if firewall: true
+#   - Check Talos network configuration to use additional interfaces
+
+# Problem: VLAN tagging not working
+# Solutions:
+#   - Verify bridge is VLAN-aware in Proxmox
+#   - Check switch port configuration for trunk/tagged mode
+#   - Ensure VLAN exists on network infrastructure
+#   - Test connectivity without VLAN first
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │ PERFORMANCE ISSUES                                                       │
+# └─────────────────────────────────────────────────────────────────────────┘
+
+# Problem: Poor disk performance
+# Solutions:
+#   - Enable disk_ssd: true for SSD/NVMe storage
+#   - Use disk_cache: none with battery-backed RAID or NVMe
+#   - Enable disk_iothread: true
+#   - Use disk_aio: io_uring on modern kernels
+#   - Check underlying storage performance on Proxmox host
+#   - Verify storage isn't overcommitted
+
+# Problem: High CPU steal time
+# Solutions:
+#   - Reduce CPU overcommitment on Proxmox host
+#   - Use cpu_type: host for better performance
+#   - Enable NUMA: numa: true on multi-socket systems
+#   - Check host CPU usage: top / htop
+
+# Problem: Memory issues with hugepages
+# Solutions:
+#   - Verify hugepages configured on host:
+#     cat /proc/meminfo | grep Huge
+#   - Allocate hugepages:
+#     echo 256 > /proc/sys/vm/nr_hugepages_1048576  # 1GB pages
+#   - Disable memory balloon: balloon: false
+#   - Ensure enough hugepages available for all VMs
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │ MULTI-DISK ISSUES                                                        │
+# └─────────────────────────────────────────────────────────────────────────┘
+
+# Problem: Additional disks not created
+# Solutions:
+#   - Check provider logs for errors
+#   - Verify storage_selector for each disk
+#   - Ensure enough space available on selected storage
+#   - Check disk appears in Proxmox UI: Hardware tab
+#   - Maximum disks depends on SCSI controller (scsi0-scsi30)
+
+# Problem: Disk order or naming issues
+# Solutions:
+#   - Primary disk is always scsi0
+#   - Additional disks are scsi1, scsi2, scsi3, etc. in order
+#   - Check VM hardware in Proxmox to verify disk assignment
+#   - Use 'lsblk' in Talos to see disk layout
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │ PROVIDER AUTHENTICATION ISSUES                                           │
+# └─────────────────────────────────────────────────────────────────────────┘
+
+# Problem: Authentication fails
+# Solutions:
+#   - Verify credentials are correct
+#   - For API token: ensure tokenID and tokenSecret are both set
+#   - Check token permissions in Proxmox
+#   - Verify user has required permissions (see above)
+#   - Test with curl:
+#     curl -k -H "Authorization: PVEAPIToken=USER@REALM!TOKENID=SECRET" \
+#       https://proxmox:8006/api2/json/version
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │ NODE PLACEMENT ISSUES                                                    │
+# └─────────────────────────────────────────────────────────────────────────┘
+
+# Problem: VM not created on specified node
+# Solutions:
+#   - Verify node name matches exactly: pvesh get /nodes
+#   - Check node is online and has resources available
+#   - Ensure storage is available on target node
+#   - Check for HA groups that might override placement
