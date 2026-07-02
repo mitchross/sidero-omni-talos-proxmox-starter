@@ -5,9 +5,9 @@ name: talos-prod-cluster
 labels:
   cluster-id: "1"
 kubernetes:
-  version: v1.34.3
+  version: v1.36.2
 talos:
-  version: v1.11.6
+  version: v1.13.5
 patches:
   - name: disable-default-cni
     inline:
@@ -17,6 +17,9 @@ patches:
             name: none
         proxy:
           disabled: true
+  # machine.network is deprecated since Talos 1.12 (multi-doc network config
+  # documents replace it) but remains supported; Omni inline patches still
+  # use the v1alpha1 form.
   - name: dns-config
     inline:
       machine:
@@ -24,6 +27,18 @@ patches:
           nameservers:
             - 192.168.10.1
             - 1.1.1.1
+  # MANDATORY on Talos 1.13+: the LifecycleService install/upgrade flow
+  # requires an explicit machine.install.disk. Without it, freshly
+  # provisioned VMs wedge at stage UPGRADING / configuptodate=false forever
+  # with NO error surfaced anywhere. Proxmox virtio-scsi-single + scsi0
+  # presents as /dev/sda on every class in this template; a class with a
+  # different bus (e.g. NVMe passthrough -> /dev/nvme0n1) needs a
+  # per-machineset override.
+  - name: install-disk
+    inline:
+      machine:
+        install:
+          disk: /dev/sda
 ---
 kind: ControlPlane
 machineClass:

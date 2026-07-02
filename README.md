@@ -33,6 +33,24 @@ You’ll learn how to set up Omni, connect it to Proxmox using the official infr
 
 ---
 
+> [!IMPORTANT]
+> **Updated for Talos 1.13 / Omni v1.9 (2026-07).** Talos 1.13 replaced the
+> install/upgrade flow with the LifecycleService API, which **requires an
+> explicit `machine.install.disk`** — the cluster template now ships this as
+> the `install-disk` patch. Without it, freshly provisioned VMs sit at
+> `stage=UPGRADING, configuptodate=false` forever with **no error surfaced
+> anywhere**. Keep `omnictl` on the same release as your Omni server
+> (`OMNI_IMG_TAG` in `omni/omni.env.example`).
+
+## The starter family (which repo do I want?)
+
+| Repo | Provisioning | What you get |
+|---|---|---|
+| **this one** | Omni + Proxmox provider | no-SSH, UI-driven Talos cluster provisioning |
+| [talos-argocd-proxmox-starter](https://github.com/mitchross/talos-argocd-proxmox-starter) | Terraform + talhelper | the non-Omni on-ramp: Talos on Proxmox + ArgoCD + simple apps |
+| [talos-argocd-proxmox-advanced-starter](https://github.com/mitchross/talos-argocd-proxmox-advanced-starter) | Omni (this kit) | the production-shaped GitOps tier: sync waves, kopiur restore-before-bind PVC backups, CNPG Postgres, Gateway API, monitoring |
+| [talos-argocd-proxmox](https://github.com/mitchross/talos-argocd-proxmox) | Omni | the live production cluster the others are pruned from |
+
 ## What This Provides
 
 - **Self-hosted Omni deployment** - Run your own Omni instance on-premises
@@ -151,7 +169,7 @@ See the official documentation: [https://docs.cilium.io](https://docs.cilium.io)
 **Quick Install**:
 ```bash
 # Disable kube-proxy in cluster config, then:
-kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.0.0/standard-install.yaml
+kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.1/standard-install.yaml
 
 cilium install \
     --set ipam.mode=kubernetes \

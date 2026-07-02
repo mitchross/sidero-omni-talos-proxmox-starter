@@ -401,12 +401,18 @@ talosctl -n <control-plane-ip> get members
 **Solutions**:
 
 **Solution 1**: Use custom ISO with extensions pre-baked
+
+The imager tag must match your `talos.version`, and the NVIDIA extension
+tags are version-locked to it — get the current tags for your Talos release
+from [factory.talos.dev](https://factory.talos.dev) (pick the release, tick
+the extensions, copy the schematic) instead of hand-writing them:
+
 ```bash
 docker run --rm -i \
-  ghcr.io/siderolabs/imager:v1.11.0 \
+  ghcr.io/siderolabs/imager:v1.13.5 \
   iso \
-  --system-extension-image ghcr.io/siderolabs/nonfree-kmod-nvidia:550.127.05-v1.11.0 \
-  --system-extension-image ghcr.io/siderolabs/nvidia-container-toolkit:550.127.05-v1.11.0-v1.16.2
+  --system-extension-image ghcr.io/siderolabs/nonfree-kmod-nvidia:<driver>-v1.13.5 \
+  --system-extension-image ghcr.io/siderolabs/nvidia-container-toolkit:<driver>-v1.13.5-<toolkit>
 ```
 
 **Solution 2**: Check Proxmox console/tty settings

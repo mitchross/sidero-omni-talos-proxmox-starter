@@ -2,7 +2,7 @@ services:
   omni-infra-provider-proxmox:
     # Use local build with advanced VM options (disk, CPU, network features)
     # To revert to upstream: ghcr.io/siderolabs/omni-infra-provider-proxmox:latest
-    image: ghcr.io/siderolabs/omni-infra-provider-proxmox:local-20251219-1428
+    image: ghcr.io/siderolabs/omni-infra-provider-proxmox:latest@sha256:96433a9747ffc2649b5be114bc6bd8034cc59972e21e73297c8b619940bcc5bf
     container_name: omni-infra-provider-proxmox
     env_file:
       - .env
