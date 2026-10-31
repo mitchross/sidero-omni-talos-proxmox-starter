@@ -65,3 +65,7 @@ local/
 !proxmox-provider/.env.example
 !proxmox-provider/config.yaml.example
 !talos-configs/*.yaml
+
+# Agent-managed worktrees (Claude Code, Hermes)
+.claude/worktrees/
+.worktrees/
